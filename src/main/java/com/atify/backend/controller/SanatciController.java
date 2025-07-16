@@ -1,7 +1,8 @@
 package com.atify.backend.controller;
 
-import com.atify.backend.entity.Sanatci;
-import com.atify.backend.repository.SanatciRepository;
+import com.atify.backend.dto.SanatciRequest;
+import com.atify.backend.dto.SanatciResponse;
+import com.atify.backend.service.SanatciService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,15 +13,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SanatciController {
 
-    private final SanatciRepository sanatciRepository;
+    private final SanatciService sanatciService;
 
     @PostMapping
-    public Sanatci sanatciEkle(@RequestBody Sanatci sanatci) {
-        return sanatciRepository.save(sanatci);
+    public SanatciResponse sanatciEkle(@RequestBody SanatciRequest sanatciRequest) {
+        return sanatciService.sanatciEkle(sanatciRequest);
     }
 
     @GetMapping
-    public List<Sanatci> tumSanatcilariGetir() {
-        return sanatciRepository.findAll();
+    public List<SanatciResponse> tumSanatcilariGetir() {
+        return sanatciService.sanatcilariGetir();
     }
 }

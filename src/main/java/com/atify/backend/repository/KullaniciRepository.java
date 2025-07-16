@@ -1,0 +1,12 @@
+package com.atify.backend.repository;
+
+import com.atify.backend.entity.Kullanici;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
+
+public interface KullaniciRepository extends JpaRepository<Kullanici, Long> {
+    Optional<Kullanici> findByKullaniciAdi(String kullaniciAdi);
+    boolean existsByKullaniciAdi(String kullaniciAdi);
+    boolean existsByEmail(String email);
+}
