@@ -15,7 +15,7 @@ public class SanatciService {
 
 
     private final SanatciRepository sanatciRepo;    // final tek kullanımlık sonra değiştirme diye Veritabanı ile iletişim kuruyorsun
-                                                    //burada public olarak da denicem bir kere burayı unutma!
+    //burada public olarak da denicem bir kere burayı unutma!
 
     public SanatciService(SanatciRepository sanatciRepo) {            // Constructor (otomatik çalışır) → repository'yi bu sınıfa veriyor
         this.sanatciRepo = sanatciRepo;
@@ -36,11 +36,22 @@ public class SanatciService {
         yeniSanatci.setAd(request.getAd());
 
 
+
         Sanatci kaydedilenSanatci = sanatciRepo.save(yeniSanatci);   // Veritabanına kaydetme komutu ezberledim bir tık bunu
 
 
-        return new SanatciResponse(kaydedilenSanatci.getId(), kaydedilenSanatci.getAd());   // DTO dışarı gösterilecek veri olarak geri döner
-    }
+        return new SanatciResponse(
+                kaydedilenSanatci.getId(),
+                kaydedilenSanatci.getAd(),
+                kaydedilenSanatci.getUlke(),
+                kaydedilenSanatci.getDogumTarihi(),
+                kaydedilenSanatci.getBiyografi(),
+                kaydedilenSanatci.getProfilResmiUrl()
+        ); // ← DTO dışarı gösterilecek veri olarak geri döner
+    }   // ← ✅ EKLENMESİ GEREKEN PARANTEZ BU!
+
+    // DTO dışarı gösterilecek veri olarak geri döner
+
 
 
     //Tüm sanatçıları getirmeye yarıyor alttaki kod
@@ -51,4 +62,14 @@ public class SanatciService {
                 .map(sanatci -> new SanatciResponse(sanatci.getId(), sanatci.getAd()))
                 .collect(Collectors.toList());
     }
+
+    public void sanatciSil(Long id) {
+        boolean varMi = sanatciRepo.existsById(id);  // ID'li sanatçı var mı?
+        if (!varMi) {
+            throw new RuntimeException("Böyle bir sanatçı bulunamadı."); // Yoksa hata fırlat
+        }
+
+        sanatciRepo.deleteById(id); // varsa sil
+    }
+
 }

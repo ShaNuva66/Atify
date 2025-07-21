@@ -1,13 +1,18 @@
 package com.atify.backend.dto;
 
-public class SanatciRequest {
-    private String ad;   // sanatçı adı
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import java.time.LocalDate;
 
-    /*----- getter & setter -----*/
-    public String getAd() {
-        return ad;
-    }
-    public void setAd(String ad) {
-        this.ad = ad;
-    }
+@Data
+@AllArgsConstructor
+public class SanatciResponse {
+
+    private Long id;
+    private String ad;
+    private String ulke;
+    private LocalDate dogumTarihi;
+    private String biyografi;
+    private String profilResmiUrl;
+
 }

@@ -12,7 +12,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 public class Sanatci {
-
+  //henüz daha bağlamadım bu kısmı sanatçılar kısmını detaylı yapınca bağla
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -23,7 +23,7 @@ public class Sanatci {
     private String ulke;
 
     private LocalDate dogumTarihi;
-    
+
     @Column(length = 1000)
     private String biyografi;
 

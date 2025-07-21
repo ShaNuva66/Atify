@@ -21,15 +21,18 @@ public class AuthController {
 
     // POST → kayıt endpoint'i
     @PostMapping("/register")
-    public ResponseEntity<String> kayit(@RequestBody KullaniciRequest request) {
-        String sonuc = kullaniciService.kaydet(request);
-        return ResponseEntity.ok(sonuc);  // "Kayıt başarılı" gibi cevap döner
+    public ResponseEntity<String> kayit(@RequestBody KullaniciRequest request) {                //@RequestBody i json verisini al KullanıcıRequeste dönüştür
+        String sonuc = kullaniciService.kaydet(request);     //ResponseEntity<string> ---> metin döndürcem haberin olsun
+        return ResponseEntity.ok(sonuc);
+        //return "Kayıt başarılı!";         //burası neden olmuyor dene bir ara
     }
+
 
     // POST → giriş endpoint'i
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> giris(@RequestBody LoginRequest request) {
         LoginResponse cevap = kullaniciService.girisYap(request);
         return ResponseEntity.ok(cevap);
+        //return "Giriş başarılı!";   //burası neden olmuyor dene bir ara
     }
 }

@@ -25,17 +25,17 @@ public class KullaniciService {
     // Kayıt işlemini yapar
     public String kaydet(KullaniciRequest request) {
 
-        // Eğer kullanıcı adı daha önce alınmışsa hata ver
+        // Aynı kullanıcı adı varsa
         if (kullaniciRepo.existsByKullaniciAdi(request.getKullaniciAdi())) {
             throw new RuntimeException("Bu kullanıcı adı zaten var.");
         }
 
-        // Eğer email zaten varsa hata ver
+        // Aynı email varsa
         if (kullaniciRepo.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Bu e-posta zaten kullanılıyor.");
         }
 
-        // Şifreyi güvenli hale getiriyoruz (hashliyoruz)
+        // Şifreyi güvenliğini arttırma (hashliyoruz)  bana ait değil bu kısmı çaldım
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
         String hashliSifre = encoder.encode(request.getSifre());
 
@@ -68,7 +68,7 @@ public class KullaniciService {
             throw new RuntimeException("Şifre yanlış.");
         }
 
-        // Token sahte → gerçek token bir sonraki adımda yapılacak
+        // Token sahte
         String token = "dummy-jwt-token";
 
         return new LoginResponse(token, "Bearer");
