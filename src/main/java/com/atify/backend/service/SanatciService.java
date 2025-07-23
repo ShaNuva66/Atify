@@ -34,6 +34,10 @@ public class SanatciService {
 
         Sanatci yeniSanatci = new Sanatci();     // Yeni sanatçı nesnesi
         yeniSanatci.setAd(request.getAd());
+        yeniSanatci.setUlke(request.getUlke());
+        yeniSanatci.setDogumTarihi(request.getDogumTarihi());
+        yeniSanatci.setBiyografi(request.getBiyografi());
+        yeniSanatci.setProfilResmiUrl(request.getProfilResmiUrl());
 
 
 
@@ -48,7 +52,7 @@ public class SanatciService {
                 kaydedilenSanatci.getBiyografi(),
                 kaydedilenSanatci.getProfilResmiUrl()
         ); // ← DTO dışarı gösterilecek veri olarak geri döner
-    }   // ← ✅ EKLENMESİ GEREKEN PARANTEZ BU!
+    }
 
     // DTO dışarı gösterilecek veri olarak geri döner
 

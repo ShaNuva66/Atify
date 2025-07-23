@@ -24,7 +24,6 @@ public class AuthController {
     public ResponseEntity<String> kayit(@RequestBody KullaniciRequest request) {                //@RequestBody i json verisini al KullanıcıRequeste dönüştür
         String sonuc = kullaniciService.kaydet(request);     //ResponseEntity<string> ---> metin döndürcem haberin olsun
         return ResponseEntity.ok(sonuc);
-        //return "Kayıt başarılı!";         //burası neden olmuyor dene bir ara
     }
 
 
@@ -33,6 +32,5 @@ public class AuthController {
     public ResponseEntity<LoginResponse> giris(@RequestBody LoginRequest request) {
         LoginResponse cevap = kullaniciService.girisYap(request);
         return ResponseEntity.ok(cevap);
-        //return "Giriş başarılı!";   //burası neden olmuyor dene bir ara
     }
 }

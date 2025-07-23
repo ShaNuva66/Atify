@@ -32,8 +32,6 @@ public class SanatciController {
         sanatciService.sanatciSil(id);  // Servis katmanına ilet
         return ResponseEntity.ok("Sanatçi başarıyla silindi");
     }
-
-    //Servis katmanını ilet
     @PutMapping("/{id}")
     public ResponseEntity<String> sanatciGuncelle(@PathVariable Long id, @RequestBody SanatciRequest request) {
         sanatciService.sanatciGuncelle(id, request);

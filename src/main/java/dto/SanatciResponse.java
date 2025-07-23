@@ -29,7 +29,6 @@ public class SanatciResponse {
         this.id = id;
         this.ad = ad;
     }
-
     // Getter & Setter’lar (otomatik tanıma için gerekli)
 
     public Long getId() {

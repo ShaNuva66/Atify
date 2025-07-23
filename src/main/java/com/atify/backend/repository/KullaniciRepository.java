@@ -9,7 +9,8 @@ import java.util.Optional;
 // kullanıcı giriş doğrulama ikiside 1 dönerse çaat gir hesaba
 
 public interface KullaniciRepository extends JpaRepository<Kullanici, Long> {
-    Optional<Kullanici> findByKullaniciAdi(String kullaniciAdi);
+    Optional<Kullanici>
+    findByKullaniciAdi(String kullaniciAdi);
     boolean existsByKullaniciAdi(String kullaniciAdi);
     boolean existsByEmail(String email);
 }

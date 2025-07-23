@@ -12,7 +12,6 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 public class Sanatci {
-  //henüz daha bağlamadım bu kısmı sanatçılar kısmını detaylı yapınca bağla
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

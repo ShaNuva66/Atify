@@ -21,7 +21,7 @@ public class Kullanici {
     @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String sifre;  // burada hash'lenmiş şifre tutulacak
 
     @ElementCollection(fetch = FetchType.EAGER)
