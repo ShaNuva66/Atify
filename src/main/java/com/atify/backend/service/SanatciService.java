@@ -1,7 +1,7 @@
 package com.atify.backend.service; // Hangi klasördeyim
+import com.atify.backend.dto.SanatciResponse;
 
 import com.atify.backend.dto.SanatciRequest;
-import com.atify.backend.dto.SanatciResponse;
 import com.atify.backend.entity.Sanatci;
 import com.atify.backend.repository.SanatciRepository;
 import org.springframework.stereotype.Service;
@@ -57,11 +57,19 @@ public class SanatciService {
     //Tüm sanatçıları getirmeye yarıyor alttaki kod
 
 
-    public List<SanatciResponse> sanatcilariGetir() {               // Tüm sanatçıları al ve tek tek DTO'ya çevir
+    public List<SanatciResponse> sanatcilariGetir() {
         return sanatciRepo.findAll().stream()
-                .map(sanatci -> new SanatciResponse(sanatci.getId(), sanatci.getAd()))
+                .map(sanatci -> new SanatciResponse(
+                        sanatci.getId(),
+                        sanatci.getAd(),
+                        sanatci.getUlke(),
+                        sanatci.getDogumTarihi(),
+                        sanatci.getBiyografi(),
+                        sanatci.getProfilResmiUrl()
+                ))
                 .collect(Collectors.toList());
     }
+
 
     public void sanatciSil(Long id) {
         boolean varMi = sanatciRepo.existsById(id);  // ID'li sanatçı var mı?
@@ -71,5 +79,29 @@ public class SanatciService {
 
         sanatciRepo.deleteById(id); // varsa sil
     }
+    public SanatciResponse sanatciGuncelle(Long id, SanatciRequest request) {
+        Sanatci sanatci = sanatciRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Güncellenecek sanatçı bulunamadı."));
+
+        // Güncelleme işlemleri
+        sanatci.setAd(request.getAd());
+        sanatci.setUlke(request.getUlke());
+        sanatci.setDogumTarihi(request.getDogumTarihi());
+        sanatci.setBiyografi(request.getBiyografi());
+        sanatci.setProfilResmiUrl(request.getProfilResmiUrl());
+
+        // Veritabanına kaydet
+        Sanatci guncellenenSanatci = sanatciRepo.save(sanatci);
+
+        return new SanatciResponse(
+                guncellenenSanatci.getId(),
+                guncellenenSanatci.getAd(),
+                guncellenenSanatci.getUlke(),
+                guncellenenSanatci.getDogumTarihi(),
+                guncellenenSanatci.getBiyografi(),
+                guncellenenSanatci.getProfilResmiUrl()
+        );
+    }
+
 
 }

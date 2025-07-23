@@ -1,11 +1,12 @@
 package com.atify.backend.controller;
 
 import com.atify.backend.dto.SanatciRequest;
-import com.atify.backend.dto.SanatciResponse;
 import com.atify.backend.service.SanatciService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.atify.backend.dto.SanatciResponse;
+
 
 import java.util.List;
 
@@ -29,8 +30,13 @@ public class SanatciController {
     @DeleteMapping("/{id}")
     public ResponseEntity<String> sanatciSil(@PathVariable Long id) {
         sanatciService.sanatciSil(id);  // Servis katmanına ilet
-        return ResponseEntity.ok ("Sanatçi başarıyla silindi");
-    }
-    //Servis katmanını ilet
+        return ResponseEntity.ok("Sanatçi başarıyla silindi");
     }
 
+    //Servis katmanını ilet
+    @PutMapping("/{id}")
+    public ResponseEntity<String> sanatciGuncelle(@PathVariable Long id, @RequestBody SanatciRequest request) {
+        sanatciService.sanatciGuncelle(id, request);
+        return ResponseEntity.ok("Sanatçı başarıyla güncellendi");
+    }
+}
