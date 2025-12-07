@@ -7,7 +7,6 @@ import lombok.Data;
 @AllArgsConstructor
 public class AlbumResponse {
     private Long id;
-    private String ad;
-    private int yayinYili;
-    private String sanatciAdi;
+    private String name;
+    private String coverUrl;
 }

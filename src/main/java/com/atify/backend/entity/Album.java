@@ -2,8 +2,7 @@ package com.atify.backend.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.util.Set;
-
+import java.time.LocalDate;
 
 @Entity
 @Data
@@ -16,10 +15,20 @@ public class Album {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String ad;
-    private int yayinYili;
+    @Column(nullable = false)
+    private String name;  // Album name
+
+    private LocalDate releaseDate;  // Release date
+
+    private String coverUrl;        // Cover image URL
+
+    @Column(nullable = false)
+    private String genre;           // Album genre
+
+    @Column(name = "release_year", nullable = false)
+    private Integer releaseYear;    // Release year
 
     @ManyToOne
-    @JoinColumn(name = "sanatci_id")
-    private Sanatci sanatci;
+    @JoinColumn(name = "artist_id", nullable = false)
+    private Artist artist;          // Related artist
 }

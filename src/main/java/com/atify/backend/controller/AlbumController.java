@@ -10,19 +10,27 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/albumler")
+@RequestMapping("/albums")
 @RequiredArgsConstructor
 public class AlbumController {
 
     private final AlbumService albumService;
 
+    // ✅ Add album
     @PostMapping
-    public ResponseEntity<AlbumResponse> albumEkle(@RequestBody AlbumRequest request) {
-        return ResponseEntity.ok(albumService.albumEkle(request));
+    public ResponseEntity<AlbumResponse> addAlbum(@RequestBody AlbumRequest albumRequest) {
+        return ResponseEntity.ok(albumService.addAlbum(albumRequest));
     }
 
+    // ✅ Get all albums
     @GetMapping
-    public List<AlbumResponse> albumleriGetir() {
-        return albumService.tumAlbumleriGetir();
+    public ResponseEntity<List<AlbumResponse>> getAllAlbums() {
+        return ResponseEntity.ok(albumService.getAllAlbums());
+    }
+
+    // ✅ Get albums of an artist
+    @GetMapping("/artist/{artistId}")
+    public ResponseEntity<List<AlbumResponse>> getAlbumsByArtist(@PathVariable Long artistId) {
+        return ResponseEntity.ok(albumService.getAlbumsByArtist(artistId));
     }
 }

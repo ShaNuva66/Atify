@@ -1,6 +1,6 @@
 package com.atify.backend.entity;
 
-public enum Rol {
+public enum Role {
     USER,
     ADMIN
 }
