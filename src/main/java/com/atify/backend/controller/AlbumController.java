@@ -16,7 +16,7 @@ public class AlbumController {
 
     private final AlbumService albumService;
 
-    // ✅ Add album
+    // ✅ Add album   commit denemeleri
     @PostMapping
     public ResponseEntity<AlbumResponse> addAlbum(@RequestBody AlbumRequest albumRequest) {
         return ResponseEntity.ok(albumService.addAlbum(albumRequest));
