@@ -15,11 +15,22 @@ public class SongController {
 
     private final SongService songService;
 
+    // Yeni şarkı ekleme
     @PostMapping
     public SongResponse addSong(@RequestBody SongRequest request) {
         return songService.addSong(request);
     }
 
+    // Şarkı güncelleme (ADMIN edit ekranı burayı çağırıyor)
+    @PutMapping("/{id}")
+    public SongResponse updateSong(
+            @PathVariable Long id,
+            @RequestBody SongRequest request
+    ) {
+        return songService.updateSong(id, request);
+    }
+
+    // Tüm şarkılar
     @GetMapping
     public List<SongResponse> getAllSongs() {
         return songService.getAllSongs();

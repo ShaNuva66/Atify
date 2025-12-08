@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Atify - Şarkılar</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #050816;
+            color: #e5e7eb;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background: linear-gradient(to right, #0f172a, #020617);
+            border-bottom: 1px solid #1f2937;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #22c55e;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .nav-username {
+            font-size: 14px;
+            color: #9ca3af;
+        }
+
+        .logout-btn {
+            background: transparent;
+            border: 1px solid #ef4444;
+            color: #fca5a5;
+            padding: 6px 12px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .logout-btn:hover {
+            background: #b91c1c;
+            color: white;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 0 20px 40px 20px;
+        }
+
+        h1 {
+            font-size: 26px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #9ca3af;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .songs-card {
+            background: rgba(15, 23, 42, 0.9);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            border: 1px solid #1f2937;
+        }
+
+        .songs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .songs-header h2 {
+            font-size: 20px;
+        }
+
+        .refresh-btn {
+            background: #22c55e;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 999px;
+            color: #022c22;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .refresh-btn:hover {
+            filter: brightness(1.1);
+        }
+
+        .songs-list {
+            margin-top: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .song-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #111827;
+        }
+
+        .song-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .song-title {
+            font-size: 14px;
+        }
+
+        .song-meta {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .play-btn {
+            background: #16a34a;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 999px;
+            color: #022c22;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .play-btn:hover {
+            filter: brightness(1.1);
+        }
+
+        .audio-wrapper {
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 1px solid #1f2937;
+        }
+
+        #audioPlayer {
+            width: 100%;
+        }
+
+        .current-song {
+            font-size: 13px;
+            color: #9ca3af;
+            margin-top: 6px;
+        }
+
+        .error-box {
+            margin-top: 10px;
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 12px;
+            background: rgba(127, 29, 29, 0.7);
+            border: 1px solid #b91c1c;
+            color: #fecaca;
+            display: none;
+        }
+
+        .empty-text {
+            font-size: 13px;
+            color: #6b7280;
+            margin-top: 10px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #020617;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1f2937;
+            border-radius: 999px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="navbar">
+    <div class="logo">Atify</div>
+    <div class="nav-right">
+        <span class="nav-username" id="navUsername"></span>
+        <button class="logout-btn" onclick="logout()">Çıkış Yap</button>
+    </div>
+</div>
+
+<div class="container">
+    <h1>Şarkılar</h1>
+    <p class="subtitle">
+        Aşağıdan listeden bir şarkı seçip <b>▶ Çal</b> butonuna bas; şarkı tarayıcı üzerinden çalsın.
+    </p>
+
+    <div class="songs-card">
+        <div class="songs-header">
+            <h2>Çalma Listesi</h2>
+            <button class="refresh-btn" onclick="loadSongs()">Yenile</button>
+        </div>
+
+        <div id="errorBox" class="error-box"></div>
+
+        <div id="songsContainer" class="songs-list">
+            <!-- Şarkılar buraya JS ile eklenecek -->
+        </div>
+
+        <p id="emptyText" class="empty-text" style="display: none;">
+            Hiç şarkı bulunamadı. Backend’de /songs endpoint’ini ve veritabanını kontrol et kanka.
+        </p>
+
+        <div class="audio-wrapper">
+            <audio id="audioPlayer" controls>
+                Tarayıcınız audio etiketini desteklemiyor.
+            </audio>
+            <div id="currentSong" class="current-song"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ✅ BACKEND ADRESİ
+    const API_BASE_URL = "http://localhost:8080";
+
+    // Sayfa yüklenince çalışacak
+    document.addEventListener("DOMContentLoaded", () => {
+        const token = localStorage.getItem("token");
+
+        // Token yoksa login sayfasına yolla (login.html ismini kendine göre değiştir)
+        if (!token) {
+            alert("Giriş yapman gerekiyor kanka.");
+            window.location.href = "login.html";
+            return;
+        }
+
+        const username = localStorage.getItem("username");
+        if (username) {
+            document.getElementById("navUsername").textContent = "Hoş geldin, " + username;
+        }
+
+        loadSongs();
+    });
+
+    function logout() {
+        localStorage.removeItem("token");
+        localStorage.removeItem("username");
+        window.location.href = "login.html"; // kendi login sayfan hangisiyse onu yaz
+    }
+
+    function showError(message) {
+        const box = document.getElementById("errorBox");
+        box.textContent = message;
+        box.style.display = "block";
+    }
+
+    function hideError() {
+        const box = document.getElementById("errorBox");
+        box.style.display = "none";
+        box.textContent = "";
+    }
+
+    function loadSongs() {
+        hideError();
+        const token = localStorage.getItem("token");
+
+        fetch(API_BASE_URL + "/songs", {
+            method: "GET",
+            headers: {
+                "Authorization": "Bearer " + token,
+                "Content-Type": "application/json"
+            }
+        })
+            .then(response => {
+                if (!response.ok) {
+                    if (response.status === 401 || response.status === 403) {
+                        throw new Error("Yetki hatası. Tekrar giriş yapman gerekebilir.");
+                    }
+                    throw new Error("Şarkılar yüklenirken sorun oluştu. Kod: " + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                renderSongs(data);
+            })
+            .catch(err => {
+                console.error(err);
+                showError(err.message);
+            });
+    }
+
+    function renderSongs(songs) {
+        const container = document.getElementById("songsContainer");
+        const emptyText = document.getElementById("emptyText");
+
+        container.innerHTML = "";
+
+        if (!songs || songs.length === 0) {
+            emptyText.style.display = "block";
+            return;
+        } else {
+            emptyText.style.display = "none";
+        }
+
+        songs.forEach(song => {
+            // Beklenen response yapısı:
+            // { id, name, duration, artistName, albumName, audioUrl }
+
+            const row = document.createElement("div");
+            row.className = "song-row";
+
+            const infoDiv = document.createElement("div");
+            infoDiv.className = "song-info";
+
+            const titleSpan = document.createElement("span");
+            titleSpan.className = "song-title";
+            titleSpan.textContent = song.name || "İsimsiz Şarkı";
+
+            const metaSpan = document.createElement("span");
+            metaSpan.className = "song-meta";
+
+            const artistName = song.artistName || "Bilinmeyen Sanatçı";
+            const albumName = song.albumName || "Bilinmeyen Albüm";
+            const duration = song.duration ? (song.duration + " sn") : "";
+
+            metaSpan.textContent = artistName + " • " + albumName + (duration ? (" • " + duration) : "");
+
+            infoDiv.appendChild(titleSpan);
+            infoDiv.appendChild(metaSpan);
+
+            const playButton = document.createElement("button");
+            playButton.className = "play-btn";
+            playButton.textContent = "▶ Çal";
+
+            playButton.onclick = () => {
+                playSong(song);
+            };
+
+            row.appendChild(infoDiv);
+            row.appendChild(playButton);
+
+            container.appendChild(row);
+        });
+    }
+
+    function playSong(song) {
+        const player = document.getElementById("audioPlayer");
+        const currentSongText = document.getElementById("currentSong");
+
+        if (!song.audioUrl) {
+            showError("Bu şarkının audioUrl alanı boş kanka. Veritabanını kontrol et.");
+            return;
+        }
+
+        // audioUrl backend'de '/audio/dosya.mp3' şeklindeyse:
+        let url = song.audioUrl;
+        if (!url.startsWith("http")) {
+            url = API_BASE_URL + url;
+        }
+
+        player.src = url;
+        player.play().catch(err => {
+            console.error(err);
+            showError("Şarkı çalınırken hata oluştu: " + err.message);
+        });
+
+        const artistName = song.artistName || "Bilinmeyen Sanatçı";
+        currentSongText.textContent = "Şu an çalan: " + (song.name || "İsimsiz Şarkı") + " — " + artistName;
+    }
+</script>
+
+</body>
+</html>
