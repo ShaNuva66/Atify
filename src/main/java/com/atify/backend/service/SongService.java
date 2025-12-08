@@ -3,20 +3,17 @@ package com.atify.backend.service;
 import com.atify.backend.dto.SongRequest;
 import com.atify.backend.dto.SongResponse;
 import com.atify.backend.entity.Album;
-import com.atify.backend.entity.Playlist;
 import com.atify.backend.entity.Artist;
+import com.atify.backend.entity.Playlist;
 import com.atify.backend.entity.Song;
 import com.atify.backend.repository.AlbumRepository;
-import com.atify.backend.repository.PlaylistRepository;
 import com.atify.backend.repository.ArtistRepository;
+import com.atify.backend.repository.PlaylistRepository;
 import com.atify.backend.repository.SongRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -27,37 +24,43 @@ public class SongService {
     private final ArtistRepository artistRepo;
     private final PlaylistRepository playlistRepo;
 
-    // ✅ Add a song
+    // SONG EKLEME
     public SongResponse addSong(SongRequest request) {
-        Album album = albumRepo.findById(request.getAlbumId())
-                .orElseThrow(() -> new IllegalArgumentException("Album not found: " + request.getAlbumId()));
 
+        // Artist yine zorunlu
         Artist artist = artistRepo.findById(request.getArtistId())
                 .orElseThrow(() -> new IllegalArgumentException("Artist not found: " + request.getArtistId()));
 
-        Set<Playlist> playlists = new HashSet<>();
+        // Album artık zorunlu değil
+        Album album = null;
+        if (request.getAlbumId() != null) {
+            album = albumRepo.findById(request.getAlbumId())
+                    .orElseThrow(() -> new IllegalArgumentException("Album not found: " + request.getAlbumId()));
+        }
+
+        // Playlist yine opsiyonel
+        List<Playlist> playlists = new ArrayList<>();
         if (request.getPlaylistIdList() != null && !request.getPlaylistIdList().isEmpty()) {
-            playlists.addAll(playlistRepo.findAllById(request.getPlaylistIdList()));
+            playlists = playlistRepo.findAllById(request.getPlaylistIdList());
         }
 
         Song song = Song.builder()
                 .name(request.getName())
                 .duration(request.getDuration())
-                .album(album)
                 .artist(artist)
-                .playlists(playlists.stream().toList())
+                .album(album)        // artık null olabilir
+                .playlists(playlists)
                 .build();
 
-        Song savedSong = songRepo.save(song);
-
-        return new SongResponse(savedSong.getId(), savedSong.getName(), savedSong.getDuration());
+        Song saved = songRepo.save(song);
+        return new SongResponse(saved.getId(), saved.getName(), saved.getDuration());
     }
 
-    // ✅ Get all songs
+    // TÜM ŞARKILAR
     public List<SongResponse> getAllSongs() {
         return songRepo.findAll()
                 .stream()
                 .map(s -> new SongResponse(s.getId(), s.getName(), s.getDuration()))
-                .collect(Collectors.toList());
+                .toList();
     }
 }

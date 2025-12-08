@@ -8,5 +8,5 @@ import lombok.Data;
 public class SongResponse {
     private Long id;
     private String name;
-    private int duration; // in seconds
+    private int duration;
 }

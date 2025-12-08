@@ -5,9 +5,9 @@ import java.util.List;
 
 @Data
 public class SongRequest {
-    private String name;                // Song name
-    private int duration;               // Duration in seconds
-    private Long albumId;               // Which album it belongs to
-    private Long artistId;              // Artist of the song
-    private List<Long> playlistIdList;  // Optional: playlists to add the song
+    private String name;             // Şarkı adı
+    private int duration;            // Süre (opsiyonel, 0 da olur)
+    private Long artistId;           // ZORUNLU
+    private Long albumId;            // OPSİYONEL - artık zorunlu değil
+    private List<Long> playlistIdList; // OPSİYONEL
 }

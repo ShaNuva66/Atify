@@ -16,19 +16,19 @@ public class Song {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;        // Song name
-
-    private int duration;       // Duration in seconds
-
-    @ManyToOne
-    @JoinColumn(name = "album_id")
-    private Album album;        // Album of the song
+    private String name;        // Şarkı adı
+    private int duration;
 
     @ManyToOne
     @JoinColumn(name = "artist_id")
-    private Artist artist;      // Artist of the song
+    private Artist artist;
 
-    // 🔹 ManyToMany: A song can be in multiple playlists
+    // Albüm artık opsiyonel
+    @ManyToOne
+    @JoinColumn(name = "album_id", nullable = true)
+    private Album album;
+
+    // Playlist opsiyonel
     @ManyToMany(mappedBy = "songs")
     private List<Playlist> playlists;
 }
