@@ -31,4 +31,12 @@ public class Song {
     // Playlist opsiyonel
     @ManyToMany(mappedBy = "songs")
     private List<Playlist> playlists;
+
+    @Column(name = "file_name")
+    private String fileName;
+
+    @Column(name = "fingerprint_code", unique = true)
+    private String fingerprintCode;
+
+    private String coverUrl;
 }

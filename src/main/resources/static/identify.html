@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Şarkıyı Bul</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            background: #020617;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #circle {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: #38bdf8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 0 40px rgba(56, 189, 248, 0.6);
+            transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+        }
+        #circle.listening {
+            animation: pulse 1.4s infinite;
+            background: #0ea5e9;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 30px rgba(56,189,248,.7); }
+            50% { transform: scale(1.08); box-shadow: 0 0 60px rgba(56,189,248,1); }
+            100% { transform: scale(1); box-shadow: 0 0 30px rgba(56,189,248,.7); }
+        }
+        #status { margin-top: 20px; opacity: .8; }
+        #result { margin-top: 30px; font-size: 22px; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+<div id="circle">Şarkıyı Dinlet</div>
+<div id="status">Hazır</div>
+<div id="result"></div>
+
+<script>
+    const circle = document.getElementById('circle');
+    const statusEl = document.getElementById('status');
+    const resultEl = document.getElementById('result');
+
+    let mediaRecorder;
+    let chunks = [];
+
+    circle.addEventListener('click', async () => {
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            mediaRecorder.stop();
+            return;
+        }
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+            mediaRecorder = new MediaRecorder(stream);
+            chunks = [];
+
+            mediaRecorder.ondataavailable = e => chunks.push(e.data);
+
+            mediaRecorder.onstop = async () => {
+                statusEl.textContent = 'Yükleniyor, analiz ediliyor...';
+                circle.classList.remove('listening');
+                circle.textContent = 'Şarkıyı Dinlet';
+
+                const blob = new Blob(chunks, { type: 'audio/webm' });
+                const formData = new FormData();
+                formData.append('file', blob, 'sample.webm');
+
+                try {
+                    const resp = await fetch('/api/identify', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await resp.json();
+
+                    if (!data.found) {
+                        resultEl.textContent = 'Şarkı bulunamadı';
+                    } else {
+                        resultEl.textContent = `${data.title} — ${data.artist ?? ''}`;
+                    }
+                    statusEl.textContent = 'Hazır';
+                } catch (e) {
+                    console.error(e);
+                    statusEl.textContent = 'Bir hata oluştu';
+                }
+            };
+
+            mediaRecorder.start();
+            circle.classList.add('listening');
+            circle.textContent = 'Dinliyorum...';
+            statusEl.textContent = 'Lütfen 10–15 saniye boyunca müziği dinlet';
+
+            setTimeout(() => {
+                if (mediaRecorder && mediaRecorder.state === 'recording') {
+                    mediaRecorder.stop();
+                }
+            }, 15000);
+
+        } catch (err) {
+            console.error(err);
+            statusEl.textContent = 'Mikrofon izni alınamadı';
+        }
+    });
+</script>
+
+</body>
+</html>
