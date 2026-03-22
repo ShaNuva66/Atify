@@ -5,549 +5,12 @@
     <title>Atify</title>
 
     <link rel="icon" type="image/png" href="atify_logo.png">
-
-    <style>
-        * { box-sizing: border-box; font-family: Arial, sans-serif; }
-
-        body {
-            margin: 0;
-            color: #e5e7eb;
-            background:
-                radial-gradient(circle at 20% 20%, rgba(90, 255, 120, 0.25), transparent 60%),
-                radial-gradient(circle at 80% 30%, rgba(0, 200, 80, 0.2), transparent 55%),
-                radial-gradient(circle at 40% 80%, rgba(0, 150, 70, 0.15), transparent 60%),
-                linear-gradient(160deg, #000000 0%, #030712 40%, #020814 100%);
-            background-attachment: fixed;
-        }
-
-        header {
-            background: #020617;
-            padding: 10px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid #111827;
-        }
-        header h1 {
-            font-size: 18px;
-            margin: 0;
-        }
-        nav button {
-            margin-right: 6px;
-            padding: 6px 10px;
-            border-radius: 999px;
-            border: none;
-            background: #111827;
-            color: #e5e7eb;
-            cursor: pointer;
-            font-size: 13px;
-        }
-        nav button.active {
-            background: #22c55e;
-            color: #022c22;
-            font-weight: 600;
-        }
-        #userInfo {
-            font-size: 12px;
-            color: #9ca3af;
-            text-align: right;
-        }
-        #userInfo b { color: #22c55e; }
-
-        main {
-            max-width: 1100px;
-            margin: 16px auto 80px auto;
-            padding: 16px;
-            background: rgba(15, 23, 42, 0.9);
-            border-radius: 12px;
-            border: 1px solid #1f2937;
-        }
-
-        .page { display: none; }
-        .page.active { display: block; }
-
-        h2 { margin-top: 0; font-size: 18px; }
-
-        label {
-            display: block;
-            font-size: 13px;
-            margin-top: 8px;
-            margin-bottom: 3px;
-        }
-        input, textarea, select {
-            width: 100%;
-            padding: 7px 9px;
-            border-radius: 4px;
-            border: 1px solid #4b5563;
-            background: #020617;
-            color: #e5e7eb;
-            font-size: 13px;
-        }
-        input:focus, textarea:focus, select:focus {
-            outline: none;
-            border-color: #22c55e;
-        }
-
-        .btn {
-            margin-top: 10px;
-            padding: 7px 12px;
-            border-radius: 999px;
-            border: none;
-            cursor: pointer;
-            font-size: 13px;
-        }
-        .btn.primary {
-            background: #22c55e;
-            color: #022c22;
-            font-weight: 600;
-        }
-        .btn.secondary {
-            background: #2563eb;
-            color: #eff6ff;
-        }
-        .btn.gray {
-            background: #374151;
-            color: #e5e7eb;
-        }
-
-        .muted {
-            font-size: 12px;
-            color: #9ca3af;
-        }
-
-        .list {
-            margin-top: 10px;
-            border-radius: 8px;
-            border: 1px solid #111827;
-            background: #020617;
-            font-size: 13px;
-        }
-
-        #status {
-            margin-top: 12px;
-            font-size: 12px;
-            color: #9ca3af;
-        }
-        #status span.ok { color: #22c55e; }
-        #status span.err { color: #f97316; }
-
-        #popup {
-            position: fixed;
-            right: 20px;
-            bottom: 100px;
-            background: #22c55e;
-            color: #022c22;
-            padding: 10px 16px;
-            border-radius: 6px;
-            font-size: 13px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            display: none;
-            z-index: 9000;
-        }
-
-        .role-card {
-            border-radius: 8px;
-            border: 1px solid #1f2937;
-            background: #020617;
-            padding: 16px;
-            flex: 1;
-            min-width: 260px;
-        }
-        .role-title {
-            font-size: 16px;
-            margin-bottom: 4px;
-        }
-        .role-badge {
-            display: inline-block;
-            font-size: 11px;
-            padding: 2px 8px;
-            border-radius: 999px;
-            border: 1px solid #4b5563;
-            margin-bottom: 8px;
-            color: #9ca3af;
-        }
-
-        /* ==== ŞARKI SAYFASI (Spotify vibe) ==== */
-        .songs-layout {
-            display: grid;
-            grid-template-columns: 1.2fr 0.8fr;
-            gap: 16px;
-        }
-        @media (max-width: 900px) {
-            .songs-layout {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .songs-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .songs-header-row {
-            font-size: 11px;
-            color: #6b7280;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-        }
-        .songs-header-row th {
-            padding: 6px 10px;
-            font-weight: 500;
-        }
-        .songs-body-row {
-            cursor: pointer;
-            transition: background 0.1s ease;
-        }
-        .songs-body-row:hover {
-            background: #111827;
-        }
-        .songs-body-row td {
-            padding: 8px 10px;
-            border-top: 1px solid #111827;
-            font-size: 13px;
-        }
-        .song-title-cell {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .song-cover {
-            width: 32px;
-            height: 32px;
-            border-radius: 4px;
-            background: linear-gradient(135deg, #22c55e, #16a34a);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            color: #022c22;
-            flex-shrink: 0;
-        }
-        .song-texts {
-            display: flex;
-            flex-direction: column;
-        }
-        .song-name {
-            font-size: 13px;
-        }
-        .song-artist {
-            font-size: 11px;
-            color: #9ca3af;
-        }
-        .play-icon-cell {
-            width: 32px;
-            font-size: 14px;
-            color: #9ca3af;
-        }
-
-        .songs-side-card {
-            border-radius: 10px;
-            border: 1px solid #111827;
-            background: radial-gradient(circle at top, rgba(34,197,94,0.08), transparent 60%),
-                        #020617;
-            padding: 14px;
-            font-size: 13px;
-        }
-
-        /* ==== PLAYLIST LAYOUT ==== */
-        .playlists-layout {
-            display: grid;
-            grid-template-columns: 0.9fr 1.1fr;
-            gap: 16px;
-        }
-        @media (max-width: 900px) {
-            .playlists-layout {
-                grid-template-columns: 1fr;
-            }
-        }
-        .playlists-left, .playlists-right {
-            background: #020617;
-            border-radius: 10px;
-            border: 1px solid #111827;
-            padding: 12px;
-        }
-        .playlist-item {
-            padding: 8px 10px;
-            border-radius: 6px;
-            margin-bottom: 4px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: transparent;
-            transition: background 0.1s ease;
-        }
-        .playlist-item:hover {
-            background: #111827;
-        }
-        .playlist-item.active {
-            background: #16a34a33;
-        }
-        .playlist-cover {
-            width: 32px;
-            height: 32px;
-            border-radius: 4px;
-            background: linear-gradient(135deg, #22c55e, #16a34a);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 15px;
-            color: #022c22;
-            flex-shrink: 0;
-        }
-        .playlist-texts {
-            display: flex;
-            flex-direction: column;
-        }
-        .playlist-name {
-            font-size: 13px;
-        }
-        .playlist-meta {
-            font-size: 11px;
-            color: #9ca3af;
-        }
-
-        .playlist-songs-list .item {
-            padding: 6px 10px;
-            border-bottom: 1px solid #111827;
-        }
-        .playlist-songs-list .item:last-child {
-            border-bottom: none;
-        }
-
-        /* ==== BOTTOM PLAYER BAR ==== */
-        .player-bar {
-            position: fixed;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: #020617;
-            border-top: 1px solid #111827;
-            padding: 8px 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            z-index: 8000;
-        }
-        .player-bar.hidden {
-            display: none;
-        }
-
-        .player-left {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            min-width: 0;
-        }
-        .player-cover {
-            width: 44px;
-            height: 44px;
-            border-radius: 6px;
-            background: linear-gradient(135deg, #22c55e, #16a34a);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            color: #022c22;
-            flex-shrink: 0;
-        }
-        .player-texts {
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-        }
-        .player-title {
-            font-size: 13px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .player-artist {
-            font-size: 11px;
-            color: #9ca3af;
-        }
-
-        .player-center {
-            flex: 1;
-            max-width: 600px;
-        }
-        .player-controls {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 4px;
-        }
-        .player-btn {
-            width: 32px;
-            height: 32px;
-            border-radius: 999px;
-            border: none;
-            cursor: pointer;
-            background: #111827;
-            color: #e5e7eb;
-            font-size: 14px;
-        }
-        .player-btn.main {
-            background: #22c55e;
-            color: #022c22;
-            font-size: 16px;
-        }
-        .player-progress {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 11px;
-            color: #9ca3af;
-        }
-        .progress-bar-bg {
-            flex: 1;
-            height: 4px;
-            border-radius: 999px;
-            background: #111827;
-            overflow: hidden;
-            cursor: pointer;
-        }
-        .progress-bar-fill {
-            height: 100%;
-            width: 0%;
-            border-radius: 999px;
-            background: #22c55e;
-        }
-
-        .player-right {
-            font-size: 11px;
-            color: #6b7280;
-            min-width: 180px;
-            text-align: right;
-        }
-
-        .vol-row {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin-bottom: 4px;
-        }
-        .vol-row input[type="range"] {
-            flex: 1;
-            accent-color: #22c55e;
-        }
-
-        #audioPlayer {
-            display: none;
-        }
-
-        /* ==== MODALLAR ==== */
-        #playlistModalOverlay,
-        #centerModalOverlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.65);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 9500;
-        }
-
-        #playlistModal,
-        #centerModal {
-            background: #020617;
-            border-radius: 12px;
-            border: 1px solid #22c55e33;
-            padding: 14px 16px;
-            width: 260px;
-            max-width: 90%;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.7);
-            text-align: center;
-        }
-        .modal-title {
-            font-size: 14px;
-            margin-bottom: 4px;
-        }
-        .modal-text {
-            font-size: 12px;
-            color: #9ca3af;
-            margin-bottom: 8px;
-        }
-        .modal-icon {
-            font-size: 26px;
-            margin-bottom: 4px;
-        }
-
-        #playlistModalList {
-            max-height: 200px;
-            overflow: auto;
-            margin-bottom: 8px;
-            text-align: left;
-        }
-        .playlist-modal-item {
-            padding: 6px 8px;
-            border-radius: 6px;
-            border: 1px solid #111827;
-            margin-bottom: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            background: #020617;
-        }
-        .playlist-modal-item:hover {
-            background: #111827;
-        }
-        .modal-close-btn {
-            margin-top: 4px;
-            padding: 5px 10px;
-            border-radius: 999px;
-            border: none;
-            cursor: pointer;
-            background: #111827;
-            color: #e5e7eb;
-            font-size: 12px;
-        }
-
-        /* === Artist autocomplete (şarkı ekleme) === */
-        #artistSuggestBox {
-            position: relative;
-        }
-        #artistSuggestions {
-            position: absolute;
-            left: 0;
-            right: 0;
-            top: 100%;
-            background: #020617;
-            border: 1px solid #111827;
-            border-radius: 6px;
-            max-height: 180px;
-            overflow: auto;
-            font-size: 12px;
-            z-index: 9100;
-        }
-        .artist-suggestion-item {
-            padding: 6px 8px;
-            cursor: pointer;
-        }
-        .artist-suggestion-item:hover {
-            background: #111827;
-        }
-
-        /* Song edit box (admin) */
-        #songEditContainer {
-            margin-top: 14px;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #111827;
-            background: #020617;
-            font-size: 12px;
-            display: none;
-        }
-        #songEditContainer h3 {
-            margin-top: 0;
-            font-size: 14px;
-        }
-    </style>
+    <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
 
 <header>
-    <div id="logoArea" style="display:flex; align-items:center; gap:12px; cursor:pointer;" onclick="goHome()">
+    <div id="logoArea" style="display:flex; align-items:center; gap:12px; cursor:pointer;">
         <img src="atify_logo.png"
              alt="Atify Logo"
              style="height:40px; border-radius:50%; box-shadow:0 0 14px rgba(34,197,94,0.7);">
@@ -558,21 +21,29 @@
     </div>
 
     <nav>
-        <button data-page="home" data-role="BOTH" class="active" onclick="showPage('home', this)">Giriş</button>
-        <button data-page="register" data-role="BOTH" onclick="showPage('register', this)">Kayıt Ol</button>
-        <button data-page="songs" data-role="BOTH" onclick="showPage('songs', this)">Şarkılar</button>
-        <button data-page="artists" data-role="ADMIN" onclick="showPage('artists', this)">Sanatçılar (Admin)</button>
-        <button data-page="playlists" data-role="BOTH" onclick="showPage('playlists', this)">Playlistler</button>
-        <button data-page="addSong" data-role="ADMIN" onclick="showPage('addSong', this)">Müzik Ekle (Admin)</button>
+        <button type="button" data-page="home" data-role="BOTH" class="active">Giriş</button>
+        <button type="button" data-page="register" data-role="BOTH">Kayıt Ol</button>
+        <button type="button" data-page="songs" data-role="BOTH">Şarkılar</button>
+        <button type="button" data-page="artists" data-role="ADMIN">Sanatçılar (Admin)</button>
+        <button type="button" data-page="users" data-role="ADMIN">Kullanıcılar (Admin)</button>
+        <button type="button" data-page="audit" data-role="ADMIN">Audit Log (Admin)</button>
+        <button type="button" data-page="playlists" data-role="BOTH">Playlistler</button>
+        <button type="button" data-page="favorites" data-role="BOTH">Favorilerim</button>
+        <button type="button" data-page="history" data-role="BOTH">Geçmiş</button>
+        <button type="button" data-page="insights" data-role="BOTH">İçgörüler</button>
+        <button type="button" data-page="addSong" data-role="ADMIN">Müzik Ekle (Admin)</button>
     </nav>
 
-    <div id="userInfo">Rol seçilmedi</div>
+    <div style="display:flex; align-items:center; gap:10px;">
+        <div id="userInfo">Rol seçilmedi</div>
+        <button id="headerLogoutBtn" class="btn gray" style="display:none; margin-top:0;">Hesaptan Çık</button>
+    </div>
 </header>
 
 <main>
     <!-- ROL SEÇİM SAYFASI -->
     <section id="page-roleSelect" class="page active">
-        <h2>Atify’e Hoş Geldin 🎧</h2>
+        <h2>Atify'e Hoş Geldin 🎧</h2>
         <p class="muted">
             Devam etmeden önce bu oturumda <b>Admin</b> mi yoksa <b>Kullanıcı</b> olarak mı giriş yapacağını seç.
         </p>
@@ -583,15 +54,15 @@
                 <p class="muted">
                     Şarkı ekleme, sanatçı ekleme ve tüm verileri yönetme yetkisi.
                 </p>
-                <button class="btn primary" onclick="enterAs('ADMIN')">Admin Olarak Devam Et</button>
+                <button id="enterAdminBtn" class="btn primary">Admin Olarak Devam Et</button>
             </div>
             <div class="role-card">
                 <div class="role-badge">Kullanıcı Paneli</div>
                 <div class="role-title">Kullanıcı Girişi</div>
                 <p class="muted">
-                    Şarkıları görüntüle, playlist oluştur, playlist’e şarkı ekle.
+                    Şarkıları görüntüle, playlist oluştur, playlist'e şarkı ekle.
                 </p>
-                <button class="btn secondary" onclick="enterAs('USER')">Kullanıcı Olarak Devam Et</button>
+                <button id="enterUserBtn" class="btn secondary">Kullanıcı Olarak Devam Et</button>
             </div>
         </div>
     </section>
@@ -600,25 +71,47 @@
     <section id="page-home" class="page">
         <h2 id="homeTitle">Giriş</h2>
         <p id="homeDesc" style="font-size:13px; color:#e5e7eb;">
-            Giriş yap, sonra Spotify benzeri şarkı ve playlist ekranlarına geç.
+            Giriş yap, sonra şarkı ve playlist ekranlarına geç.
         </p>
 
         <div id="authBox">
             <h3>Giriş (POST /auth/login)</h3>
             <small>JWT kullanmak için önce kayıt olup giriş yapman gerekiyor.</small>
 
-            <div style="margin-top:8px; max-width:360px;">
+            <form id="loginForm" style="margin-top:8px; max-width:360px;">
                 <label>Kullanıcı adı</label>
-                <input id="loginUsername" type="text" placeholder="username">
+                <input id="loginUsername" type="text" placeholder="username" autocomplete="username">
                 <label>Şifre</label>
-                <input id="loginPassword" type="password" placeholder="123456">
-                <button class="btn secondary" onclick="login()">Giriş Yap</button>
-                <button class="btn gray" onclick="logout()">Çıkış</button>
-            </div>
+                <input id="loginPassword" type="password" placeholder="123456" autocomplete="current-password">
+                <button type="submit" class="btn secondary">Giriş Yap</button>
+            </form>
 
             <p class="muted" style="margin-top:12px;">
                 Henüz hesabın yoksa üstteki <b>Kayıt Ol</b> sekmesinden yeni kullanıcı oluşturabilirsin.
             </p>
+        </div>
+
+        <div id="homeDashboard" style="display:none;">
+            <div class="home-dashboard-grid">
+                <div class="songs-side-card">
+                    <div style="font-size:13px; margin-bottom:8px;">Hızlı Özet</div>
+                    <div id="homeQuickStats" class="muted">
+                        Şarkı dinlemeye başladığında burada kısa özetin görünecek.
+                    </div>
+                </div>
+                <div class="songs-side-card">
+                    <div style="font-size:13px; margin-bottom:8px;">En Çok Dinlenenler</div>
+                    <div id="homeTopHistoryList" class="list" style="padding:8px;">
+                        Henüz kayıt yok.
+                    </div>
+                </div>
+            </div>
+            <div class="songs-side-card" style="margin-top:16px;">
+                <div style="font-size:13px; margin-bottom:8px;">Sana Özel Keşif</div>
+                <div id="homeRecommendationPreview" class="recommendation-list">
+                    Dinleme verin oluştuğunda burada sana özel öneriler gözükecek.
+                </div>
+            </div>
         </div>
     </section>
 
@@ -627,26 +120,44 @@
         <h2>Kayıt Ol</h2>
         <p class="muted">Buradan yeni kullanıcı oluşturup sonra giriş ekranından login olabilirsin.</p>
 
-        <div style="max-width:360px;">
+        <form id="registerForm" style="max-width:360px;">
             <label>Kullanıcı adı</label>
-            <input id="regUsername" type="text" placeholder="username">
+            <input id="regUsername" type="text" placeholder="username" autocomplete="username">
             <label>Email (opsiyonel)</label>
-            <input id="regEmail" type="email" placeholder="mail@ornek.com">
+            <input id="regEmail" type="email" placeholder="mail@ornek.com" autocomplete="email">
             <label>Şifre</label>
-            <input id="regPassword" type="password" placeholder="123456">
-            <button class="btn primary" onclick="register()">Kayıt Ol</button>
-        </div>
+            <input id="regPassword" type="password" placeholder="123456" autocomplete="new-password">
+            <button type="submit" class="btn primary">Kayıt Ol</button>
+        </form>
     </section>
 
     <!-- ŞARKILAR -->
     <section id="page-songs" class="page">
         <h2>Şarkılar</h2>
         <p class="muted" style="margin-bottom:8px;">
-            Giriş yaptıysan şarkılar otomatik yüklenir. Satıra tıkla, alttaki player’dan çalsın.
+            Yerel kütüphaneyi açabilir veya Jamendo üzerinden telifsiz parça arayabilirsin.
         </p>
 
         <div class="songs-layout">
             <div>
+                <div class="catalog-toolbar">
+                    <input id="catalogSearchInput" type="text" placeholder="Şarkı veya şarkıcı ara">
+                    <select id="catalogArtistFilter">
+                        <option value="">Tüm sanatçılar</option>
+                    </select>
+                    <select id="catalogSourceFilter">
+                        <option value="LOCAL">Sadece Yerel</option>
+                        <option value="JAMENDO">Sadece Jamendo</option>
+                        <option value="ALL">Tümü</option>
+                    </select>
+                    <button id="applyCatalogFiltersBtn" class="btn gray" style="margin-top:0;">Filtrele</button>
+                    <button id="clearCatalogFiltersBtn" class="btn gray" style="margin-top:0;">Temizle</button>
+                    <button id="searchJamendoBtn" class="btn secondary" style="margin-top:0;">Jamendo Ara</button>
+                    <button id="showLocalSongsBtn" class="btn gray" style="margin-top:0;">Yerel Şarkılar</button>
+                </div>
+                <div id="catalogSummary" class="muted" style="margin-bottom:8px;">
+                    Yerel şarkılar gösteriliyor.
+                </div>
                 <div class="list">
                     <table class="songs-table">
                         <thead>
@@ -655,10 +166,10 @@
                             <th>Başlık</th>
                             <th>Şarkıcı</th>
                             <th style="width:60px; text-align:right;">Süre</th>
+                            <th style="width:40px; text-align:center;"></th>
                         </tr>
                         </thead>
-                        <tbody id="songsTableBody">
-                        </tbody>
+                        <tbody id="songsTableBody"></tbody>
                     </table>
                 </div>
 
@@ -667,7 +178,7 @@
                     <h3>Seçili şarkıyı düzenle (Admin)</h3>
                     <p class="muted">
                         Bu bölüm yalnızca admin için. Backend şu an sadece POST /songs destekliyorsa,
-                        PUT isteği 405/404 dönebilir; o kısmı backend’de eklemen gerekecek.
+                        PUT isteği 405/404 dönebilir; o kısmı backend'de eklemen gerekecek.
                     </p>
                     <label>Şarkı ID (readonly)</label>
                     <input id="editSongId" type="text" readonly>
@@ -678,7 +189,7 @@
                     <label>Süre (saniye)</label>
                     <input id="editSongDuration" type="number">
 
-                    <button class="btn primary" onclick="updateSong()">Kaydet (PUT /songs/{id})</button>
+                    <button id="updateSongBtn" class="btn primary">Kaydet (PUT /songs/{id})</button>
                 </div>
             </div>
 
@@ -688,8 +199,12 @@
                     • Liste otomatik gelir, satıra tıklayınca alt player çalar. <br>
                     • 🎯 ile şarkının ortasına atlayabilirsin. <br>
                     • Ses kaydırıcıyla sesi aç/kıs. <br>
-                    • “Playlist’e ekle” tuşu ile hangi listeye ekleyeceğini seçersin.
+                    • "Playlist'e ekle" tuşu ile hangi listeye ekleyeceğini seçersin.
                 </p>
+                <div style="font-size:13px; margin:14px 0 6px;">Senin için öneriler</div>
+                <div id="recommendationList" class="recommendation-list">
+                    <div class="muted">Bir şarkı seçtiğinde burada benzer öneriler gözükecek.</div>
+                </div>
             </div>
         </div>
     </section>
@@ -698,14 +213,15 @@
     <section id="page-artists" class="page">
         <h2>Sanatçılar (Admin)</h2>
         <p class="muted">Bu ekran adminlere özel.</p>
-        <button class="btn primary" onclick="getArtists()">Sanatçıları Getir (GET /artists)</button>
+        <p id="artistRoleText" class="muted" style="margin-bottom:10px;"></p>
+        <button id="loadArtistsBtn" class="btn primary">Sanatçıları Getir (GET /artists)</button>
         <div id="artistsList" class="list" style="margin-top:10px;">Henüz sanatçı çekilmedi.</div>
 
         <div id="artistAdminBox">
             <h3 style="margin-top:16px;font-size:15px;">Yeni Sanatçı Ekle (POST /artists)</h3>
             <label>Sanatçı Adı</label>
             <input id="artistName" type="text" placeholder="Tarkan">
-            <button class="btn secondary" onclick="createArtist()">Sanatçı Ekle</button>
+            <button id="createArtistBtn" class="btn secondary">Sanatçı Ekle</button>
         </div>
     </section>
 
@@ -721,7 +237,7 @@
                 <h3 style="font-size:14px;margin-top:0;">Yeni Playlist Oluştur</h3>
                 <label>Playlist adı</label>
                 <input id="playlistName" type="text" placeholder="Favorilerim">
-                <button class="btn primary" onclick="createPlaylist()">Oluştur</button>
+                <button id="createPlaylistBtn" class="btn primary">Oluştur</button>
 
                 <h3 style="font-size:14px;margin-top:16px;">Playlistlerin</h3>
                 <div id="playlistsList" class="list" style="padding:8px; max-height:260px; overflow:auto;">
@@ -730,7 +246,24 @@
             </div>
 
             <div class="playlists-right">
-                <h3 id="playlistDetailTitle" style="font-size:14px;margin-top:0;">Seçili playlist yok</h3>
+                <div class="playlist-detail-head">
+                    <div id="playlistDetailCover" class="playlist-cover large">P</div>
+                    <div class="playlist-detail-copy">
+                        <h3 id="playlistDetailTitle" style="font-size:14px;margin-top:0;">Seçili playlist yok</h3>
+                        <div id="playlistDetailMeta" class="playlist-meta">Kapak ve içerik burada görünecek.</div>
+                    </div>
+                </div>
+                <div class="playlist-detail-toolbar">
+                    <input id="playlistRenameInput" type="text" placeholder="Playlist adı" disabled>
+                    <button id="renamePlaylistBtn" class="btn secondary" style="margin-top:0;" disabled>Adı Güncelle</button>
+                    <button id="deletePlaylistBtn" class="btn gray" style="margin-top:0;" disabled>Playlisti Sil</button>
+                </div>
+                <div class="playlist-cover-toolbar">
+                    <input id="playlistCoverInput" type="text" placeholder="Kapak görseli URL'si" disabled>
+                    <button id="savePlaylistCoverBtn" class="btn secondary" style="margin-top:0;" disabled>Kapağı Kaydet</button>
+                    <button id="useCurrentSongCoverBtn" class="btn gray" style="margin-top:0;" disabled>Şu An Çalanı Kullan</button>
+                    <button id="clearPlaylistCoverBtn" class="btn gray" style="margin-top:0;" disabled>Kapağı Temizle</button>
+                </div>
                 <div id="playlistContent" class="list playlist-songs-list" style="padding:8px; max-height:260px; overflow:auto;">
                     Bir playlist seçtiğinde şarkılar burada gözükecek.
                 </div>
@@ -738,31 +271,182 @@
         </div>
     </section>
 
-    <!-- MÜZİK EKLE -->
-    <section id="page-addSong" class="page">
-        <h2>Müzik Ekle (Admin – POST /songs)</h2>
-        <p class="muted" style="margin-top:-4px;">
-            Body: <code>{ "name", "artistId", "duration", "playlistIdList" }</code>.
-            Sadece <b>name</b> ve <b>artistId</b> zorunlu. ArtistId’yi artık otomatik dolduruyoruz.
+    <section id="page-users" class="page">
+        <h2>Kullanıcı Yönetimi (Admin)</h2>
+        <p class="muted" style="margin-bottom:8px;">
+            Buradan kullanıcıları görebilir ve rollerini güvenli şekilde değiştirebilirsin.
+        </p>
+        <button id="loadUsersBtn" class="btn primary">Kullanıcıları Yenile</button>
+        <div id="usersAdminList" class="list" style="padding:8px; margin-top:12px;">
+            Henüz kullanıcı verisi yüklenmedi.
+        </div>
+    </section>
+
+    <section id="page-audit" class="page">
+        <h2>Audit Log (Admin)</h2>
+        <p class="muted" style="margin-bottom:8px;">
+            Kritik yönetim işlemleri burada zaman sırasıyla tutulur.
+        </p>
+        <div class="audit-toolbar">
+            <input id="auditSearchInput" type="text" placeholder="Detay, id veya anahtar kelime ara">
+            <input id="auditActorInput" type="text" placeholder="Kullanıcı adına göre filtrele">
+            <select id="auditActionFilter">
+                <option value="">Tüm aksiyonlar</option>
+            </select>
+            <select id="auditTargetFilter">
+                <option value="">Tüm hedefler</option>
+            </select>
+            <button id="applyAuditFiltersBtn" class="btn gray" style="margin-top:0;">Filtrele</button>
+            <button id="clearAuditFiltersBtn" class="btn gray" style="margin-top:0;">Temizle</button>
+            <button id="exportAuditCsvBtn" class="btn secondary" style="margin-top:0;">CSV / Excel İndir</button>
+            <button id="loadAuditLogsBtn" class="btn primary" style="margin-top:0;">Yenile</button>
+        </div>
+        <div class="audit-grid">
+            <div>
+                <div id="auditLogList" class="list" style="padding:8px; margin-top:12px;">
+                    Henüz audit kaydı yüklenmedi.
+                </div>
+            </div>
+            <div class="audit-side-column">
+                <div class="songs-side-card">
+                    <div style="font-size:13px; margin-bottom:8px;">Kullanıcı Özeti</div>
+                    <div id="auditActorSummaryList" class="audit-actor-summary-list">
+                        Özet yüklenmeyi bekliyor.
+                    </div>
+                </div>
+                <div class="songs-side-card" style="margin-top:12px;">
+                    <div id="auditActorDetailTitle" style="font-size:13px; margin-bottom:6px;">Kullanıcı seçilmedi</div>
+                    <div id="auditActorDetailMeta" class="muted" style="margin-bottom:8px;">
+                        Soldaki özetten bir kullanıcı seç.
+                    </div>
+                    <div id="auditActorDetailList" class="audit-detail-list">
+                        Henüz detay gösterilecek kayıt yok.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section id="page-favorites" class="page">
+        <h2>Favorilerim</h2>
+        <p class="muted" style="margin-bottom:8px;">Favoriye aldığın şarkılar burada listelenir.</p>
+        <div id="favoritesList" class="list" style="padding:8px;">Henüz favori şarkın yok.</div>
+    </section>
+
+    <section id="page-history" class="page">
+        <h2>Dinleme Geçmişi</h2>
+        <p class="muted" style="margin-bottom:8px;">Son dinlediklerin ve en çok döndürdüklerin burada görünür.</p>
+        <div class="history-grid">
+            <div>
+                <h3 style="font-size:14px; margin-top:0;">Son Dinlenenler</h3>
+                <div id="recentHistoryList" class="list" style="padding:8px;">Henüz kayıt yok.</div>
+            </div>
+            <div>
+                <h3 style="font-size:14px; margin-top:0;">En Çok Dinlenenler</h3>
+                <div id="topHistoryList" class="list" style="padding:8px;">Henüz kayıt yok.</div>
+            </div>
+        </div>
+    </section>
+
+    <section id="page-insights" class="page">
+        <h2>İçgörüler</h2>
+        <p class="muted" style="margin-bottom:8px;">
+            Favorilerin ve dinleme alışkanlığına göre oluşan özetler ve kişiselleştirilmiş öneriler burada.
         </p>
 
-        <label>Şarkı Adı (name)</label>
-        <input id="songTitle" type="text" placeholder="Kuzu Kuzu">
-
-        <label>Sanatçı (isim yazarak seç)</label>
-        <div id="artistSuggestBox">
-            <input id="songArtistNameInput" type="text" placeholder="Tarkan yazmaya başla...">
-            <div id="artistSuggestions" style="display:none;"></div>
+        <div id="insightStatsGrid" class="insights-stats-grid">
+            <div class="insight-stat-card">
+                <div class="insight-stat-label">Toplam Dinleme</div>
+                <div class="insight-stat-value">0</div>
+            </div>
         </div>
-        <input id="songArtistIdHidden" type="hidden">
 
-        <label>Süre (duration, saniye - opsiyonel)</label>
-        <input id="songDuration" type="number" placeholder="270">
+        <div class="insights-grid">
+            <div class="songs-side-card">
+                <div style="font-size:13px; margin-bottom:8px;">Sana Özel Öneriler</div>
+                <div id="personalRecommendationList" class="recommendation-list">
+                    Dinleme verin oluştukça burada daha güçlü öneriler göreceksin.
+                </div>
+            </div>
+            <div class="songs-side-card">
+                <div style="font-size:13px; margin-bottom:8px;">En Çok Dinlediğin Sanatçılar</div>
+                <div id="topArtistsList" class="list" style="padding:8px;">
+                    Henüz yeterli veri yok.
+                </div>
+            </div>
+        </div>
+    </section>
 
-        <label>Playlist ID Listesi (opsiyonel, 1,2,3)</label>
-        <input id="songPlaylistIds" type="text" placeholder="">
+    <!-- MÜZİK EKLE -->
+    <section id="page-addSong" class="page">
+        <h2>Müzik Ekle (Admin)</h2>
+        <p class="muted" style="margin-top:-4px;">
+            İki farklı akışın var: hızlı metadata kaydı veya doğrudan MP3 yükleme.
+        </p>
 
-        <button class="btn primary" onclick="createSong()">Şarkıyı Kaydet</button>
+        <div class="song-admin-grid">
+            <div class="song-admin-card">
+                <h3>Hızlı Katalog Kaydı</h3>
+                <p class="muted">
+                    <code>POST /songs</code> ile sadece metadata kaydeder. Yerel dosya bağlamaz.
+                </p>
+
+                <label>Şarkı Adı</label>
+                <input id="songTitle" type="text" placeholder="Kuzu Kuzu">
+
+                <label>Sanatçı (isim yazarak seç)</label>
+                <div id="artistSuggestBox">
+                    <input id="songArtistNameInput" type="text" placeholder="Tarkan yazmaya başla...">
+                    <div id="artistSuggestions" style="display:none;"></div>
+                </div>
+                <input id="songArtistIdHidden" type="hidden">
+
+                <label>Süre (saniye - opsiyonel)</label>
+                <input id="songDuration" type="number" placeholder="270">
+
+                <label>Playlist ID Listesi (opsiyonel, 1,2,3)</label>
+                <input id="songPlaylistIds" type="text" placeholder="">
+
+                <div class="song-admin-actions">
+                    <button id="createSongBtn" class="btn primary">Kayıt Oluştur</button>
+                </div>
+            </div>
+
+            <div class="song-admin-card">
+                <h3>MP3 Yükle ve Kaydet</h3>
+                <p class="muted">
+                    <code>POST /songs/upload</code> ile dosyayı yükler, süreyi otomatik çözer ve stream edilebilir hale getirir.
+                </p>
+
+                <label>Şarkı Adı</label>
+                <input id="uploadSongName" type="text" placeholder="Yeni Demo Şarkı">
+
+                <label>Sanatçı (isim yazarak seç)</label>
+                <div id="uploadArtistSuggestBox">
+                    <input id="uploadArtistNameInput" type="text" placeholder="Sanatçı ara...">
+                    <div id="uploadArtistSuggestions" style="display:none;"></div>
+                </div>
+                <input id="uploadArtistIdHidden" type="hidden">
+
+                <label>Albüm ID (opsiyonel)</label>
+                <input id="uploadAlbumId" type="number" placeholder="Varsa albüm id">
+
+                <label>Yüklendikten sonra playlist'e ekle (opsiyonel)</label>
+                <select id="uploadPlaylistSelect">
+                    <option value="">Playlist seçme</option>
+                </select>
+
+                <label>MP3 Dosyası</label>
+                <input id="uploadSongFile" type="file" accept=".mp3,audio/mpeg">
+
+                <div class="upload-drop-hint">
+                    Dosyayı seçtiğinde backend süreyi otomatik hesaplar. MP3 dışında format kabul etmiyor.
+                </div>
+
+                <div class="song-admin-actions">
+                    <button id="uploadSongBtn" class="btn secondary">MP3 Yükle</button>
+                </div>
+            </div>
+        </div>
     </section>
 
     <div id="status">Durum: Rol seçmeni bekliyorum...</div>
@@ -785,24 +469,24 @@
 
     <div class="player-center">
         <div class="player-controls">
-            <button class="player-btn" onclick="seekRelative(-5)">⏪</button>
-            <button class="player-btn" onclick="jumpToMiddle()">🎯</button>
-            <button class="player-btn main" id="playPauseBtn" onclick="togglePlay()">▶</button>
-            <button class="player-btn" onclick="seekRelative(5)">⏩</button>
+            <button id="seekBackBtn" class="player-btn">⏪</button>
+            <button id="jumpMiddleBtn" class="player-btn">🎯</button>
+            <button class="player-btn main" id="playPauseBtn">▶</button>
+            <button id="seekForwardBtn" class="player-btn">⏩</button>
         </div>
         <div class="player-progress">
             <span id="currentTimeLabel">0:00</span>
-            <div class="progress-bar-bg" onclick="clickProgress(event)">
+            <div id="progressBarBg" class="progress-bar-bg">
                 <div class="progress-bar-fill" id="progressBarFill"></div>
             </div>
             <span id="durationLabel">0:00</span>
         </div>
     </div>
 
-    <div class="player-right">
+            <div class="player-right">
         <div style="margin-bottom:2px;">Ses & Playlist</div>
         <div class="vol-row">
-            <button class="player-btn" onclick="changeVolume(-0.1)">🔉</button>
+            <button id="volumeDownBtn" class="player-btn">ğŸ”‰</button>
             <input
                     type="range"
                     id="volumeSlider"
@@ -810,15 +494,20 @@
                     max="1"
                     step="0.01"
                     value="1"
-                    oninput="onVolumeSliderChange(this.value)"
             >
-            <button class="player-btn" onclick="changeVolume(0.1)">🔊</button>
+            <button id="volumeUpBtn" class="player-btn">ğŸ”Š</button>
         </div>
         <button
+                id="addToPlaylistBtn"
                 class="player-btn"
-                style="margin-top:6px; width:100%; padding:4px 8px; font-size:11px;"
-                onclick="openPlaylistModalForCurrentSong()">
+                style="margin-top:6px; width:100%; padding:4px 8px; font-size:11px;">
             + Playlist'e ekle
+        </button>
+        <button
+                id="favoriteToggleBtn"
+                class="player-btn"
+                style="margin-top:6px; width:100%; padding:4px 8px; font-size:11px;">
+            ♡ Favorilere ekle
         </button>
         <div style="margin-top:4px;">Şarkı çalarken playlistine ekleyebilirsin 🎶</div>
     </div>
@@ -830,7 +519,7 @@
         <div class="modal-title">Hangi playliste eklensin?</div>
         <div class="modal-text">Aşağıdan bir playlist seç.</div>
         <div id="playlistModalList"></div>
-        <button class="modal-close-btn" onclick="closePlaylistModal()">Vazgeç</button>
+        <button id="playlistModalCloseBtn" class="modal-close-btn">Vazgeç</button>
     </div>
 </div>
 
@@ -843,830 +532,24 @@
     </div>
 </div>
 
-<script>
-    const CONFIG = {
-        baseUrl: "http://localhost:8080",
-        endpoints: {
-            register: "/auth/register",
-            login: "/auth/login",
-            songs: "/songs",
-            artists: "/artists",
-            playlists: "/playlists"
-        }
-    };
-
-    let authToken = null;
-    let loggedUsername = null;
-    let currentRole = null;
-    let currentSong = null;
-    let isPlaying = false;
-
-    let playlistsCache = [];
-    let activePlaylistId = null;
-    let pendingPlaylistSong = null;
-
-    let songsCache = [];
-    let allArtistsCache = [];
-
-    const audio = document.getElementById("audioPlayer");
-    const playerTitleEl = document.getElementById("playerTitle");
-    const playerArtistEl = document.getElementById("playerArtist");
-    const playPauseBtn = document.getElementById("playPauseBtn");
-    const currentTimeLabel = document.getElementById("currentTimeLabel");
-    const durationLabel = document.getElementById("durationLabel");
-    const progressBarFill = document.getElementById("progressBarFill");
-    const volumeSlider = document.getElementById("volumeSlider");
-    const playerBar = document.getElementById("playerBar");
-
-    const playlistModalOverlay = document.getElementById("playlistModalOverlay");
-    const playlistModalList = document.getElementById("playlistModalList");
-
-    const centerModalOverlay = document.getElementById("centerModalOverlay");
-    const centerModalTitle = document.getElementById("centerModalTitle");
-    const centerModalText = document.getElementById("centerModalText");
-
-    const artistSuggestionsBox = document.getElementById("artistSuggestions");
-    const artistNameInput = document.getElementById("songArtistNameInput");
-    const artistIdHidden = document.getElementById("songArtistIdHidden");
-
-    function formatTime(sec) {
-        if (!isFinite(sec)) return "0:00";
-        sec = Math.floor(sec);
-        const m = Math.floor(sec / 60);
-        const s = sec % 60;
-        return m + ":" + (s < 10 ? "0" + s : s);
-    }
-
-    audio.volume = 1;
-
-    audio.addEventListener("timeupdate", () => {
-        currentTimeLabel.textContent = formatTime(audio.currentTime);
-        durationLabel.textContent = formatTime(audio.duration || 0);
-        const ratio = audio.duration ? (audio.currentTime / audio.duration) : 0;
-        progressBarFill.style.width = (ratio * 100).toFixed(1) + "%";
-    });
-
-    audio.addEventListener("ended", () => {
-        isPlaying = false;
-        playPauseBtn.textContent = "▶";
-    });
-
-    function togglePlay() {
-        if (!currentSong || !audio.src) return;
-
-        if (audio.paused) {
-            audio.play().then(() => {
-                isPlaying = true;
-                playPauseBtn.textContent = "⏸";
-            }).catch(err => {
-                console.error(err);
-                setStatus("Şarkı çalınırken hata: " + err.message, false);
-            });
-        } else {
-            audio.pause();
-            isPlaying = false;
-            playPauseBtn.textContent = "▶";
-        }
-    }
-
-    function seekRelative(deltaSec) {
-        if (!audio.duration) return;
-        let t = audio.currentTime + deltaSec;
-        if (t < 0) t = 0;
-        if (t > audio.duration) t = audio.duration;
-        audio.currentTime = t;
-    }
-
-    function clickProgress(ev) {
-        const bar = ev.currentTarget;
-        const rect = bar.getBoundingClientRect();
-        const ratio = (ev.clientX - rect.left) / rect.width;
-        if (!audio.duration) return;
-        audio.currentTime = ratio * audio.duration;
-    }
-
-    function jumpToMiddle() {
-        if (!audio.duration) return;
-        audio.currentTime = audio.duration / 2;
-    }
-
-    function changeVolume(delta) {
-        let v = audio.volume + delta;
-        if (v < 0) v = 0;
-        if (v > 1) v = 1;
-        audio.volume = v;
-        volumeSlider.value = v.toFixed(2);
-    }
-
-    function onVolumeSliderChange(v) {
-        const val = Number(v);
-        if (Number.isFinite(val)) {
-            audio.volume = val;
-        }
-    }
-
-    function setStatus(msg, ok = true) {
-        const el = document.getElementById("status");
-        el.innerHTML = `Durum: ${ok ? '<span class="ok">'+msg+'</span>' : '<span class="err">'+msg+'</span>'}`;
-    }
-
-    function showPopup(message) {
-        const p = document.getElementById("popup");
-        p.textContent = message;
-        p.style.display = "block";
-        setTimeout(() => { p.style.display = "none"; }, 2000);
-    }
-
-    function showCenterModal(title, text) {
-        centerModalTitle.textContent = title || "Bilgi";
-        centerModalText.textContent = text || "";
-        centerModalOverlay.style.display = "flex";
-        setTimeout(() => {
-            centerModalOverlay.style.display = "none";
-        }, 1500);
-    }
-
-    function openPlaylistModalForCurrentSong() {
-        if (!currentSong || !currentSong.id) {
-            setStatus("Önce bir şarkı seçip çal.", false);
-            return;
-        }
-        if (!playlistsCache || playlistsCache.length === 0) {
-            setStatus("Önce bir playlist oluştur.", false);
-            showCenterModal("Playlist yok", "Şarkıyı eklemek için önce en az bir playlist oluştur.");
-            return;
-        }
-        pendingPlaylistSong = currentSong;
-        playlistModalList.innerHTML = "";
-
-        playlistsCache.forEach(pl => {
-            const div = document.createElement("div");
-            div.className = "playlist-modal-item";
-            const name = pl.name || "(isim yok)";
-            const count = pl.songCount ?? (Array.isArray(pl.songs) ? pl.songs.length : null);
-            div.innerHTML = `
-                <div>${name}</div>
-                <div style="font-size:11px;color:#9ca3af;">${count != null ? count + ' şarkı' : ''}</div>
-            `;
-            div.onclick = () => addSongToPlaylistFromModal(pl.id);
-            playlistModalList.appendChild(div);
-        });
-
-        playlistModalOverlay.style.display = "flex";
-    }
-
-    function closePlaylistModal() {
-        playlistModalOverlay.style.display = "none";
-        pendingPlaylistSong = null;
-    }
-
-    // ✅ Playlist'e şarkı ekleme (405 fixli)
-    async function addSongToPlaylistFromModal(playlistId) {
-        if (!pendingPlaylistSong || !pendingPlaylistSong.id) return;
-
-        const path = `${CONFIG.endpoints.playlists}/${playlistId}/songs/${pendingPlaylistSong.id}`;
-
-        const { status, ok, data } = await apiRequest(path, "POST", null, true);
-        setStatus("Playlist’e şarkı ekleme sonucu: HTTP " + status, ok);
-        console.log("addSongToPlaylistFromModal response:", data);
-
-        if (ok) {
-            const title =
-                pendingPlaylistSong.name ||
-                pendingPlaylistSong.title ||
-                pendingPlaylistSong.songName ||
-                "Şarkı";
-            closePlaylistModal();
-            showPopup("Şarkı playlistine eklendi");
-            showCenterModal("Başarılı", `"${title}" playlistine eklendi.`);
-            if (Number(playlistId) === Number(activePlaylistId)) {
-                loadPlaylistContent(playlistId);
-            }
-            loadPlaylists();
-        }
-    }
-
-    function updateUserInfo() {
-        const el = document.getElementById("userInfo");
-        if (!currentRole) {
-            el.textContent = "Rol seçilmedi";
-            return;
-        }
-        const roleText = currentRole === "ADMIN" ? "Admin" : "Kullanıcı";
-        if (authToken && loggedUsername) {
-            el.innerHTML = `Rol: <b>${roleText}</b> | Giriş yapan: <b>${loggedUsername}</b>`;
-        } else {
-            el.innerHTML = `Rol: <b>${roleText}</b> | Giriş yapılmamış`;
-        }
-    }
-
-    function applyRoleToUI() {
-        const panelLabel = document.getElementById("panelLabel");
-        const homeTitle  = document.getElementById("homeTitle");
-        const homeDesc   = document.getElementById("homeDesc");
-        const artistRoleText = document.getElementById("artistRoleText");
-        const artistAdminBox = document.getElementById("artistAdminBox");
-        const songEditContainer = document.getElementById("songEditContainer");
-
-        if (currentRole === "ADMIN") {
-            panelLabel.textContent = "Admin Paneli";
-            homeTitle.textContent  = "Admin Girişi";
-            homeDesc.textContent   = "Adminler için; şarkı, sanatçı ve playlist yönetimi.";
-            if (artistRoleText) artistRoleText.textContent = "Adminler sanatçı ekleyebilir.";
-            if (artistAdminBox) artistAdminBox.style.display = "";
-            if (songEditContainer) songEditContainer.style.display = "block";
-        } else if (currentRole === "USER") {
-            panelLabel.textContent = "Kullanıcı Paneli";
-            homeTitle.textContent  = "Kullanıcı Girişi";
-            homeDesc.textContent   = "Şarkı dinleyip playlist oluşturabileceğin ekran.";
-            if (artistRoleText) artistRoleText.textContent = "Kullanıcılar sanatçı ekleyemez.";
-            if (artistAdminBox) artistAdminBox.style.display = "none";
-            if (songEditContainer) songEditContainer.style.display = "none";
-        }
-
-        document.querySelectorAll("nav button").forEach(btn => {
-            const needRole = btn.getAttribute("data-role");
-            if (!needRole || needRole === "BOTH") {
-                btn.style.display = "inline-block";
-            } else if (needRole === "ADMIN" && currentRole !== "ADMIN") {
-                btn.style.display = "none";
-            } else if (needRole === "USER" && currentRole !== "USER") {
-                btn.style.display = "none";
-            } else {
-                btn.style.display = "inline-block";
-            }
-        });
-
-        updateUserInfo();
-    }
-
-    function enterAs(role) {
-        currentRole = role;
-        localStorage.setItem("atifyRole", role);
-
-        document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-        document.getElementById("page-home").classList.add("active");
-        document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
-        document.querySelector('nav button[data-page="home"]').classList.add("active");
-        applyRoleToUI();
-        setStatus(role === "ADMIN" ? "Admin paneline geçtin." : "Kullanıcı paneline geçtin.", true);
-    }
-
-    function showPage(pageId, btn) {
-        if (!currentRole) {
-            setStatus("Önce Admin / Kullanıcı olarak giriş tipini seç.", false);
-            return;
-        }
-        if (currentRole !== "ADMIN" && (pageId === "artists" || pageId === "addSong")) {
-            setStatus("Bu alan sadece admin için.", false);
-            return;
-        }
-
-        document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-        const pageEl = document.getElementById("page-" + pageId);
-        if (pageEl) pageEl.classList.add("active");
-
-        if (btn) {
-            document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
-            btn.classList.add("active");
-        }
-
-        if (pageId === "songs" && authToken) {
-            getSongs();
-        }
-        if (pageId === "playlists" && authToken) {
-            loadPlaylists();
-        }
-    }
-
-    function goHome() {
-        if (!currentRole) {
-            document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-            document.getElementById("page-roleSelect").classList.add("active");
-            document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
-        } else {
-            showPage("home", document.querySelector('nav button[data-page="home"]'));
-        }
-    }
-
-    async function apiRequest(path, method = "GET", body = null, withAuth = true) {
-        const url = CONFIG.baseUrl + path;
-        const options = { method, headers: { "Content-Type": "application/json" } };
-        if (withAuth && authToken) {
-            options.headers["Authorization"] = "Bearer " + authToken;
-        }
-        if (body != null) {
-            options.body = JSON.stringify(body);
-        }
-        try {
-            const res = await fetch(url, options);
-            const text = await res.text();
-            let json;
-            try { json = text ? JSON.parse(text) : null; } catch { json = text; }
-            return { status: res.status, ok: res.ok, data: json };
-        } catch (e) {
-            setStatus("İstek hatası: " + e.message, false);
-            throw e;
-        }
-    }
-
-    async function register() {
-        const username = document.getElementById("regUsername").value.trim();
-        const email    = document.getElementById("regEmail").value.trim();
-        const password = document.getElementById("regPassword").value.trim();
-
-        if (!username || !password) {
-            setStatus("Kullanıcı adı ve şifre zorunlu", false);
-            return;
-        }
-
-        const payload = { username, password, email: email || undefined };
-        const { status, ok, data } = await apiRequest(CONFIG.endpoints.register, "POST", payload, false);
-        setStatus("Kayıt sonucu: HTTP " + status, ok);
-        console.log("register response:", data);
-
-        if (ok) {
-            showPopup("Kayıt başarılı");
-            showCenterModal("Kayıt tamamlandı", "Şimdi Giriş sayfasından login olabilirsin.");
-        }
-    }
-
-    async function login() {
-        const username = document.getElementById("loginUsername").value.trim();
-        const password = document.getElementById("loginPassword").value.trim();
-
-        if (!username || !password) {
-            setStatus("Kullanıcı adı ve şifre zorunlu", false);
-            return;
-        }
-
-        const payload = { username, password };
-        const { status, ok, data } = await apiRequest(CONFIG.endpoints.login, "POST", payload, false);
-        setStatus("Giriş sonucu: HTTP " + status, ok);
-        console.log("login response:", data);
-
-        if (ok) {
-            const token = data && (data.token || data.jwt || data.jwtToken || data.accessToken);
-            if (token) {
-                authToken = token;
-                loggedUsername = username;
-                localStorage.setItem("atifyToken", token);
-                localStorage.setItem("atifyUser", username);
-                if (currentRole) {
-                    localStorage.setItem("atifyRole", currentRole);
-                }
-                updateUserInfo();
-                showPopup("Giriş başarılı");
-                showPage("songs", document.querySelector('nav button[data-page="songs"]'));
-                getSongs();
-                loadPlaylists();
-            } else {
-                setStatus("Login OK ama token alanı bulunamadı.", false);
-            }
-        }
-    }
-
-    function logout() {
-        authToken = null;
-        loggedUsername = null;
-        localStorage.removeItem("atifyToken");
-        localStorage.removeItem("atifyUser");
-        updateUserInfo();
-        setStatus("Çıkış yapıldı");
-        showPopup("Çıkış yapıldı");
-    }
-
-    function asArrayMaybe(data) {
-        if (Array.isArray(data)) return data;
-        if (data && Array.isArray(data.content)) return data.content;
-        if (data && Array.isArray(data.songs)) return data.songs;
-        return [];
-    }
-
-    async function getSongs() {
-        const { status, ok, data } = await apiRequest(CONFIG.endpoints.songs, "GET", null, true);
-        setStatus("Şarkılar getirildi: HTTP " + status, ok);
-
-        const tbody = document.getElementById("songsTableBody");
-        const arr = asArrayMaybe(data);
-        songsCache = ok ? arr : [];
-
-        tbody.innerHTML = "";
-
-        if (!ok || arr.length === 0) {
-            const tr = document.createElement("tr");
-            const td = document.createElement("td");
-            td.colSpan = 4;
-            td.style.padding = "10px";
-            td.style.fontSize = "12px";
-            td.style.color = "#9ca3af";
-            td.textContent = typeof data === "string" ? data : "Hiç şarkı bulunamadı.";
-            tr.appendChild(td);
-            tbody.appendChild(tr);
-            return;
-        }
-
-        arr.forEach((song, index) => {
-            const tr = document.createElement("tr");
-            tr.className = "songs-body-row";
-
-            const title = song.name || song.title || song.songName || "(isim yok)";
-            const artistName = song.artistName || "Bilinmeyen Şarkıcı";
-            const duration = song.duration ?? 0;
-
-            const tdPlay = document.createElement("td");
-            tdPlay.className = "play-icon-cell";
-            tdPlay.textContent = "▶";
-
-            const tdTitle = document.createElement("td");
-            tdTitle.innerHTML = `
-                <div class="song-title-cell">
-                    <div class="song-cover">${(index+1)}</div>
-                    <div class="song-texts">
-                        <span class="song-name">${title}</span>
-                        <span class="song-artist">${artistName}</span>
-                    </div>
-                </div>
-            `;
-
-            const tdArtist = document.createElement("td");
-            tdArtist.textContent = artistName;
-
-            const tdDuration = document.createElement("td");
-            tdDuration.style.textAlign = "right";
-            tdDuration.textContent = duration ? formatTime(duration) : "";
-
-            tr.appendChild(tdPlay);
-            tr.appendChild(tdTitle);
-            tr.appendChild(tdArtist);
-            tr.appendChild(tdDuration);
-
-            tr.onclick = () => playSong(song);
-
-            tbody.appendChild(tr);
-        });
-    }
-
-    function playSong(song) {
-        currentSong = song;
-        const title = song.name || song.title || song.songName || "(isim yok)";
-        const artist = song.artistName || "Bilinmeyen Şarkıcı";
-        const id = song.id ?? null;
-
-        if (!id) {
-            setStatus("Şarkının id alanı yok, dosya yolu üretemiyorum.", false);
-            return;
-        }
-
-        const url = CONFIG.baseUrl + "/audio/" + id + ".mp3";
-
-        playerTitleEl.textContent = title;
-        playerArtistEl.textContent = artist;
-
-        // admin ise edit kutusunu doldur
-        if (currentRole === "ADMIN") {
-            const editId = document.getElementById("editSongId");
-            const editName = document.getElementById("editSongName");
-            const editDur = document.getElementById("editSongDuration");
-            if (editId && editName && editDur) {
-                editId.value = id;
-                editName.value = title;
-                editDur.value = song.duration ?? 0;
-            }
-        }
-
-        audio.src = url;
-        audio.play()
-            .then(() => {
-                isPlaying = true;
-                playPauseBtn.textContent = "⏸";
-                setStatus("Şarkı çalıyor: " + title, true);
-                playerBar.classList.remove("hidden"); // ilk şarkıda player'ı göster
-            })
-            .catch(err => {
-                console.error(err);
-                setStatus("Şarkı çalınırken hata: " + err.message, false);
-            });
-    }
-
-    // Basit şarkı update (backend'de PUT yoksa hata döner)
-    async function updateSong() {
-        if (currentRole !== "ADMIN") {
-            setStatus("Şarkı düzenleme sadece admin için.", false);
-            return;
-        }
-        const id = document.getElementById("editSongId").value.trim();
-        const name = document.getElementById("editSongName").value.trim();
-        const durStr = document.getElementById("editSongDuration").value.trim();
-
-        if (!id || !name) {
-            setStatus("ID ve isim zorunlu.", false);
-            return;
-        }
-
-        let duration = 0;
-        if (durStr) {
-            const d = Number(durStr);
-            if (!Number.isNaN(d) && d >= 0) duration = d;
-        }
-
-        const payload = { name: name, duration: duration };
-        const path = `${CONFIG.endpoints.songs}/${id}`;
-
-        const { status, ok, data } = await apiRequest(path, "PUT", payload, true);
-        setStatus("Şarkı güncelleme sonucu: HTTP " + status, ok);
-        console.log("updateSong response:", data);
-
-        if (ok) {
-            showPopup("Şarkı güncellendi");
-            getSongs();
-        } else {
-            // muhtemel 404/405'e bilerek açıklama:
-            showCenterModal(
-                "Backend güncelleme yok",
-                "Frontend PUT /songs/" + id + " çağırdı ama backend bu endpoint’i tanımıyorsa 404/405 döner. Service’e update endpointi eklemen gerekiyor."
-            );
-        }
-    }
-
-    async function loadPlaylists() {
-        const { status, ok, data } = await apiRequest(CONFIG.endpoints.playlists, "GET", null, true);
-        setStatus("Playlistler getirildi: HTTP " + status, ok);
-
-        const arr = asArrayMaybe(data);
-        playlistsCache = ok ? arr : [];
-        renderPlaylistsList();
-    }
-
-    function renderPlaylistsList() {
-        const listEl = document.getElementById("playlistsList");
-        listEl.innerHTML = "";
-
-        if (!playlistsCache || playlistsCache.length === 0) {
-            listEl.textContent = "Henüz playlist yok. Üstten bir playlist adı girip oluşturabilirsin.";
-            return;
-        }
-
-        playlistsCache.forEach(pl => {
-            const div = document.createElement("div");
-            div.className = "playlist-item";
-            if (pl.id === activePlaylistId) div.classList.add("active");
-
-            const name = pl.name || "(isim yok)";
-            const songCount = pl.songCount ?? (Array.isArray(pl.songs) ? pl.songs.length : null);
-            const firstChar = name ? name.trim().charAt(0).toUpperCase() : "P";
-
-            div.innerHTML = `
-                <div class="playlist-cover">${firstChar}</div>
-                <div class="playlist-texts">
-                    <span class="playlist-name">${name}</span>
-                    <span class="playlist-meta">${songCount != null ? songCount + ' şarkı' : ''}</span>
-                </div>
-            `;
-
-            div.onclick = () => selectPlaylist(pl.id);
-
-            listEl.appendChild(div);
-        });
-    }
-
-    async function selectPlaylist(id) {
-        activePlaylistId = id;
-        renderPlaylistsList();
-        await loadPlaylistContent(id);
-    }
-
-    // GET /playlists/{id}/songs
-    async function loadPlaylistContent(id) {
-        if (!id && id !== 0) return;
-
-        const path = `${CONFIG.endpoints.playlists}/${id}/songs`;
-        const { status, ok, data } = await apiRequest(path, "GET", null, true);
-        setStatus("Playlist içeriği getirildi: HTTP " + status, ok);
-
-        const titleEl = document.getElementById("playlistDetailTitle");
-        const box = document.getElementById("playlistContent");
-
-        const plObj = playlistsCache.find(pl => Number(pl.id) === Number(id));
-        const name = plObj && plObj.name ? plObj.name : "Playlist";
-        titleEl.textContent = name;
-
-        if (!ok || !data) {
-            box.textContent = typeof data === "string" ? data : JSON.stringify(data, null, 2);
-            return;
-        }
-
-        const songsArr = asArrayMaybe(data);
-        if (songsArr.length === 0) {
-            box.textContent = "Bu playlistte henüz şarkı yok.";
-            return;
-        }
-
-        box.innerHTML = "";
-        songsArr.forEach(s => {
-            const div = document.createElement("div");
-            div.className = "item";
-            const title =
-                s.name ||
-                s.title ||
-                s.songName ||
-                "(isim yok)";
-            const artist = s.artistName || "Bilinmeyen Şarkıcı";
-            div.innerHTML = `<b>${title}</b> <span style="color:#9ca3af;font-size:11px;">– ${artist}</span>`;
-            box.appendChild(div);
-        });
-    }
-
-    async function createPlaylist() {
-        const name = document.getElementById("playlistName").value.trim();
-        if (!name) {
-            setStatus("Playlist adı zorunlu", false);
-            return;
-        }
-        const payload = { name };
-        const { status, ok, data } = await apiRequest(CONFIG.endpoints.playlists, "POST", payload, true);
-        setStatus("Playlist oluşturma sonucu: HTTP " + status, ok);
-        console.log("createPlaylist response:", data);
-        if (ok) {
-            showPopup("Playlist oluşturuldu");
-            document.getElementById("playlistName").value = "";
-            await loadPlaylists();
-        }
-    }
-
-    async function getArtists() {
-        const { status, ok, data } = await apiRequest(CONFIG.endpoints.artists, "GET", null, true);
-        setStatus("Sanatçılar getirildi: HTTP " + status, ok);
-
-        const list = document.getElementById("artistsList");
-        const arr = asArrayMaybe(data);
-        allArtistsCache = ok ? arr : allArtistsCache;
-
-        if (!ok || arr.length === 0) {
-            list.textContent = typeof data === "string" ? data : JSON.stringify(data, null, 2);
-            return;
-        }
-
-        list.innerHTML = "";
-        arr.forEach(a => {
-            const div = document.createElement("div");
-            div.className = "item";
-            const id = a.id ?? "";
-            const name = a.name || "(isim yok)";
-            div.innerHTML = `<b>${name}</b> ${id !== "" ? "(#" + id + ")" : ""}`;
-            list.appendChild(div);
-        });
-    }
-
-    async function createArtist() {
-        if (currentRole !== "ADMIN") {
-            setStatus("Sanatçı ekleme sadece admin için.", false);
-            return;
-        }
-        const name = document.getElementById("artistName").value.trim();
-        if (!name) {
-            setStatus("Sanatçı adı zorunlu", false);
-            return;
-        }
-        const payload = { name };
-        const { status, ok, data } = await apiRequest(CONFIG.endpoints.artists, "POST", payload, true);
-        setStatus("Sanatçı ekleme sonucu: HTTP " + status, ok);
-        console.log("createArtist response:", data);
-        if (ok) {
-            showPopup("Sanatçı eklendi");
-            document.getElementById("artistName").value = "";
-            getArtists();
-        }
-    }
-
-    // === Şarkı ekleme (artist autocomplete ile) ===
-    async function ensureArtistsCache() {
-        if (allArtistsCache.length > 0) return;
-        const { ok, data } = await apiRequest(CONFIG.endpoints.artists, "GET", null, true);
-        if (ok) {
-            allArtistsCache = asArrayMaybe(data);
-        }
-    }
-
-    artistNameInput.addEventListener("input", async () => {
-        const query = artistNameInput.value.trim().toLowerCase();
-        artistIdHidden.value = "";
-        if (!query) {
-            artistSuggestionsBox.style.display = "none";
-            artistSuggestionsBox.innerHTML = "";
-            return;
-        }
-        await ensureArtistsCache();
-        const filtered = allArtistsCache.filter(a =>
-            a.name && a.name.toLowerCase().includes(query)
-        );
-        if (filtered.length === 0) {
-            artistSuggestionsBox.style.display = "none";
-            artistSuggestionsBox.innerHTML = "";
-            return;
-        }
-        artistSuggestionsBox.innerHTML = "";
-        filtered.forEach(a => {
-            const div = document.createElement("div");
-            div.className = "artist-suggestion-item";
-            div.textContent = a.name + " (id: " + a.id + ")";
-            div.onclick = () => {
-                artistNameInput.value = a.name;
-                artistIdHidden.value = a.id;
-                artistSuggestionsBox.style.display = "none";
-                artistSuggestionsBox.innerHTML = "";
-            };
-            artistSuggestionsBox.appendChild(div);
-        });
-        artistSuggestionsBox.style.display = "block";
-    });
-
-    document.addEventListener("click", (e) => {
-        if (!document.getElementById("artistSuggestBox").contains(e.target)) {
-            artistSuggestionsBox.style.display = "none";
-        }
-    });
-
-    async function createSong() {
-        if (currentRole !== "ADMIN") {
-            setStatus("Şarkı ekleme sadece admin için.", false);
-            return;
-        }
-
-        const title       = document.getElementById("songTitle").value.trim();
-        const artistIdVal = artistIdHidden.value.trim();
-        const durationStr = document.getElementById("songDuration").value.trim();
-        const playlistStr = document.getElementById("songPlaylistIds").value.trim();
-
-        if (!title || !artistIdVal) {
-            setStatus("Şarkı adı ve sanatçı seçimi zorunlu (önerilerden seç).", false);
-            return;
-        }
-
-        let duration = 0;
-        if (durationStr) {
-            const d = Number(durationStr);
-            if (!Number.isNaN(d) && d >= 0) duration = d;
-        }
-
-        let playlistIdList = [];
-        if (playlistStr) {
-            playlistIdList = playlistStr
-                .split(",")
-                .map(s => s.trim())
-                .filter(s => s.length > 0)
-                .map(s => Number(s))
-                .filter(n => !Number.isNaN(n));
-        }
-
-        const payload = {
-            name: title,
-            artistId: Number(artistIdVal),
-            duration: duration,
-        };
-        if (playlistIdList.length > 0) {
-            payload.playlistIdList = playlistIdList;
-        }
-
-        const { status, ok, data } = await apiRequest(CONFIG.endpoints.songs, "POST", payload, true);
-        setStatus("Şarkı ekleme sonucu: HTTP " + status, ok);
-        console.log("createSong response:", data);
-        if (ok) {
-            showPopup("Şarkı eklendi");
-            document.getElementById("songTitle").value = "";
-            artistNameInput.value = "";
-            artistIdHidden.value = "";
-            document.getElementById("songDuration").value = "";
-            document.getElementById("songPlaylistIds").value = "";
-            getSongs();
-        }
-    }
-
-    // ==== İlk başlatma: localStorage'dan devam etme ====
-    function initFromStorage() {
-        const token = localStorage.getItem("atifyToken");
-        const user = localStorage.getItem("atifyUser");
-        const role = localStorage.getItem("atifyRole");
-
-        if (token && role) {
-            authToken = token;
-            loggedUsername = user;
-            currentRole = role;
-            document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-            document.getElementById("page-home").classList.add("active");
-            applyRoleToUI();
-            const songsBtn = document.querySelector('nav button[data-page="songs"]');
-            showPage("songs", songsBtn);
-            getSongs();
-            loadPlaylists();
-            setStatus("Kaldığın yerden devam ediyorsun.", true);
-        } else {
-            setStatus("Rol seçmeni bekliyorum...", true);
-        }
-    }
-
-    initFromStorage();
-</script>
+<script src="js/app.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/favorites.js"></script>
+<script src="js/songs.js"></script>
+<script src="js/playlists.js"></script>
+<script src="js/artists.js"></script>
+<script src="js/insights.js"></script>
+<script src="js/users.js"></script>
+<script src="js/audit.js"></script>
+<script src="js/init.js"></script>
 
 </body>
 </html>
+
+
+
+
+
+
+
+

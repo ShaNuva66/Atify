@@ -13,14 +13,14 @@ import java.util.stream.Collectors;
 public class ArtistService {
 
     private final ArtistRepository artistRepo;
+    private final AuditLogService auditLogService;
 
-    public ArtistService(ArtistRepository artistRepo) {
+    public ArtistService(ArtistRepository artistRepo, AuditLogService auditLogService) {
         this.artistRepo = artistRepo;
+        this.auditLogService = auditLogService;
     }
 
-    // ✅ Add new artist
     public ArtistResponse addArtist(ArtistRequest request) {
-
         boolean exists = artistRepo.existsByName(request.getName());
         if (exists) {
             throw new RuntimeException("This artist already exists.");
@@ -34,6 +34,12 @@ public class ArtistService {
         newArtist.setProfileImageUrl(request.getProfileImageUrl());
 
         Artist savedArtist = artistRepo.save(newArtist);
+        auditLogService.record(
+                "ARTIST_CREATED",
+                "ARTIST",
+                savedArtist.getId(),
+                savedArtist.getName() + " sanatçısı eklendi."
+        );
 
         return new ArtistResponse(
                 savedArtist.getId(),
@@ -45,7 +51,6 @@ public class ArtistService {
         );
     }
 
-    // ✅ Get all artists
     public List<ArtistResponse> getAllArtists() {
         return artistRepo.findAll().stream()
                 .map(artist -> new ArtistResponse(
@@ -59,16 +64,18 @@ public class ArtistService {
                 .collect(Collectors.toList());
     }
 
-    // ✅ Delete artist
     public void deleteArtist(Long id) {
-        boolean exists = artistRepo.existsById(id);
-        if (!exists) {
-            throw new RuntimeException("Artist not found.");
-        }
-        artistRepo.deleteById(id);
+        Artist artist = artistRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Artist not found."));
+        artistRepo.delete(artist);
+        auditLogService.record(
+                "ARTIST_DELETED",
+                "ARTIST",
+                id,
+                artist.getName() + " sanatçısı silindi."
+        );
     }
 
-    // ✅ Update artist
     public ArtistResponse updateArtist(Long id, ArtistRequest request) {
         Artist artist = artistRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Artist to update not found."));
@@ -80,6 +87,12 @@ public class ArtistService {
         artist.setProfileImageUrl(request.getProfileImageUrl());
 
         Artist updatedArtist = artistRepo.save(artist);
+        auditLogService.record(
+                "ARTIST_UPDATED",
+                "ARTIST",
+                updatedArtist.getId(),
+                updatedArtist.getName() + " sanatçısı güncellendi."
+        );
 
         return new ArtistResponse(
                 updatedArtist.getId(),

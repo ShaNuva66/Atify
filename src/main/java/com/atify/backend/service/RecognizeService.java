@@ -26,6 +26,9 @@ public class RecognizeService {
     @Value("${music.temp-dir}")
     private String tempDir;
 
+    @Value("${shazam.python-base-url:http://127.0.0.1:5001}")
+    private String pythonBaseUrl;
+
     private final SongRepository songRepository;
     private final RestTemplate restTemplate;
 
@@ -68,7 +71,7 @@ public class RecognizeService {
                 new HttpEntity<>(body, headers);
 
         ResponseEntity<RecognizeSimpleResponse> resp = restTemplate.postForEntity(
-                "http://127.0.0.1:5001/recognize-simple",
+                pythonBaseUrl + "/recognize-simple",
                 requestEntity,
                 RecognizeSimpleResponse.class
         );

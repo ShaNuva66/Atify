@@ -3,9 +3,13 @@ package com.atify.backend.controller;
 import com.atify.backend.dto.IdentifyResponse;
 import com.atify.backend.service.RecognizeService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
 @Controller
@@ -14,13 +18,11 @@ public class IdentifyController {
 
     private final RecognizeService recognizeService;
 
-    // Shazam sayfası (butonlu arayüz)
     @GetMapping("/identify")
     public String identifyPage() {
-        return "identify"; // src/main/resources/templates/identify.html
+        return "forward:/identify.html";
     }
 
-    // Frontend JS'in çağıracağı API
     @PostMapping("/api/identify")
     @ResponseBody
     public ResponseEntity<IdentifyResponse> identify(@RequestParam("file") MultipartFile file) {

@@ -22,6 +22,9 @@ public class FingerprintService {
     @Value("${music.upload-dir}")
     private String uploadDir;
 
+    @Value("${shazam.python-base-url:http://127.0.0.1:5001}")
+    private String pythonBaseUrl;
+
     private final RestTemplate restTemplate;
 
     public void fingerprintSong(Song song) {
@@ -43,7 +46,7 @@ public class FingerprintService {
 
         try {
             restTemplate.postForEntity(
-                    "http://127.0.0.1:5001/fingerprint-file",
+                    pythonBaseUrl + "/fingerprint-file",
                     entity,
                     String.class
             );

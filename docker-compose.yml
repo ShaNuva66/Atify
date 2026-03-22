@@ -1,0 +1,80 @@
+version: "3.9"
+
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: atify-mysql
+    environment:
+      MYSQL_DATABASE: atify
+      MYSQL_ROOT_PASSWORD: 1234
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p1234"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  recognizer:
+    image: python:3.11-slim
+    container_name: atify-recognizer
+    working_dir: /app
+    command: ["python", "mock_recognizer.py"]
+    volumes:
+      - ./recognizer:/app
+    ports:
+      - "5001:5001"
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: atify-backend
+    depends_on:
+      mysql:
+        condition: service_healthy
+      recognizer:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/atify?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 1234
+      SHAZAM_PYTHON_BASE_URL: http://recognizer:5001
+      MUSIC_UPLOAD_DIR: /data/uploads
+      MUSIC_TEMP_DIR: /data/tmp
+    ports:
+      - "8080:8080"
+    volumes:
+      - atify_media:/data
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: atify-prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    volumes:
+      - ./ops/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    depends_on:
+      - backend
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: atify-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
+volumes:
+  mysql_data:
+  atify_media:
+  grafana_data:

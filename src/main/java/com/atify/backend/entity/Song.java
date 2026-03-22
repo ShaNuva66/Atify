@@ -39,4 +39,13 @@ public class Song {
     private String fingerprintCode;
 
     private String coverUrl;
+
+    @Column(name = "external_source")
+    private String externalSource;
+
+    @Column(name = "external_ref")
+    private String externalRef;
+
+    @Column(name = "audio_url", length = 1024)
+    private String audioUrl;
 }

@@ -1,0 +1,95 @@
+version: "3.9"
+
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: atify-prod-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-atify}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    command: --default-authentication-plugin=mysql_native_password
+    volumes:
+      - mysql_prod_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    networks:
+      - atify-net
+
+  recognizer:
+    image: python:3.11-slim
+    container_name: atify-prod-recognizer
+    restart: unless-stopped
+    working_dir: /app
+    command: ["python", "mock_recognizer.py"]
+    volumes:
+      - ./recognizer:/app:ro
+    networks:
+      - atify-net
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: atify-prod-backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      recognizer:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-atify}?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO:-update}
+      SPRING_JPA_SHOW_SQL: "false"
+      SPRING_JPA_FORMAT_SQL: "false"
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
+      MUSIC_UPLOAD_DIR: /data/uploads
+      MUSIC_TEMP_DIR: /data/tmp
+      SHAZAM_PYTHON_BASE_URL: http://recognizer:5001
+      JAMENDO_CLIENT_ID: ${JAMENDO_CLIENT_ID}
+      APP_CORS_ALLOWED_ORIGINS: https://${APP_DOMAIN},https://www.${APP_DOMAIN}
+      SERVER_FORWARD_HEADERS_STRATEGY: framework
+      FFPROBE_PATH: ffprobe
+      JAVA_OPTS: "${JAVA_OPTS:--Xms256m -Xmx1024m}"
+    expose:
+      - "8080"
+    volumes:
+      - atify_prod_media:/data
+    networks:
+      - atify-net
+
+  caddy:
+    image: caddy:2.8-alpine
+    container_name: atify-prod-caddy
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN}
+      LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - atify-net
+
+networks:
+  atify-net:
+
+volumes:
+  mysql_prod_data:
+  atify_prod_media:
+  caddy_data:
+  caddy_config:

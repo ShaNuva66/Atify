@@ -1,0 +1,14 @@
+.git
+.github
+.idea
+.vscode
+target
+run.out.log
+run.err.log
+*.iml
+*.userlibraries
+backend.userlibraries
+docs
+benchmark
+ops
+start_backend_test.cmd

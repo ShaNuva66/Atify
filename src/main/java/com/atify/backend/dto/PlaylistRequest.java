@@ -6,4 +6,5 @@ import lombok.Data;
 public class PlaylistRequest {
     private String name;        // Playlist name
     private String username;    // Which user owns this playlist
+    private String coverUrl;
 }

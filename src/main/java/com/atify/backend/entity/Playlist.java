@@ -18,6 +18,9 @@ public class Playlist {
 
     private String name;  // Playlist name
 
+    @Column(name = "cover_url", length = 1024)
+    private String coverUrl;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;  // Owner of the playlist
@@ -29,5 +32,6 @@ public class Playlist {
             joinColumns = @JoinColumn(name = "playlist_id"),
             inverseJoinColumns = @JoinColumn(name = "song_id")
     )
+    @OrderColumn(name = "song_order")
     private List<Song> songs;
 }

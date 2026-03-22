@@ -1,0 +1,5 @@
+clip_path,expected_song_name,expected_song_code,noise_level
+clean/example_01.wav,Example Song,example_song_fp,clean
+noise_10/example_01_n10.wav,Example Song,example_song_fp,noise_10
+noise_20/example_01_n20.wav,Example Song,example_song_fp,noise_20
+noise_30/example_01_n30.wav,Example Song,example_song_fp,noise_30

@@ -31,3 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Local Runtime / Secrets ###
+.env.prod
+run.out.log
+run.err.log

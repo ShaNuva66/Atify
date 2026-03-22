@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ArtistRepository extends JpaRepository<Artist, Long> {
     boolean existsByName(String name);  // Prevent duplicate artist entries
+    java.util.Optional<Artist> findByNameIgnoreCase(String name);
 }

@@ -22,6 +22,13 @@ public class UserService {
         this.userRepo = userRepo;
     }
 
+    private String resolvePrimaryRole(User user) {
+        if (user.getRoles() != null && user.getRoles().contains(Role.ADMIN)) {
+            return Role.ADMIN.name();
+        }
+        return Role.USER.name();
+    }
+
     // Register a new user
     public String register(UserRequest request) {
 
@@ -71,6 +78,6 @@ public class UserService {
         // Dummy token for now (replace with JWT generation if needed)
         String token = "dummy-jwt-token";
 
-        return new LoginResponse("Login successful.", token);
+        return new LoginResponse("Login successful.", token, resolvePrimaryRole(foundUser));
     }
 }

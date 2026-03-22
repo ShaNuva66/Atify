@@ -23,7 +23,18 @@ public class AlbumService {
     private final SongRepository songRepo;
     private final ArtistRepository artistRepo;
 
-    // ✅ Add album
+    private SongResponse toSongResponse(Song song) {
+        return new SongResponse(
+                song.getId(),
+                song.getName(),
+                song.getDuration(),
+                song.getArtist() != null ? song.getArtist().getName() : null,
+                song.getCoverUrl(),
+                song.getAudioUrl(),
+                song.getExternalSource() == null ? "LOCAL" : song.getExternalSource()
+        );
+    }
+
     public AlbumResponse addAlbum(AlbumRequest albumRequest) {
         Artist artist = artistRepo.findById(albumRequest.getArtistId())
                 .orElseThrow(() -> new RuntimeException("Artist not found"));
@@ -42,7 +53,6 @@ public class AlbumService {
         return new AlbumResponse(savedAlbum.getId(), savedAlbum.getName(), savedAlbum.getCoverUrl());
     }
 
-    // ✅ Get all albums
     public List<AlbumResponse> getAllAlbums() {
         return albumRepo.findAll()
                 .stream()
@@ -50,7 +60,6 @@ public class AlbumService {
                 .collect(Collectors.toList());
     }
 
-    // ✅ Get albums of an artist
     public List<AlbumResponse> getAlbumsByArtist(Long artistId) {
         return albumRepo.findAll().stream()
                 .filter(a -> a.getArtist().getId().equals(artistId))
@@ -58,7 +67,6 @@ public class AlbumService {
                 .collect(Collectors.toList());
     }
 
-    // ✅ Get songs of an album
     public List<SongResponse> getSongsByAlbum(Long albumId) {
         Album album = albumRepo.findById(albumId)
                 .orElseThrow(() -> new RuntimeException("Album not found"));
@@ -66,7 +74,7 @@ public class AlbumService {
         List<Song> songs = songRepo.findByAlbum(album);
 
         return songs.stream()
-                .map(s -> new SongResponse(s.getId(), s.getName(), s.getDuration()))
+                .map(this::toSongResponse)
                 .collect(Collectors.toList());
     }
 }

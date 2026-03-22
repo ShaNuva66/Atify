@@ -1,5 +1,6 @@
 package com.atify.backend.service;
 
+import com.atify.backend.entity.Role;
 import com.atify.backend.entity.User;
 import com.atify.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -7,6 +8,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+
+import java.util.Collections;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -19,11 +23,12 @@ public class CustomUserDetailsService implements UserDetailsService {
         User userEntity = userRepo.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
-        // ✅ Ambiguity yok, Security User tam yolu ile çağırıldı
+        Set<Role> roles = userEntity.getRoles() == null ? Collections.emptySet() : userEntity.getRoles();
+
         return org.springframework.security.core.userdetails.User.builder()
                 .username(userEntity.getUsername())
-                .password(userEntity.getPassword()) // hashed password
-                .roles(userEntity.getRoles().stream().map(Enum::name).toArray(String[]::new))
+                .password(userEntity.getPassword())
+                .roles(roles.stream().map(Enum::name).toArray(String[]::new))
                 .build();
     }
 }
