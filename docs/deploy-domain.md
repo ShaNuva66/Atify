@@ -1,106 +1,157 @@
-# Atify Domain Deployment
+# Atify Production Deploy
 
-Bu proje `atify.com.tr` için Docker + Caddy ile production deploy olacak şekilde hazırlandı.
+Bu dokuman `atify.com.tr` uzerinde calisan production kurulumu icin hazirlandi.
 
-## Bugün doğruladığım durum
+## Mimari
 
-- `atify.com.tr` için `2026-03-21` tarihinde DNS sorgusu `NXDOMAIN` dönüyor.
-- `www.atify.com.tr` için de aynı anda `NXDOMAIN` dönüyor.
+- `mysql`: uygulama veritabani
+- `recognizer`: mock tanima servisi
+- `backend`: Spring Boot uygulamasi
+- `caddy`: reverse proxy ve otomatik HTTPS
 
-Bu şu anlama geliyor:
+## Gerekenler
 
-1. Domain henüz DNS'te yayınlanmamış olabilir.
-2. Ya da A kaydı / nameserver ayarı henüz yapılmamış olabilir.
+- Ubuntu 22.04 veya 24.04
+- Docker
+- Docker Compose plugin
+- Domain DNS kayitlari
 
-## Bu repo içinde hazır olanlar
+## Sunucu dizin yapisi
 
-1. `docker-compose.prod.yml`
-   - MySQL
-   - recognizer
-   - Spring Boot backend
-   - Caddy reverse proxy + otomatik HTTPS
-
-2. `deploy/Caddyfile`
-   - `atify.com.tr`
-   - `www.atify.com.tr`
-   - Let's Encrypt HTTPS
-
-3. `application-prod.properties`
-   - prod profil ayarları
-
-4. `.env.prod.example`
-   - production secret ve domain örneği
-
-## Sunucuda çalıştırma
-
-Sunucuda Docker ve Docker Compose plugin kurulu olmalı.
-
-### 1. Repo'yu sunucuya kopyala
+Sunucuda repo dizini:
 
 ```bash
-git clone <repo-url> atify
-cd atify/backend
+/root/atify
 ```
 
-### 2. Env dosyasını oluştur
+Ana dosyalar:
+
+- `docker-compose.prod.yml`
+- `.env.prod`
+- `deploy/start-prod.sh`
+- `deploy/update-prod.sh`
+- `deploy/backup-prod.sh`
+- `deploy/harden-server.sh`
+
+## Ilk kurulum
+
+Sunucu bootstrap:
 
 ```bash
-cp .env.prod.example .env.prod
+chmod +x /root/atify/deploy/*.sh
+/root/atify/deploy/server-bootstrap.sh
 ```
 
-`.env.prod` içinde en az şunları doldur:
-
-- `APP_DOMAIN=atify.com.tr`
-- `LETSENCRYPT_EMAIL=...`
-- `MYSQL_ROOT_PASSWORD=...`
-- `JWT_SECRET=...`
-- `JAMENDO_CLIENT_ID=...`
-
-### 3. Stack'i ayağa kaldır
+Ilk deploy:
 
 ```bash
-docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+/root/atify/deploy/start-prod.sh
 ```
 
-### 4. Log kontrolü
+## DNS
 
-```bash
-docker compose -f docker-compose.prod.yml --env-file .env.prod logs -f
+Asagidaki kayitlar domain panelinde bulunmali:
+
+```text
+A   @     <SUNUCU_IP>
+A   www   <SUNUCU_IP>
 ```
 
-## DNS tarafında yapılacaklar
+Notlar:
 
-Domain panelinde şu kayıtları sunucu IP'sine yönlendir:
+- `@` veya `www` icin eski cakisan `A`, `AAAA` veya `CNAME` kayitlari kalmamali
+- DNSSEC problem cikariyorsa gecici olarak kapatilabilir
 
-1. `A  @    -> <SUNUCU_IP>`
-2. `A  www  -> <SUNUCU_IP>`
+## Guncelleme
 
-Sunucuda şu portlar açık olmalı:
-
-1. `80/tcp`
-2. `443/tcp`
-
-## Notlar
-
-1. Uygulama şu an aynı origin'den servis ediliyor.
-   - Yani frontend ayrı host değil, backend static dosyaları da aynı domainden veriyor.
-
-2. CORS prod'da şu origin'lere açılıyor:
-   - `https://atify.com.tr`
-   - `https://www.atify.com.tr`
-
-3. Deploy stack içindeki recognizer şu an `mock_recognizer.py`.
-   - Gerçek tanıma servisine geçilecekse bu container onunla değiştirilmeli.
-
-4. Upload ve temp klasörleri container içinde `/data` altında tutuluyor.
-
-## Hızlı kontrol
-
-Deploy sonrası:
+Repoya yeni commit geldikten sonra:
 
 ```bash
+/root/atify/deploy/update-prod.sh
+```
+
+Bu script:
+
+1. `git pull --ff-only` yapar
+2. container'lari rebuild eder
+3. servis durumunu ve son loglari gosterir
+
+## Yedek Alma
+
+Veritabani ve medya yedegi:
+
+```bash
+/root/atify/deploy/backup-prod.sh
+```
+
+Yedekler:
+
+```bash
+/root/atify/backups
+```
+
+altina yazilir.
+
+## Sunucu Guvenligi
+
+Deploy kullanicisi ve temel sertlestirme:
+
+```bash
+DEPLOY_USER=atify DEPLOY_PUBLIC_KEY="<ssh-public-key>" /root/atify/deploy/harden-server.sh
+```
+
+Script sunlari yapar:
+
+1. `atify` kullanicisini olusturur
+2. `sudo` ve `docker` grubuna ekler
+3. public key'i `authorized_keys` icine yazar
+4. `fail2ban` ve `unattended-upgrades` kurar
+5. `atify-update` ve `atify-backup` kisayollarini olusturur
+
+Uyari:
+
+- yeni kullanici ile SSH girisini test etmeden root login'i kapatma
+- root sifresini ekran goruntulerinde paylasma
+
+## Hizli Kontrol
+
+Servisler:
+
+```bash
+docker compose -f /root/atify/docker-compose.prod.yml --env-file /root/atify/.env.prod ps
+```
+
+Caddy log:
+
+```bash
+docker compose -f /root/atify/docker-compose.prod.yml --env-file /root/atify/.env.prod logs caddy --tail 50
+```
+
+Backend log:
+
+```bash
+docker compose -f /root/atify/docker-compose.prod.yml --env-file /root/atify/.env.prod logs backend --tail 50
+```
+
+HTTP test:
+
+```bash
+curl -I http://atify.com.tr
 curl -I https://atify.com.tr
-curl -I https://www.atify.com.tr
 ```
 
-Beklenen sonuç: `200` veya redirect sonrası `200`.
+## Ilk Admin Kullanici
+
+Production veritabani bos gelirse:
+
+1. web arayuzunden normal kullanici kaydi olustur
+2. MySQL icinde kullanicinin `id` degerini bul
+3. ilgili kullaniciya `ADMIN` rolunu ekle
+
+Ornek:
+
+```sql
+USE atify;
+SELECT id, username, email FROM app_user;
+INSERT INTO user_roles (user_id, roles) VALUES (1, 'ADMIN');
+```

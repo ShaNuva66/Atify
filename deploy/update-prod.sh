@@ -9,7 +9,20 @@ if [[ ! -f .env.prod ]]; then
   exit 1
 fi
 
+if [[ -d .git ]]; then
+  git fetch --all --prune
+  git pull --ff-only
+else
+  echo "Uyari: .git dizini yok, git pull atlandi."
+fi
+
 docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build --remove-orphans
 docker compose -f docker-compose.prod.yml --env-file .env.prod ps
-docker compose -f docker-compose.prod.yml --env-file .env.prod logs backend --tail 20 || true
+
+echo
+echo "Caddy son loglari:"
 docker compose -f docker-compose.prod.yml --env-file .env.prod logs caddy --tail 20 || true
+
+echo
+echo "Backend son loglari:"
+docker compose -f docker-compose.prod.yml --env-file .env.prod logs backend --tail 20 || true
