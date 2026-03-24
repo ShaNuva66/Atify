@@ -34,3 +34,4 @@ Ana script'ler:
 - `deploy/backup-prod.sh`
 - `deploy/harden-server.sh`
 - `ops/sync-prod.ps1`
+- `ops/setup-prod-access.ps1`

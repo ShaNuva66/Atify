@@ -18,10 +18,16 @@ Bu dokuman `atify.com.tr` uzerinde calisan production kurulumu icin hazirlandi.
 
 ## Sunucu dizin yapisi
 
-Sunucuda repo dizini:
+Ilk kurulumdan sonra dosyalar genelde:
 
 ```bash
 /root/atify
+```
+
+Guvenlik sertlestirmesinden sonra calisma dizini:
+
+```bash
+/opt/atify
 ```
 
 Ana dosyalar:
@@ -118,7 +124,27 @@ Script sunlari yapar:
 2. `sudo` ve `docker` grubuna ekler
 3. public key'i `authorized_keys` icine yazar
 4. `fail2ban` ve `unattended-upgrades` kurar
-5. `atify-update` ve `atify-backup` kisayollarini olusturur
+5. uygulamayi `/opt/atify` altina tasir
+6. `atify-start`, `atify-update` ve `atify-backup` kisayollarini olusturur
+
+Windows istemcisinden bu kurulumu tek komutla yapmak icin:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\ops\setup-prod-access.ps1
+```
+
+Bu script:
+
+1. yerelde `ed25519` SSH key uretir veya mevcut key'i kullanir
+2. `deploy/harden-server.sh` dosyasini sunucuya yollar
+3. root kullanicisi ile sertlestirmeyi calistirir
+4. `atify` kullanicisi ve SSH key ile yeni erisimi test eder
+
+Kurulumdan sonra Windows tarafindan guncelleme ornegi:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\ops\sync-prod.ps1 -Server atify@89.47.113.106 -RemoteDir /opt/atify -IdentityFile "$env:USERPROFILE\.ssh\atify_prod_ed25519"
+```
 
 Uyari:
 
