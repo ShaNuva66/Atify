@@ -33,3 +33,4 @@ Ana script'ler:
 - `deploy/update-prod.sh`
 - `deploy/backup-prod.sh`
 - `deploy/harden-server.sh`
+- `ops/sync-prod.ps1`

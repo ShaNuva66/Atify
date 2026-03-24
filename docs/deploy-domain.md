@@ -76,6 +76,18 @@ Bu script:
 2. container'lari rebuild eder
 3. servis durumunu ve son loglari gosterir
 
+Windows istemcisinden tek komutla sync ve redeploy:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\ops\sync-prod.ps1
+```
+
+Not:
+
+- bu script mevcut `HEAD` durumunu archive edip sunucuya yollar
+- `.env.prod` dosyasini korur
+- ardindan `deploy/start-prod.sh` calistirir
+
 ## Yedek Alma
 
 Veritabani ve medya yedegi:
