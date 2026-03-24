@@ -15,8 +15,12 @@ if (-not (Test-Path (Split-Path -Parent $KeyPath))) {
     New-Item -ItemType Directory -Force -Path (Split-Path -Parent $KeyPath) | Out-Null
 }
 
-if (-not (Test-Path $KeyPath)) {
-    ssh-keygen -t ed25519 -f $KeyPath -N "" -C "atify-prod-access" | Out-Null
+if ((-not (Test-Path $KeyPath)) -or (-not (Test-Path $publicKeyPath))) {
+    $sshKeygenCmd = "ssh-keygen -t ed25519 -f `"$KeyPath`" -N `"`" -C `"atify-prod-access`""
+    $keygen = Start-Process -FilePath "cmd.exe" -ArgumentList "/c", $sshKeygenCmd -NoNewWindow -Wait -PassThru
+    if ($keygen.ExitCode -ne 0) {
+        throw "ssh-keygen basarisiz oldu."
+    }
 }
 
 $publicKey = (Get-Content $publicKeyPath -Raw).Trim()
