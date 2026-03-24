@@ -30,9 +30,16 @@ if ([string]::IsNullOrWhiteSpace($publicKey)) {
 
 Push-Location $repoRoot
 try {
-    scp "deploy/harden-server.sh" "${RootServer}:${SourceDir}/deploy/harden-server.sh"
-    ssh $RootServer "sed -i 's/\r$//' ${SourceDir}/deploy/harden-server.sh && chmod +x ${SourceDir}/deploy/harden-server.sh && DEPLOY_USER='${DeployUser}' DEPLOY_PUBLIC_KEY='${publicKey}' ATIFY_DIR='${AppDir}' SOURCE_DIR='${SourceDir}' bash ${SourceDir}/deploy/harden-server.sh"
-    ssh -i $KeyPath "${DeployUser}@89.47.113.106" "bash -lc 'whoami && test -d ${AppDir} && docker ps --format \"table {{.Names}}\t{{.Status}}\" | head -n 5'"
+    & scp "deploy/harden-server.sh" "${RootServer}:${SourceDir}/deploy/harden-server.sh"
+    & ssh $RootServer "sed -i 's/\r$//' ${SourceDir}/deploy/harden-server.sh && chmod +x ${SourceDir}/deploy/harden-server.sh && DEPLOY_USER='${DeployUser}' DEPLOY_PUBLIC_KEY='${publicKey}' ATIFY_DIR='${AppDir}' SOURCE_DIR='${SourceDir}' bash ${SourceDir}/deploy/harden-server.sh"
+
+    $verifyCommand = @"
+whoami
+test -d ${AppDir} && echo APP_DIR_OK
+docker ps --format 'table {{.Names}}\t{{.Status}}' | sed -n '1,5p'
+"@
+
+    & ssh -i $KeyPath "${DeployUser}@89.47.113.106" $verifyCommand
 }
 finally {
     Pop-Location
