@@ -177,19 +177,21 @@
         const email    = document.getElementById("regEmail").value.trim();
         const password = document.getElementById("regPassword").value.trim();
 
-        if (!username || !password) {
-            setStatus("Kullanıcı adı ve şifre zorunlu", false);
+        if (!username || !email || !password) {
+            setStatus("Kullanici adi, email ve sifre zorunlu", false);
             return;
         }
 
-        const payload = { username, password, email: email || undefined };
+        const payload = { username, password, email };
         const { status, ok, data } = await apiRequest(CONFIG.endpoints.register, "POST", payload, false);
-        setStatus("Kayıt sonucu: HTTP " + status, ok);
+        setStatus("Kayit sonucu: HTTP " + status, ok);
         console.log("register response:", data);
 
         if (ok) {
-            showPopup("Kayıt başarılı");
-            showCenterModal("Kayıt tamamlandı", "Şimdi Giriş sayfasından login olabilirsin.");
+            showPopup("Kayit basarili");
+            showCenterModal("Kayit tamamlandi", "Simdi Giris sayfasindan login olabilirsin.");
+        } else if (data && data.message) {
+            setStatus("Kayit hatasi: " + data.message, false);
         }
     }
 
@@ -198,7 +200,7 @@
         const password = document.getElementById("loginPassword").value.trim();
 
         if (!username || !password) {
-            setStatus("Kullanıcı adı ve şifre zorunlu", false);
+            setStatus("Kullanici adi ve sifre zorunlu", false);
             return;
         }
 
@@ -270,6 +272,8 @@
         setStatus("Çıkış yapıldı");
         showPopup("Çıkış yapıldı");
     }
+
+
 
 
 

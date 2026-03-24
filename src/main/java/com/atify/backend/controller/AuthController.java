@@ -35,10 +35,26 @@ public class AuthController {
     // ✅ User register
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody UserRequest request) {
+        if (request.getUsername() == null || request.getUsername().trim().isEmpty()) {
+            throw new RuntimeException("Username is required");
+        }
+        if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
+            throw new RuntimeException("Email is required");
+        }
+        if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
+            throw new RuntimeException("Password is required");
+        }
+        if (userRepo.existsByUsername(request.getUsername().trim())) {
+            throw new RuntimeException("This username is already taken.");
+        }
+        if (userRepo.existsByEmail(request.getEmail().trim())) {
+            throw new RuntimeException("This email is already in use.");
+        }
+
         User newUser = User.builder()
-                .username(request.getUsername())
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
+                .username(request.getUsername().trim())
+                .email(request.getEmail().trim())
+                .password(passwordEncoder.encode(request.getPassword().trim()))
                 .roles(Set.of(Role.USER))
                 .build();
 
