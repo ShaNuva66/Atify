@@ -21,7 +21,7 @@ try {
     ssh $Server "mkdir -p $RemoteDir"
     scp $archivePath "${Server}:${RemoteDir}/$archiveName"
     scp ".env.prod" "${Server}:${RemoteDir}/.env.prod"
-    ssh $Server "tar -xf $RemoteDir/$archiveName -C $RemoteDir && rm -f $RemoteDir/$archiveName && chmod +x $RemoteDir/deploy/*.sh && $RemoteDir/deploy/start-prod.sh"
+    ssh $Server "tar -xf $RemoteDir/$archiveName -C $RemoteDir && rm -f $RemoteDir/$archiveName && sed -i 's/\r$//' $RemoteDir/deploy/*.sh && chmod +x $RemoteDir/deploy/*.sh && bash $RemoteDir/deploy/start-prod.sh"
 }
 finally {
     Pop-Location
