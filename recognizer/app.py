@@ -281,6 +281,23 @@ def fingerprint_file():
     )
 
 
+@app.post("/register-fingerprint")
+def register_fingerprint():
+    payload = request.get_json(silent=True) or {}
+    song_code = payload.get("songCode")
+    fingerprint_data = payload.get("fingerprintData")
+
+    if not song_code or not fingerprint_data:
+        return jsonify({"status": "error", "message": "songCode and fingerprintData are required"}), 400
+
+    try:
+        CATALOG[song_code] = decode_fingerprint(fingerprint_data)
+    except ValueError as exc:
+        return jsonify({"status": "error", "message": str(exc)}), 400
+
+    return jsonify({"status": "ok", "catalogSize": len(CATALOG)})
+
+
 @app.post("/recognize-simple")
 def recognize_simple():
     try:

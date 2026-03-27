@@ -18,6 +18,7 @@ import org.springframework.web.client.RestTemplate;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -78,6 +79,35 @@ public class FingerprintService {
             }
         } catch (Exception e) {
             log.warn("Fingerprint olusturulamadi. songId={}, message={}", song.getId(), e.getMessage());
+        }
+    }
+
+    public void registerFingerprint(Song song) {
+        if (song == null
+                || song.getFingerprintCode() == null || song.getFingerprintCode().isBlank()
+                || song.getFingerprintData() == null || song.getFingerprintData().isBlank()) {
+            return;
+        }
+
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(
+                    Map.of(
+                            "songCode", song.getFingerprintCode(),
+                            "fingerprintData", song.getFingerprintData()
+                    ),
+                    headers
+            );
+
+            restTemplate.postForEntity(
+                    pythonBaseUrl + "/register-fingerprint",
+                    requestEntity,
+                    String.class
+            );
+        } catch (Exception e) {
+            log.warn("Fingerprint index'e yuklenemedi. songId={}, message={}", song.getId(), e.getMessage());
         }
     }
 

@@ -20,22 +20,32 @@ public class FingerprintBackfillService {
 
     @EventListener(ApplicationReadyEvent.class)
     public void backfillMissingFingerprints() {
-        List<Song> songsToFingerprint = songRepository.findAll()
+        List<Song> songs = songRepository.findAll()
                 .stream()
-                .filter(song -> song.getFingerprintData() == null || song.getFingerprintData().isBlank())
                 .filter(song -> hasAudioSource(song))
                 .toList();
 
-        if (songsToFingerprint.isEmpty()) {
-            log.info("Fingerprint backfill icin eksik sarki bulunamadi.");
+        if (songs.isEmpty()) {
+            log.info("Fingerprint backfill icin ses kaynagi olan sarki bulunamadi.");
             return;
         }
 
-        log.info("Fingerprint backfill basladi. {} sarki islenecek.", songsToFingerprint.size());
-        for (Song song : songsToFingerprint) {
+        int indexedCount = 0;
+        int generatedCount = 0;
+
+        log.info("Fingerprint startup senkronizasyonu basladi. {} sarki kontrol edilecek.", songs.size());
+        for (Song song : songs) {
+            if (song.getFingerprintData() != null && !song.getFingerprintData().isBlank()
+                    && song.getFingerprintCode() != null && !song.getFingerprintCode().isBlank()) {
+                fingerprintService.registerFingerprint(song);
+                indexedCount++;
+                continue;
+            }
+
             fingerprintService.fingerprintSong(song);
+            generatedCount++;
         }
-        log.info("Fingerprint backfill tamamlandi.");
+        log.info("Fingerprint startup senkronizasyonu tamamlandi. indexed={}, generated={}", indexedCount, generatedCount);
     }
 
     private boolean hasAudioSource(Song song) {
