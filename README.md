@@ -20,6 +20,25 @@ Windows:
 ./mvnw test
 ```
 
+UI smoke testi:
+
+```powershell
+python .\ops\ui_smoke.py `
+  --base-url https://atify.com.tr `
+  --mode both `
+  --ssh-host 89.47.113.106 `
+  --ssh-user atify `
+  --ssh-key "$env:USERPROFILE\.ssh\atify_prod_ed25519"
+```
+
+Notlar:
+
+- Script temp user ve temp admin hesabi olusturur.
+- Admin hesabini SSH uzerinden `user_roles` tablosuna ekler.
+- Is bitince temp hesaplari temizler.
+- `selenium` ve `requests` kurulu bir Python ortami bekler.
+- Screenshot almak istersen `--artifacts-dir .\tmp\ui-smoke` ekleyebilirsin.
+
 ## Production
 
 Production deploy ve operasyon notlari:
