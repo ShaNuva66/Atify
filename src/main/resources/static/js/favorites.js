@@ -1,4 +1,4 @@
-﻿    function buildJamendoPayload(song) {
+    function buildJamendoPayload(song) {
         return {
             jamendoId: song.jamendoId || song.id,
             name: song.name || song.title || song.songName,

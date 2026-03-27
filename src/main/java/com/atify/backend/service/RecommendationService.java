@@ -38,7 +38,7 @@ public class RecommendationService {
     @Transactional
     public List<RecommendationResponse> getRecommendations(Long songId, int limit) {
         Song target = songRepository.findById(songId)
-                .orElseThrow(() -> new IllegalArgumentException("?ark? bulunamad?: " + songId));
+                .orElseThrow(() -> new IllegalArgumentException("Şarkı bulunamadı: " + songId));
 
         Set<Long> targetPlaylistIds = playlistIds(target);
         String targetArtist = target.getArtist() != null ? normalize(target.getArtist().getName()) : "";
@@ -96,36 +96,36 @@ public class RecommendationService {
 
         if (!targetArtist.isBlank() && targetArtist.equals(candidateArtist)) {
             score += 3.0;
-            reasons.add("Ayn? sanat??");
+            reasons.add("Aynı sanatçı");
         }
 
         if (!targetGenre.isBlank() && targetGenre.equals(candidateGenre)) {
             score += 2.0;
-            reasons.add("Benzer t?r");
+            reasons.add("Benzer tür");
         }
 
         if (target.getAlbum() != null && candidate.getAlbum() != null
                 && target.getAlbum().getId().equals(candidate.getAlbum().getId())) {
             score += 1.5;
-            reasons.add("Ayn? alb?m");
+            reasons.add("Aynı albüm");
         }
 
         double durationScore = durationSimilarity(target.getDuration(), candidate.getDuration());
         if (durationScore > 0.35) {
             score += durationScore * 1.5;
-            reasons.add("Benzer s?re");
+            reasons.add("Benzer süre");
         }
 
         int overlap = commonPlaylistCount(targetPlaylistIds, playlistIds(candidate));
         if (overlap > 0) {
             score += Math.min(4.0, overlap * 2.0);
-            reasons.add(overlap > 1 ? "Ayn? playlistlerde s?k ge?iyor" : "Ayn? playlistte birlikte ge?iyor");
+            reasons.add(overlap > 1 ? "Aynı playlistlerde sık geçiyor" : "Aynı playlistte birlikte geçiyor");
         }
 
         RecommendationResponse response = new RecommendationResponse(
                 candidate.getId(),
                 candidate.getName(),
-                candidate.getArtist() != null ? candidate.getArtist().getName() : "Bilinmeyen Sanat??",
+                candidate.getArtist() != null ? candidate.getArtist().getName() : "Bilinmeyen Sanatçı",
                 candidate.getCoverUrl(),
                 candidate.getDuration(),
                 candidate.getAudioUrl(),
@@ -147,26 +147,26 @@ public class RecommendationService {
         double artistWeight = artist.isBlank() ? 0.0 : profile.artistWeights().getOrDefault(artist, 0.0);
         if (artistWeight > 0) {
             score += Math.min(5.0, artistWeight * 1.25);
-            reasons.add("Favori ve ge?mi?ine yak?n sanat??");
+            reasons.add("Favori ve geçmişine yakın sanatçı");
         }
 
         double genreWeight = genre.isBlank() ? 0.0 : profile.genreWeights().getOrDefault(genre, 0.0);
         if (genreWeight > 0) {
             score += Math.min(4.0, genreWeight);
-            reasons.add("S?k dinledi?in t?re yak?n");
+            reasons.add("Sık dinlediğin türe yakın");
         }
 
         int playlistOverlap = commonPlaylistCount(profile.playlistIds(), playlistIds(candidate));
         if (playlistOverlap > 0) {
             score += Math.min(3.2, playlistOverlap * 1.2);
-            reasons.add("Sevdi?in playlistlerle ?rt???yor");
+            reasons.add("Sevdiğin playlistlerle örtüşüyor");
         }
 
         if (profile.averageDuration() > 0) {
             double durationScore = durationSimilarity((int) Math.round(profile.averageDuration()), candidate.getDuration());
             if (durationScore > 0.35) {
                 score += durationScore * 1.25;
-                reasons.add("Dinleme al??kanl???na yak?n s?re");
+                reasons.add("Dinleme alışkanlığına yakın süre");
             }
         }
 
@@ -182,7 +182,7 @@ public class RecommendationService {
         RecommendationResponse response = new RecommendationResponse(
                 candidate.getId(),
                 candidate.getName(),
-                candidate.getArtist() != null ? candidate.getArtist().getName() : "Bilinmeyen Sanat??",
+                candidate.getArtist() != null ? candidate.getArtist().getName() : "Bilinmeyen Sanatçı",
                 candidate.getCoverUrl(),
                 candidate.getDuration(),
                 candidate.getAudioUrl(),
@@ -256,13 +256,13 @@ public class RecommendationService {
                 .map(song -> new RecommendationResponse(
                         song.getId(),
                         song.getName(),
-                        song.getArtist() != null ? song.getArtist().getName() : "Bilinmeyen Sanat??",
+                        song.getArtist() != null ? song.getArtist().getName() : "Bilinmeyen Sanatçı",
                         song.getCoverUrl(),
                         song.getDuration(),
                         song.getAudioUrl(),
                         song.getExternalSource() == null ? "LOCAL" : song.getExternalSource(),
                         1.0,
-                        List.of("K?t?phaneden ke?fetmeye uygun pop?ler par?a")
+                        List.of("Kütüphaneden keşfetmeye uygun popüler parça")
                 ))
                 .collect(Collectors.toList());
     }
@@ -324,7 +324,7 @@ public class RecommendationService {
     private User getActiveUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Kullan?c? bulunamad?"));
+                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
     }
 
     private record RecommendationProfile(

@@ -44,27 +44,27 @@ public class SongUploadService {
 
     public Song uploadMp3(MultipartFile file, String name, Long artistId, Long albumId) {
         if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("file bos olamaz");
+            throw new IllegalArgumentException("file boş olamaz");
         }
         if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException("name bos olamaz");
+            throw new IllegalArgumentException("name boş olamaz");
         }
         if (artistId == null) {
-            throw new IllegalArgumentException("Sanatci secimi zorunlu.");
+            throw new IllegalArgumentException("Sanatçı seçimi zorunlu.");
         }
 
         String original = (file.getOriginalFilename() == null) ? "audio.mp3" : file.getOriginalFilename();
         if (!original.toLowerCase().endsWith(".mp3")) {
-            throw new IllegalArgumentException("Sadece .mp3 dosyalari yuklenebilir.");
+            throw new IllegalArgumentException("Sadece .mp3 dosyaları yüklenebilir.");
         }
 
         Artist artist = artistRepository.findById(artistId)
-                .orElseThrow(() -> new IllegalArgumentException("Sanatci bulunamadi: " + artistId));
+                .orElseThrow(() -> new IllegalArgumentException("Sanatçı bulunamadı: " + artistId));
 
         Album album = null;
         if (albumId != null) {
             album = albumRepository.findById(albumId)
-                    .orElseThrow(() -> new IllegalArgumentException("Album bulunamadi: " + albumId));
+                    .orElseThrow(() -> new IllegalArgumentException("Albüm bulunamadı: " + albumId));
         }
 
         try {
@@ -89,7 +89,7 @@ public class SongUploadService {
             fingerprintService.fingerprintSong(saved);
             return saved;
         } catch (Exception e) {
-            throw new RuntimeException("Upload basarisiz: " + e.getMessage(), e);
+            throw new RuntimeException("Upload başarısız: " + e.getMessage(), e);
         }
     }
 }

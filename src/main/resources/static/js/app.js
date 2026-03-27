@@ -261,7 +261,7 @@
         }
 
         const { status, ok, data } = await apiRequest(path, "POST", body, true);
-        setStatus("Playlist’e şarkı ekleme sonucu: HTTP " + status, ok);
+        setStatus("Playlist'e şarkı ekleme sonucu: HTTP " + status, ok);
         console.log("addSongToPlaylistFromModal response:", data);
 
         if (ok) {

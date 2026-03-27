@@ -65,7 +65,7 @@ public class FingerprintService {
                 );
 
                 if (response == null || response.getFingerprintData() == null || response.getFingerprintData().isBlank()) {
-                    log.warn("Fingerprint response bos dondu. songId={}", song.getId());
+                    log.warn("Fingerprint response boş döndü. songId={}", song.getId());
                     return;
                 }
 
@@ -73,12 +73,12 @@ public class FingerprintService {
                 song.setFingerprintData(response.getFingerprintData());
                 songRepository.save(song);
 
-                log.info("Fingerprint olusturuldu. songId={}, hashCount={}", song.getId(), response.getHashCount());
+                log.info("Fingerprint oluşturuldu. songId={}, hashCount={}", song.getId(), response.getHashCount());
             } finally {
                 Files.deleteIfExists(tempWav);
             }
         } catch (Exception e) {
-            log.warn("Fingerprint olusturulamadi. songId={}, message={}", song.getId(), e.getMessage());
+            log.warn("Fingerprint oluşturulamadı. songId={}, message={}", song.getId(), e.getMessage());
         }
     }
 
@@ -107,7 +107,7 @@ public class FingerprintService {
                     String.class
             );
         } catch (Exception e) {
-            log.warn("Fingerprint index'e yuklenemedi. songId={}, message={}", song.getId(), e.getMessage());
+            log.warn("Fingerprint index'e yüklenemedi. songId={}, message={}", song.getId(), e.getMessage());
         }
     }
 
@@ -138,7 +138,7 @@ public class FingerprintService {
             );
         } else {
             Files.deleteIfExists(tempWav);
-            throw new IllegalStateException("Song icin fingerprint kaynak dosyasi yok");
+            throw new IllegalStateException("Song için fingerprint kaynak dosyası yok");
         }
 
         pb.redirectErrorStream(true);
@@ -147,7 +147,7 @@ public class FingerprintService {
 
         if (exitCode != 0) {
             Files.deleteIfExists(tempWav);
-            throw new IllegalStateException("ffmpeg fingerprint wav olusturma hatasi: " + exitCode);
+            throw new IllegalStateException("ffmpeg fingerprint wav oluşturma hatası: " + exitCode);
         }
 
         return tempWav;

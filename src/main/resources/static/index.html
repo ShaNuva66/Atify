@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
@@ -18,104 +18,104 @@
                  style="height:40px; border-radius:50%; box-shadow:0 0 14px rgba(34,197,94,0.7);">
             <div>
                 <h1>Atify</h1>
-                <div style="font-size:11px;color:#9ca3af;" id="panelLabel">Admin / KullanÄ±cÄ± Paneli</div>
+                <div style="font-size:11px;color:#9ca3af;" id="panelLabel">Admin / Kullanıcı Paneli</div>
             </div>
         </div>
-        <button id="mobileNavToggle" class="mobile-nav-toggle" type="button" aria-expanded="false" aria-controls="primaryNav">Menu</button>
+        <button id="mobileNavToggle" class="mobile-nav-toggle" type="button" aria-expanded="false" aria-controls="primaryNav">Menü</button>
     </div>
 
     <div id="headerNavPanel" class="header-nav-panel">
         <nav id="primaryNav">
-            <button type="button" data-page="home" data-role="BOTH" class="active">GiriÅŸ</button>
-            <button type="button" data-page="register" data-role="BOTH">KayÄ±t Ol</button>
-            <button type="button" data-page="songs" data-role="BOTH">ÅarkÄ±lar</button>
-            <button type="button" data-page="artists" data-role="ADMIN">SanatÃ§Ä±lar (Admin)</button>
-            <button type="button" data-page="users" data-role="ADMIN">KullanÄ±cÄ±lar (Admin)</button>
+            <button type="button" data-page="home" data-role="BOTH" class="active">Giriş</button>
+            <button type="button" data-page="register" data-role="BOTH">Kayıt Ol</button>
+            <button type="button" data-page="songs" data-role="BOTH">Şarkılar</button>
+            <button type="button" data-page="artists" data-role="ADMIN">Sanatçılar (Admin)</button>
+            <button type="button" data-page="users" data-role="ADMIN">Kullanıcılar (Admin)</button>
             <button type="button" data-page="audit" data-role="ADMIN">Audit Log (Admin)</button>
             <button type="button" data-page="playlists" data-role="BOTH">Playlistler</button>
             <button type="button" data-page="favorites" data-role="BOTH">Favorilerim</button>
-            <button type="button" data-page="history" data-role="BOTH">GeÃ§miÅŸ</button>
-            <button type="button" data-page="insights" data-role="BOTH">Ä°Ã§gÃ¶rÃ¼ler</button>
-            <button type="button" data-page="addSong" data-role="ADMIN">MÃ¼zik Ekle (Admin)</button>
+            <button type="button" data-page="history" data-role="BOTH">Geçmiş</button>
+            <button type="button" data-page="insights" data-role="BOTH">İçgörüler</button>
+            <button type="button" data-page="addSong" data-role="ADMIN">Müzik Ekle (Admin)</button>
         </nav>
 
         <div class="header-meta">
-            <div id="userInfo">Rol seÃ§ilmedi</div>
-            <button id="headerLogoutBtn" class="btn gray" style="display:none; margin-top:0;">Hesaptan Ã‡Ä±k</button>
+            <div id="userInfo">Rol seçilmedi</div>
+            <button id="headerLogoutBtn" class="btn gray" style="display:none; margin-top:0;">Hesaptan Çık</button>
         </div>
     </div>
 </header>
 
 <main>
-    <!-- ROL SEÃ‡Ä°M SAYFASI -->
+    <!-- ROL SEÇİM SAYFASI -->
     <section id="page-roleSelect" class="page active">
-        <h2>Atify'e HoÅŸ Geldin ğŸ§</h2>
+        <h2>Atify'e Hoş Geldin 🎧</h2>
         <p class="muted">
-            Devam etmeden Ã¶nce bu oturumda <b>Admin</b> mi yoksa <b>KullanÄ±cÄ±</b> olarak mÄ± giriÅŸ yapacaÄŸÄ±nÄ± seÃ§.
+            Devam etmeden önce bu oturumda <b>Admin</b> mi yoksa <b>Kullanıcı</b> olarak mı giriş yapacağını seç.
         </p>
         <div style="display:flex; gap:16px; flex-wrap:wrap; margin-top:12px;">
             <div class="role-card">
                 <div class="role-badge">Admin Paneli</div>
-                <div class="role-title">Admin GiriÅŸi</div>
+                <div class="role-title">Admin Girişi</div>
                 <p class="muted">
-                    ÅarkÄ± ekleme, sanatÃ§Ä± ekleme ve tÃ¼m verileri yÃ¶netme yetkisi.
+                    Şarkı ekleme, sanatçı ekleme ve tüm verileri yönetme yetkisi.
                 </p>
                 <button id="enterAdminBtn" class="btn primary">Admin Olarak Devam Et</button>
             </div>
             <div class="role-card">
-                <div class="role-badge">KullanÄ±cÄ± Paneli</div>
-                <div class="role-title">KullanÄ±cÄ± GiriÅŸi</div>
+                <div class="role-badge">Kullanıcı Paneli</div>
+                <div class="role-title">Kullanıcı Girişi</div>
                 <p class="muted">
-                    ÅarkÄ±larÄ± gÃ¶rÃ¼ntÃ¼le, playlist oluÅŸtur, playlist'e ÅŸarkÄ± ekle.
+                    Şarkıları görüntüle, playlist oluştur, playlist'e şarkı ekle.
                 </p>
-                <button id="enterUserBtn" class="btn secondary">KullanÄ±cÄ± Olarak Devam Et</button>
+                <button id="enterUserBtn" class="btn secondary">Kullanıcı Olarak Devam Et</button>
             </div>
         </div>
     </section>
 
-    <!-- GÄ°RÄ°Å SAYFASI -->
+    <!-- GİRİŞ SAYFASI -->
     <section id="page-home" class="page">
-        <h2 id="homeTitle">GiriÅŸ</h2>
+        <h2 id="homeTitle">Giriş</h2>
         <p id="homeDesc" style="font-size:13px; color:#e5e7eb;">
-            GiriÅŸ yap, sonra ÅŸarkÄ± ve playlist ekranlarÄ±na geÃ§.
+            Giriş yap, sonra şarkı ve playlist ekranlarına geç.
         </p>
 
         <div id="authBox">
-            <h3>GiriÅŸ (POST /auth/login)</h3>
-            <small>JWT kullanmak iÃ§in Ã¶nce kayÄ±t olup giriÅŸ yapman gerekiyor.</small>
+            <h3>Giriş (POST /auth/login)</h3>
+            <small>JWT kullanmak için önce kayıt olup giriş yapman gerekiyor.</small>
 
             <form id="loginForm" style="margin-top:8px; max-width:360px;">
-                <label>KullanÄ±cÄ± adÄ±</label>
+                <label>Kullanıcı adı</label>
                 <input id="loginUsername" type="text" placeholder="username" autocomplete="username">
-                <label>Åifre</label>
+                <label>Şifre</label>
                 <input id="loginPassword" type="password" placeholder="123456" autocomplete="current-password">
-                <button type="submit" class="btn secondary">GiriÅŸ Yap</button>
+                <button type="submit" class="btn secondary">Giriş Yap</button>
             </form>
 
             <p class="muted" style="margin-top:12px;">
-                HenÃ¼z hesabÄ±n yoksa Ã¼stteki <b>KayÄ±t Ol</b> sekmesinden yeni kullanÄ±cÄ± oluÅŸturabilirsin.
+                Henüz hesabın yoksa üstteki <b>Kayıt Ol</b> sekmesinden yeni kullanıcı oluşturabilirsin.
             </p>
         </div>
 
         <div id="homeDashboard" style="display:none;">
             <div class="home-dashboard-grid">
                 <div class="songs-side-card">
-                    <div style="font-size:13px; margin-bottom:8px;">HÄ±zlÄ± Ã–zet</div>
+                    <div style="font-size:13px; margin-bottom:8px;">Hızlı Özet</div>
                     <div id="homeQuickStats" class="muted">
-                        ÅarkÄ± dinlemeye baÅŸladÄ±ÄŸÄ±nda burada kÄ±sa Ã¶zetin gÃ¶rÃ¼necek.
+                        Şarkı dinlemeye başladığında burada kısa özetin görünecek.
                     </div>
                 </div>
                 <div class="songs-side-card">
-                    <div style="font-size:13px; margin-bottom:8px;">En Ã‡ok Dinlenenler</div>
+                    <div style="font-size:13px; margin-bottom:8px;">En Çok Dinlenenler</div>
                     <div id="homeTopHistoryList" class="list" style="padding:8px;">
-                        HenÃ¼z kayÄ±t yok.
+                        Henüz kayıt yok.
                     </div>
                 </div>
             </div>
             <div class="songs-side-card" style="margin-top:16px;">
-                <div style="font-size:13px; margin-bottom:8px;">Sana Ã–zel KeÅŸif</div>
+                <div style="font-size:13px; margin-bottom:8px;">Sana Özel Keşif</div>
                 <div id="homeRecommendationPreview" class="recommendation-list">
-                    Dinleme verin oluÅŸtuÄŸunda burada sana Ã¶zel Ã¶neriler gÃ¶zÃ¼kecek.
+                    Dinleme verin oluştuğunda burada sana özel öneriler gözükecek.
                 </div>
             </div>
         </div>
@@ -123,56 +123,56 @@
 
     <!-- KAYIT OL SAYFASI -->
     <section id="page-register" class="page">
-        <h2>KayÄ±t Ol</h2>
-        <p class="muted">Buradan yeni kullanÄ±cÄ± oluÅŸturup sonra giriÅŸ ekranÄ±ndan login olabilirsin.</p>
+        <h2>Kayıt Ol</h2>
+        <p class="muted">Buradan yeni kullanıcı oluşturup sonra giriş ekranından login olabilirsin.</p>
 
         <form id="registerForm" style="max-width:360px;">
-            <label>KullanÄ±cÄ± adÄ±</label>
+            <label>Kullanıcı adı</label>
             <input id="regUsername" type="text" placeholder="username" autocomplete="username">
             <label>Email</label>
             <input id="regEmail" type="email" placeholder="mail@ornek.com" autocomplete="email">
-            <label>Åifre</label>
+            <label>Şifre</label>
             <input id="regPassword" type="password" placeholder="123456" autocomplete="new-password">
-            <button type="submit" class="btn primary">KayÄ±t Ol</button>
+            <button type="submit" class="btn primary">Kayıt Ol</button>
         </form>
     </section>
 
-    <!-- ÅARKILAR -->
+    <!-- ŞARKILAR -->
     <section id="page-songs" class="page">
-        <h2>ÅarkÄ±lar</h2>
+        <h2>Şarkılar</h2>
         <p class="muted" style="margin-bottom:8px;">
-            Yerel kÃ¼tÃ¼phaneyi aÃ§abilir veya Jamendo Ã¼zerinden telifsiz parÃ§a arayabilirsin.
+            Yerel kütüphaneyi açabilir veya Jamendo üzerinden telifsiz parça arayabilirsin.
         </p>
 
         <div class="songs-layout">
             <div>
                 <div class="catalog-toolbar">
-                    <input id="catalogSearchInput" type="text" placeholder="ÅarkÄ± veya ÅŸarkÄ±cÄ± ara">
+                    <input id="catalogSearchInput" type="text" placeholder="Şarkı veya şarkıcı ara">
                     <select id="catalogArtistFilter">
-                        <option value="">TÃ¼m sanatÃ§Ä±lar</option>
+                        <option value="">Tüm sanatçılar</option>
                     </select>
                     <select id="catalogSourceFilter">
                         <option value="LOCAL">Sadece Yerel</option>
                         <option value="JAMENDO">Sadece Jamendo</option>
-                        <option value="ALL">TÃ¼mÃ¼</option>
+                        <option value="ALL">Tümü</option>
                     </select>
                     <button id="applyCatalogFiltersBtn" class="btn gray" style="margin-top:0;">Filtrele</button>
                     <button id="clearCatalogFiltersBtn" class="btn gray" style="margin-top:0;">Temizle</button>
                     <button id="searchJamendoBtn" class="btn secondary" style="margin-top:0;">Jamendo Ara</button>
-                    <button id="importJamendoResultsBtn" class="btn primary" style="margin-top:0; display:none;">SonuÃ§larÄ± Atify'ye Ekle</button>
-                    <button id="showLocalSongsBtn" class="btn gray" style="margin-top:0;">Yerel ÅarkÄ±lar</button>
+                    <button id="importJamendoResultsBtn" class="btn primary" style="margin-top:0; display:none;">Sonuçları Atify'ye Ekle</button>
+                    <button id="showLocalSongsBtn" class="btn gray" style="margin-top:0;">Yerel Şarkılar</button>
                 </div>
                 <div id="catalogSummary" class="muted" style="margin-bottom:8px;">
-                    Yerel ÅŸarkÄ±lar gÃ¶steriliyor.
+                    Yerel şarkılar gösteriliyor.
                 </div>
                 <div class="list">
                     <table class="songs-table">
                         <thead>
                         <tr class="songs-header-row">
                             <th style="width:32px;"></th>
-                            <th>BaÅŸlÄ±k</th>
-                            <th>ÅarkÄ±cÄ±</th>
-                            <th style="width:60px; text-align:right;">SÃ¼re</th>
+                            <th>Başlık</th>
+                            <th>Şarkıcı</th>
+                            <th style="width:60px; text-align:right;">Süre</th>
                             <th style="width:40px; text-align:center;"></th>
                         </tr>
                         </thead>
@@ -180,20 +180,20 @@
                     </table>
                 </div>
 
-                <!-- Admin iÃ§in ÅŸarkÄ± dÃ¼zenleme kutusu -->
+                <!-- Admin için şarkı düzenleme kutusu -->
                 <div id="songEditContainer">
-                    <h3>SeÃ§ili ÅŸarkÄ±yÄ± dÃ¼zenle (Admin)</h3>
+                    <h3>Seçili şarkıyı düzenle (Admin)</h3>
                     <p class="muted">
-                        Bu bÃ¶lÃ¼m yalnÄ±zca admin iÃ§in. Backend ÅŸu an sadece POST /songs destekliyorsa,
-                        PUT isteÄŸi 405/404 dÃ¶nebilir; o kÄ±smÄ± backend'de eklemen gerekecek.
+                        Bu bölüm yalnızca admin için. Backend şu an sadece POST /songs destekliyorsa,
+                        PUT isteği 405/404 dönebilir; o kısmı backend'de eklemen gerekecek.
                     </p>
-                    <label>ÅarkÄ± ID (readonly)</label>
+                    <label>Şarkı ID (readonly)</label>
                     <input id="editSongId" type="text" readonly>
 
-                    <label>ÅarkÄ± adÄ±</label>
+                    <label>Şarkı adı</label>
                     <input id="editSongName" type="text">
 
-                    <label>SÃ¼re (saniye)</label>
+                    <label>Süre (saniye)</label>
                     <input id="editSongDuration" type="number">
 
                     <button id="updateSongBtn" class="btn primary">Kaydet (PUT /songs/{id})</button>
@@ -201,34 +201,34 @@
             </div>
 
             <div class="songs-side-card">
-                <div style="font-size:13px; margin-bottom:6px;">ğŸ§ Atify Player</div>
+                <div style="font-size:13px; margin-bottom:6px;">🎧 Atify Player</div>
                 <p class="muted">
-                    â€¢ Liste otomatik gelir, satÄ±ra tÄ±klayÄ±nca alt player Ã§alar. <br>
-                    â€¢ ğŸ¯ ile ÅŸarkÄ±nÄ±n ortasÄ±na atlayabilirsin. <br>
-                    â€¢ Ses kaydÄ±rÄ±cÄ±yla sesi aÃ§/kÄ±s. <br>
-                    â€¢ "Playlist'e ekle" tuÅŸu ile hangi listeye ekleyeceÄŸini seÃ§ersin.
+                    • Liste otomatik gelir, satıra tıklayınca alt player çalar. <br>
+                    • 🎯 ile şarkının ortasına atlayabilirsin. <br>
+                    • Ses kaydırıcıyla sesi aç/kıs. <br>
+                    • "Playlist'e ekle" tuşu ile hangi listeye ekleyeceğini seçersin.
                 </p>
-                <div style="font-size:13px; margin:14px 0 6px;">Senin iÃ§in Ã¶neriler</div>
+                <div style="font-size:13px; margin:14px 0 6px;">Senin için öneriler</div>
                 <div id="recommendationList" class="recommendation-list">
-                    <div class="muted">Bir ÅŸarkÄ± seÃ§tiÄŸinde burada benzer Ã¶neriler gÃ¶zÃ¼kecek.</div>
+                    <div class="muted">Bir şarkı seçtiğinde burada benzer öneriler gözükecek.</div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- SANATÃ‡ILAR -->
+    <!-- SANATÇILAR -->
     <section id="page-artists" class="page">
-        <h2>SanatÃ§Ä±lar (Admin)</h2>
-        <p class="muted">Bu ekran adminlere Ã¶zel.</p>
+        <h2>Sanatçılar (Admin)</h2>
+        <p class="muted">Bu ekran adminlere özel.</p>
         <p id="artistRoleText" class="muted" style="margin-bottom:10px;"></p>
-        <button id="loadArtistsBtn" class="btn primary">SanatÃ§Ä±larÄ± Getir (GET /artists)</button>
-        <div id="artistsList" class="list" style="margin-top:10px;">HenÃ¼z sanatÃ§Ä± Ã§ekilmedi.</div>
+        <button id="loadArtistsBtn" class="btn primary">Sanatçıları Getir (GET /artists)</button>
+        <div id="artistsList" class="list" style="margin-top:10px;">Henüz sanatçı çekilmedi.</div>
 
         <div id="artistAdminBox">
-            <h3 style="margin-top:16px;font-size:15px;">Yeni SanatÃ§Ä± Ekle (POST /artists)</h3>
-            <label>SanatÃ§Ä± AdÄ±</label>
+            <h3 style="margin-top:16px;font-size:15px;">Yeni Sanatçı Ekle (POST /artists)</h3>
+            <label>Sanatçı Adı</label>
             <input id="artistName" type="text" placeholder="Tarkan">
-            <button id="createArtistBtn" class="btn secondary">SanatÃ§Ä± Ekle</button>
+            <button id="createArtistBtn" class="btn secondary">Sanatçı Ekle</button>
         </div>
     </section>
 
@@ -236,19 +236,19 @@
     <section id="page-playlists" class="page">
         <h2>Playlistlerin</h2>
         <p class="muted" style="margin-bottom:8px;">
-            Sol tarafta playlistlerin, saÄŸda seÃ§ili playlistin ÅŸarkÄ±larÄ±.
+            Sol tarafta playlistlerin, sağda seçili playlistin şarkıları.
         </p>
 
         <div class="playlists-layout">
             <div class="playlists-left">
-                <h3 style="font-size:14px;margin-top:0;">Yeni Playlist OluÅŸtur</h3>
-                <label>Playlist adÄ±</label>
+                <h3 style="font-size:14px;margin-top:0;">Yeni Playlist Oluştur</h3>
+                <label>Playlist adı</label>
                 <input id="playlistName" type="text" placeholder="Favorilerim">
-                <button id="createPlaylistBtn" class="btn primary">OluÅŸtur</button>
+                <button id="createPlaylistBtn" class="btn primary">Oluştur</button>
 
                 <h3 style="font-size:14px;margin-top:16px;">Playlistlerin</h3>
                 <div id="playlistsList" class="list" style="padding:8px; max-height:260px; overflow:auto;">
-                    HenÃ¼z playlist yok.
+                    Henüz playlist yok.
                 </div>
             </div>
 
@@ -256,78 +256,78 @@
                 <div class="playlist-detail-head">
                     <div id="playlistDetailCover" class="playlist-cover large">P</div>
                     <div class="playlist-detail-copy">
-                        <h3 id="playlistDetailTitle" style="font-size:14px;margin-top:0;">SeÃ§ili playlist yok</h3>
-                        <div id="playlistDetailMeta" class="playlist-meta">Kapak ve iÃ§erik burada gÃ¶rÃ¼necek.</div>
+                        <h3 id="playlistDetailTitle" style="font-size:14px;margin-top:0;">Seçili playlist yok</h3>
+                        <div id="playlistDetailMeta" class="playlist-meta">Kapak ve içerik burada görünecek.</div>
                     </div>
                 </div>
                 <div class="playlist-detail-toolbar">
-                    <input id="playlistRenameInput" type="text" placeholder="Playlist adÄ±" disabled>
-                    <button id="renamePlaylistBtn" class="btn secondary" style="margin-top:0;" disabled>AdÄ± GÃ¼ncelle</button>
+                    <input id="playlistRenameInput" type="text" placeholder="Playlist adı" disabled>
+                    <button id="renamePlaylistBtn" class="btn secondary" style="margin-top:0;" disabled>Adı Güncelle</button>
                     <button id="deletePlaylistBtn" class="btn gray" style="margin-top:0;" disabled>Playlisti Sil</button>
                 </div>
                 <div class="playlist-cover-toolbar">
-                    <input id="playlistCoverInput" type="text" placeholder="Kapak gÃ¶rseli URL'si" disabled>
-                    <button id="savePlaylistCoverBtn" class="btn secondary" style="margin-top:0;" disabled>KapaÄŸÄ± Kaydet</button>
-                    <button id="useCurrentSongCoverBtn" class="btn gray" style="margin-top:0;" disabled>Åu An Ã‡alanÄ± Kullan</button>
-                    <button id="clearPlaylistCoverBtn" class="btn gray" style="margin-top:0;" disabled>KapaÄŸÄ± Temizle</button>
+                    <input id="playlistCoverInput" type="text" placeholder="Kapak görseli URL'si" disabled>
+                    <button id="savePlaylistCoverBtn" class="btn secondary" style="margin-top:0;" disabled>Kapağı Kaydet</button>
+                    <button id="useCurrentSongCoverBtn" class="btn gray" style="margin-top:0;" disabled>Şu An Çalanı Kullan</button>
+                    <button id="clearPlaylistCoverBtn" class="btn gray" style="margin-top:0;" disabled>Kapağı Temizle</button>
                 </div>
                 <div id="playlistContent" class="list playlist-songs-list" style="padding:8px; max-height:260px; overflow:auto;">
-                    Bir playlist seÃ§tiÄŸinde ÅŸarkÄ±lar burada gÃ¶zÃ¼kecek.
+                    Bir playlist seçtiğinde şarkılar burada gözükecek.
                 </div>
             </div>
         </div>
     </section>
 
     <section id="page-users" class="page">
-        <h2>KullanÄ±cÄ± YÃ¶netimi (Admin)</h2>
+        <h2>Kullanıcı Yönetimi (Admin)</h2>
         <p class="muted" style="margin-bottom:8px;">
-            Buradan kullanÄ±cÄ±larÄ± gÃ¶rebilir ve rollerini gÃ¼venli ÅŸekilde deÄŸiÅŸtirebilirsin.
+            Buradan kullanıcıları görebilir ve rollerini güvenli şekilde değiştirebilirsin.
         </p>
-        <button id="loadUsersBtn" class="btn primary">KullanÄ±cÄ±larÄ± Yenile</button>
+        <button id="loadUsersBtn" class="btn primary">Kullanıcıları Yenile</button>
         <div id="usersAdminList" class="list" style="padding:8px; margin-top:12px;">
-            HenÃ¼z kullanÄ±cÄ± verisi yÃ¼klenmedi.
+            Henüz kullanıcı verisi yüklenmedi.
         </div>
     </section>
 
     <section id="page-audit" class="page">
         <h2>Audit Log (Admin)</h2>
         <p class="muted" style="margin-bottom:8px;">
-            Kritik yÃ¶netim iÅŸlemleri burada zaman sÄ±rasÄ±yla tutulur.
+            Kritik yönetim işlemleri burada zaman sırasıyla tutulur.
         </p>
         <div class="audit-toolbar">
             <input id="auditSearchInput" type="text" placeholder="Detay, id veya anahtar kelime ara">
-            <input id="auditActorInput" type="text" placeholder="KullanÄ±cÄ± adÄ±na gÃ¶re filtrele">
+            <input id="auditActorInput" type="text" placeholder="Kullanıcı adına göre filtrele">
             <select id="auditActionFilter">
-                <option value="">TÃ¼m aksiyonlar</option>
+                <option value="">Tüm aksiyonlar</option>
             </select>
             <select id="auditTargetFilter">
-                <option value="">TÃ¼m hedefler</option>
+                <option value="">Tüm hedefler</option>
             </select>
             <button id="applyAuditFiltersBtn" class="btn gray" style="margin-top:0;">Filtrele</button>
             <button id="clearAuditFiltersBtn" class="btn gray" style="margin-top:0;">Temizle</button>
-            <button id="exportAuditCsvBtn" class="btn secondary" style="margin-top:0;">CSV / Excel Ä°ndir</button>
+            <button id="exportAuditCsvBtn" class="btn secondary" style="margin-top:0;">CSV / Excel İndir</button>
             <button id="loadAuditLogsBtn" class="btn primary" style="margin-top:0;">Yenile</button>
         </div>
         <div class="audit-grid">
             <div>
                 <div id="auditLogList" class="list" style="padding:8px; margin-top:12px;">
-                    HenÃ¼z audit kaydÄ± yÃ¼klenmedi.
+                    Henüz audit kaydı yüklenmedi.
                 </div>
             </div>
             <div class="audit-side-column">
                 <div class="songs-side-card">
-                    <div style="font-size:13px; margin-bottom:8px;">KullanÄ±cÄ± Ã–zeti</div>
+                    <div style="font-size:13px; margin-bottom:8px;">Kullanıcı Özeti</div>
                     <div id="auditActorSummaryList" class="audit-actor-summary-list">
-                        Ã–zet yÃ¼klenmeyi bekliyor.
+                        Özet yüklenmeyi bekliyor.
                     </div>
                 </div>
                 <div class="songs-side-card" style="margin-top:12px;">
-                    <div id="auditActorDetailTitle" style="font-size:13px; margin-bottom:6px;">KullanÄ±cÄ± seÃ§ilmedi</div>
+                    <div id="auditActorDetailTitle" style="font-size:13px; margin-bottom:6px;">Kullanıcı seçilmedi</div>
                     <div id="auditActorDetailMeta" class="muted" style="margin-bottom:8px;">
-                        Soldaki Ã¶zetten bir kullanÄ±cÄ± seÃ§.
+                        Soldaki özetten bir kullanıcı seç.
                     </div>
                     <div id="auditActorDetailList" class="audit-detail-list">
-                        HenÃ¼z detay gÃ¶sterilecek kayÄ±t yok.
+                        Henüz detay gösterilecek kayıt yok.
                     </div>
                 </div>
             </div>
@@ -335,29 +335,29 @@
     </section>
     <section id="page-favorites" class="page">
         <h2>Favorilerim</h2>
-        <p class="muted" style="margin-bottom:8px;">Favoriye aldÄ±ÄŸÄ±n ÅŸarkÄ±lar burada listelenir.</p>
-        <div id="favoritesList" class="list" style="padding:8px;">HenÃ¼z favori ÅŸarkÄ±n yok.</div>
+        <p class="muted" style="margin-bottom:8px;">Favoriye aldığın şarkılar burada listelenir.</p>
+        <div id="favoritesList" class="list" style="padding:8px;">Henüz favori şarkın yok.</div>
     </section>
 
     <section id="page-history" class="page">
-        <h2>Dinleme GeÃ§miÅŸi</h2>
-        <p class="muted" style="margin-bottom:8px;">Son dinlediklerin ve en Ã§ok dÃ¶ndÃ¼rdÃ¼klerin burada gÃ¶rÃ¼nÃ¼r.</p>
+        <h2>Dinleme Geçmişi</h2>
+        <p class="muted" style="margin-bottom:8px;">Son dinlediklerin ve en çok döndürdüklerin burada görünür.</p>
         <div class="history-grid">
             <div>
                 <h3 style="font-size:14px; margin-top:0;">Son Dinlenenler</h3>
-                <div id="recentHistoryList" class="list" style="padding:8px;">HenÃ¼z kayÄ±t yok.</div>
+                <div id="recentHistoryList" class="list" style="padding:8px;">Henüz kayıt yok.</div>
             </div>
             <div>
-                <h3 style="font-size:14px; margin-top:0;">En Ã‡ok Dinlenenler</h3>
-                <div id="topHistoryList" class="list" style="padding:8px;">HenÃ¼z kayÄ±t yok.</div>
+                <h3 style="font-size:14px; margin-top:0;">En Çok Dinlenenler</h3>
+                <div id="topHistoryList" class="list" style="padding:8px;">Henüz kayıt yok.</div>
             </div>
         </div>
     </section>
 
     <section id="page-insights" class="page">
-        <h2>Ä°Ã§gÃ¶rÃ¼ler</h2>
+        <h2>İçgörüler</h2>
         <p class="muted" style="margin-bottom:8px;">
-            Favorilerin ve dinleme alÄ±ÅŸkanlÄ±ÄŸÄ±na gÃ¶re oluÅŸan Ã¶zetler ve kiÅŸiselleÅŸtirilmiÅŸ Ã¶neriler burada.
+            Favorilerin ve dinleme alışkanlığına göre oluşan özetler ve kişiselleştirilmiş öneriler burada.
         </p>
 
         <div id="insightStatsGrid" class="insights-stats-grid">
@@ -369,96 +369,96 @@
 
         <div class="insights-grid">
             <div class="songs-side-card">
-                <div style="font-size:13px; margin-bottom:8px;">Sana Ã–zel Ã–neriler</div>
+                <div style="font-size:13px; margin-bottom:8px;">Sana Özel Öneriler</div>
                 <div id="personalRecommendationList" class="recommendation-list">
-                    Dinleme verin oluÅŸtukÃ§a burada daha gÃ¼Ã§lÃ¼ Ã¶neriler gÃ¶receksin.
+                    Dinleme verin oluştukça burada daha güçlü öneriler göreceksin.
                 </div>
             </div>
             <div class="songs-side-card">
-                <div style="font-size:13px; margin-bottom:8px;">En Ã‡ok DinlediÄŸin SanatÃ§Ä±lar</div>
+                <div style="font-size:13px; margin-bottom:8px;">En Çok Dinlediğin Sanatçılar</div>
                 <div id="topArtistsList" class="list" style="padding:8px;">
-                    HenÃ¼z yeterli veri yok.
+                    Henüz yeterli veri yok.
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- MÃœZÄ°K EKLE -->
+    <!-- MÜZİK EKLE -->
         <section id="page-addSong" class="page">
-        <h2>Muzik Ekle (Admin)</h2>
+        <h2>Müzik Ekle (Admin)</h2>
         <p class="muted" style="margin-top:-4px;">
-            Iki farkli akis var: hizli metadata kaydi, MP3 yukleme ve Jamendo seed yonetimi.
+            İki farklı akış var: hızlı metadata kaydı, MP3 yükleme ve Jamendo seed yönetimi.
         </p>
 
         <div class="song-admin-grid">
             <div class="song-admin-card">
-                <h3>Hizli Katalog Kaydi</h3>
+                <h3>Hızlı Katalog Kaydı</h3>
                 <p class="muted">
-                    <code>POST /songs</code> ile sadece metadata kaydeder. Yerel dosya baglamaz.
+                    <code>POST /songs</code> ile sadece metadata kaydeder. Yerel dosya bağlamaz.
                 </p>
 
-                <label>Sarki Adi</label>
+                <label>Şarkı Adı</label>
                 <input id="songTitle" type="text" placeholder="Kuzu Kuzu">
 
-                <label>Sanatci (isim yazarak sec)</label>
+                <label>Sanatçı (isim yazarak seç)</label>
                 <div id="artistSuggestBox">
-                    <input id="songArtistNameInput" type="text" placeholder="Tarkan yazmaya basla...">
+                    <input id="songArtistNameInput" type="text" placeholder="Tarkan yazmaya başla...">
                     <div id="artistSuggestions" style="display:none;"></div>
                 </div>
                 <input id="songArtistIdHidden" type="hidden">
 
-                <label>Sure (saniye - opsiyonel)</label>
+                <label>Süre (saniye - opsiyonel)</label>
                 <input id="songDuration" type="number" placeholder="270">
 
                 <label>Playlist ID Listesi (opsiyonel, 1,2,3)</label>
                 <input id="songPlaylistIds" type="text" placeholder="">
 
                 <div class="song-admin-actions">
-                    <button id="createSongBtn" class="btn primary">Kayit Olustur</button>
+                    <button id="createSongBtn" class="btn primary">Kayıt Oluştur</button>
                 </div>
             </div>
 
             <div class="song-admin-card">
-                <h3>MP3 Yukle ve Kaydet</h3>
+                <h3>MP3 Yükle ve Kaydet</h3>
                 <p class="muted">
-                    <code>POST /songs/upload</code> ile dosyayi yukler, sureyi otomatik cozer ve stream edilebilir hale getirir.
+                    <code>POST /songs/upload</code> ile dosyayı yükler, süreyi otomatik çözer ve stream edilebilir hale getirir.
                 </p>
 
-                <label>Sarki Adi</label>
-                <input id="uploadSongName" type="text" placeholder="Yeni Demo Sarki">
+                <label>Şarkı Adı</label>
+                <input id="uploadSongName" type="text" placeholder="Yeni Demo Şarkı">
 
-                <label>Sanatci (isim yazarak sec)</label>
+                <label>Sanatçı (isim yazarak seç)</label>
                 <div id="uploadArtistSuggestBox">
-                    <input id="uploadArtistNameInput" type="text" placeholder="Sanatci ara...">
+                    <input id="uploadArtistNameInput" type="text" placeholder="Sanatçı ara...">
                     <div id="uploadArtistSuggestions" style="display:none;"></div>
                 </div>
                 <input id="uploadArtistIdHidden" type="hidden">
 
                 <label>Album ID (opsiyonel)</label>
-                <input id="uploadAlbumId" type="number" placeholder="Varsa album id">
+                <input id="uploadAlbumId" type="number" placeholder="Varsa albüm id">
 
-                <label>Yuklendikten sonra playlist'e ekle (opsiyonel)</label>
+                <label>Yüklendikten sonra playlist'e ekle (opsiyonel)</label>
                 <select id="uploadPlaylistSelect">
-                    <option value="">Playlist secme</option>
+                    <option value="">Playlist seçme</option>
                 </select>
 
-                <label>MP3 Dosyasi</label>
+                <label>MP3 Dosyası</label>
                 <input id="uploadSongFile" type="file" accept=".mp3,audio/mpeg">
 
                 <div class="upload-drop-hint">
-                    Dosyayi sectiginde backend sureyi otomatik hesaplar. MP3 disinda format kabul etmiyor.
+                    Dosyayı seçtiğinde backend süreyi otomatik hesaplar. MP3 dışında format kabul etmiyor.
                 </div>
 
                 <div class="song-admin-actions">
-                    <button id="uploadSongBtn" class="btn secondary">MP3 Yukle</button>
+                    <button id="uploadSongBtn" class="btn secondary">MP3 Yükle</button>
                 </div>
             </div>
 
             <div class="song-admin-card">
-                <h3>Jamendo Seed Ayarlari</h3>
+                <h3>Jamendo Seed Ayarları</h3>
                 <p class="muted">
-                    Uygulama acilirken otomatik yuklenecek Jamendo sorgularini burada yonet.
-                    Kaydettigin ayarlar kalici tutulur. Istersen ayni ekrandan hemen calistirabilirsin.
+                    Uygulama açılırken otomatik yüklenecek Jamendo sorgularını burada yönet.
+                    Kaydettiğin ayarlar kalıcı tutulur. İstersen aynı ekrandan hemen çalıştırabilirsin.
                 </p>
 
                 <label>
@@ -466,48 +466,48 @@
                     Startup preload aktif
                 </label>
 
-                <label>Her sorgudan kac parca alinsin?</label>
+                <label>Her sorgudan kaç parça alınsın?</label>
                 <input id="jamendoPreloadLimit" type="number" min="1" max="20" value="4">
 
-                <label>Sorgular (her satira bir tane)</label>
+                <label>Sorgular (her satıra bir tane)</label>
                 <textarea id="jamendoPreloadQueries" rows="6" placeholder="instrumental&#10;chill&#10;lofi"></textarea>
 
                 <div class="song-admin-actions">
-                    <button id="saveJamendoPreloadBtn" class="btn primary">Ayarlari Kaydet</button>
-                    <button id="runJamendoPreloadBtn" class="btn secondary">Simdi Calistir</button>
+                    <button id="saveJamendoPreloadBtn" class="btn primary">Ayarları Kaydet</button>
+                    <button id="runJamendoPreloadBtn" class="btn secondary">Şimdi Çalıştır</button>
                 </div>
 
                 <div id="jamendoPreloadStatus" class="muted" style="margin-top:10px;">
-                    Jamendo preload ayarlari henuz yuklenmedi.
+                    Jamendo preload ayarları henüz yüklenmedi.
                 </div>
             </div>
         </div>
     </section>
 
-    <div id="status">Durum: Rol seÃ§meni bekliyorum...</div>
+    <div id="status">Durum: Rol seçmeni bekliyorum...</div>
 </main>
 
 <div id="popup"></div>
 
-<!-- GÄ°ZLÄ° AUDIO -->
+<!-- GİZLİ AUDIO -->
 <audio id="audioPlayer"></audio>
 
-<!-- ALT PLAYER (baÅŸta gizli) -->
+<!-- ALT PLAYER (başta gizli) -->
 <div id="playerBar" class="player-bar hidden">
     <div class="player-left">
-        <div class="player-cover" id="playerCover">â™ª</div>
+        <div class="player-cover" id="playerCover">♪</div>
         <div class="player-texts">
-            <div class="player-title" id="playerTitle">Åu an ÅŸarkÄ± seÃ§ilmedi</div>
+            <div class="player-title" id="playerTitle">Şu an şarkı seçilmedi</div>
             <div class="player-artist" id="playerArtist">Atify</div>
         </div>
     </div>
 
     <div class="player-center">
         <div class="player-controls">
-            <button id="seekBackBtn" class="player-btn">âª</button>
-            <button id="jumpMiddleBtn" class="player-btn">ğŸ¯</button>
-            <button class="player-btn main" id="playPauseBtn">â–¶</button>
-            <button id="seekForwardBtn" class="player-btn">â©</button>
+            <button id="seekBackBtn" class="player-btn">⏪</button>
+            <button id="jumpMiddleBtn" class="player-btn">🎯</button>
+            <button class="player-btn main" id="playPauseBtn">▶</button>
+            <button id="seekForwardBtn" class="player-btn">⏩</button>
         </div>
         <div class="player-progress">
             <span id="currentTimeLabel">0:00</span>
@@ -521,7 +521,7 @@
             <div class="player-right">
         <div style="margin-bottom:2px;">Ses & Playlist</div>
         <div class="vol-row">
-            <button id="volumeDownBtn" class="player-btn">ÄŸÅ¸â€â€°</button>
+            <button id="volumeDownBtn" class="player-btn">🔉</button>
             <input
                     type="range"
                     id="volumeSlider"
@@ -530,7 +530,7 @@
                     step="0.01"
                     value="1"
             >
-            <button id="volumeUpBtn" class="player-btn">ÄŸÅ¸â€Å </button>
+            <button id="volumeUpBtn" class="player-btn">🔊</button>
         </div>
         <button
                 id="addToPlaylistBtn"
@@ -542,28 +542,28 @@
                 id="favoriteToggleBtn"
                 class="player-btn"
                 style="margin-top:6px; width:100%; padding:4px 8px; font-size:11px;">
-            â™¡ Favorilere ekle
+            ♡ Favorilere ekle
         </button>
-        <div style="margin-top:4px;">ÅarkÄ± Ã§alarken playlistine ekleyebilirsin ğŸ¶</div>
+        <div style="margin-top:4px;">Şarkı çalarken playlistine ekleyebilirsin 🎶</div>
     </div>
 </div>
 
-<!-- PLAYLIST SEÃ‡ME MODALI -->
+<!-- PLAYLIST SEÇME MODALI -->
 <div id="playlistModalOverlay">
     <div id="playlistModal">
         <div class="modal-title">Hangi playliste eklensin?</div>
-        <div class="modal-text">AÅŸaÄŸÄ±dan bir playlist seÃ§.</div>
+        <div class="modal-text">Aşağıdan bir playlist seç.</div>
         <div id="playlistModalList"></div>
-        <button id="playlistModalCloseBtn" class="modal-close-btn">VazgeÃ§</button>
+        <button id="playlistModalCloseBtn" class="modal-close-btn">Vazgeç</button>
     </div>
 </div>
 
-<!-- ORTA BAÅARILI MODALI -->
+<!-- ORTA BAŞARILI MODALI -->
 <div id="centerModalOverlay">
     <div id="centerModal">
-        <div class="modal-icon">âœ…</div>
-        <div class="modal-title" id="centerModalTitle">BaÅŸarÄ±lÄ±</div>
-        <div class="modal-text" id="centerModalText">ÅarkÄ± playlistine eklendi.</div>
+        <div class="modal-icon">✅</div>
+        <div class="modal-title" id="centerModalTitle">Başarılı</div>
+        <div class="modal-text" id="centerModalText">Şarkı playlistine eklendi.</div>
     </div>
 </div>
 

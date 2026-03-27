@@ -48,10 +48,10 @@ async function loadJamendoPreloadSettings() {
     }
 
     const { status, ok, data } = await apiRequest(CONFIG.endpoints.jamendoPreloadAdmin, "GET", null, true);
-    setStatus("Jamendo preload ayarlari getirildi: HTTP " + status, ok);
+    setStatus("Jamendo preload ayarları getirildi: HTTP " + status, ok);
 
     if (!ok || !data) {
-        renderJamendoPreloadStatus("Jamendo preload ayarlari alinamadi.", false);
+        renderJamendoPreloadStatus("Jamendo preload ayarları alınamadı.", false);
         return;
     }
 
@@ -60,41 +60,41 @@ async function loadJamendoPreloadSettings() {
 
 async function saveJamendoPreloadSettings() {
     if (currentRole !== "ADMIN") {
-        setStatus("Jamendo preload ayarlari sadece admin icin.", false);
+        setStatus("Jamendo preload ayarları sadece admin için.", false);
         return;
     }
 
     const payload = getJamendoPreloadFormValues();
     const { status, ok, data } = await apiRequest(CONFIG.endpoints.jamendoPreloadAdmin, "PUT", payload, true);
-    setStatus("Jamendo preload ayarlari kaydedildi: HTTP " + status, ok);
+    setStatus("Jamendo preload ayarları kaydedildi: HTTP " + status, ok);
 
     if (!ok || !data) {
-        renderJamendoPreloadStatus("Jamendo preload ayarlari kaydedilemedi.", false);
+        renderJamendoPreloadStatus("Jamendo preload ayarları kaydedilemedi.", false);
         return;
     }
 
     applyJamendoPreloadSettingsToForm(data);
-    showPopup("Jamendo preload ayarlari kaydedildi");
+    showPopup("Jamendo preload ayarları kaydedildi");
 }
 
 async function runJamendoPreloadNow() {
     if (currentRole !== "ADMIN") {
-        setStatus("Jamendo preload sadece admin icin.", false);
+        setStatus("Jamendo preload sadece admin için.", false);
         return;
     }
 
     const { status, ok, data } = await apiRequest(`${CONFIG.endpoints.jamendoPreloadAdmin}/run`, "POST", {}, true);
-    setStatus("Jamendo preload calistirildi: HTTP " + status, ok);
+    setStatus("Jamendo preload çalıştırıldı: HTTP " + status, ok);
 
     if (!ok || !data) {
-        renderJamendoPreloadStatus("Jamendo preload calistirilamadi.", false);
+        renderJamendoPreloadStatus("Jamendo preload çalıştırılamadı.", false);
         return;
     }
 
     const queries = Array.isArray(data.queries) ? data.queries.join(", ") : "-";
     renderJamendoPreloadStatus(
-        `Calisti · imported=${data.imported || 0} · skipped=${data.skipped || 0} · sorgular: ${queries}`
+        `Çalıştı · imported=${data.imported || 0} · skipped=${data.skipped || 0} · sorgular: ${queries}`
     );
     await getSongs();
-    showPopup("Jamendo preload calistirildi");
+    showPopup("Jamendo preload çalıştırıldı");
 }

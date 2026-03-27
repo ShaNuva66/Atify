@@ -26,14 +26,14 @@ public class FingerprintBackfillService {
                 .toList();
 
         if (songs.isEmpty()) {
-            log.info("Fingerprint backfill icin ses kaynagi olan sarki bulunamadi.");
+            log.info("Fingerprint backfill için ses kaynağı olan şarkı bulunamadı.");
             return;
         }
 
         int indexedCount = 0;
         int generatedCount = 0;
 
-        log.info("Fingerprint startup senkronizasyonu basladi. {} sarki kontrol edilecek.", songs.size());
+        log.info("Fingerprint startup senkronizasyonu başladı. {} şarkı kontrol edilecek.", songs.size());
         for (Song song : songs) {
             if (song.getFingerprintData() != null && !song.getFingerprintData().isBlank()
                     && song.getFingerprintCode() != null && !song.getFingerprintCode().isBlank()) {
@@ -45,7 +45,7 @@ public class FingerprintBackfillService {
             fingerprintService.fingerprintSong(song);
             generatedCount++;
         }
-        log.info("Fingerprint startup senkronizasyonu tamamlandi. indexed={}, generated={}", indexedCount, generatedCount);
+        log.info("Fingerprint startup senkronizasyonu tamamlandı. indexed={}, generated={}", indexedCount, generatedCount);
     }
 
     private boolean hasAudioSource(Song song) {

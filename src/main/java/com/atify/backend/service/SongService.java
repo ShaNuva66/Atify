@@ -48,12 +48,12 @@ public class SongService {
 
     public SongResponse addSong(SongRequest request) {
         Artist artist = artistRepo.findById(request.getArtistId())
-                .orElseThrow(() -> new IllegalArgumentException("Sanat?? bulunamad?: " + request.getArtistId()));
+                .orElseThrow(() -> new IllegalArgumentException("Sanatçı bulunamadı: " + request.getArtistId()));
 
         Album album = null;
         if (request.getAlbumId() != null) {
             album = albumRepo.findById(request.getAlbumId())
-                    .orElseThrow(() -> new IllegalArgumentException("Alb?m bulunamad?: " + request.getAlbumId()));
+                    .orElseThrow(() -> new IllegalArgumentException("Albüm bulunamadı: " + request.getAlbumId()));
         }
 
         List<Playlist> playlists = new ArrayList<>();
@@ -81,7 +81,7 @@ public class SongService {
 
     public SongResponse updateSong(Long id, SongRequest request) {
         Song song = songRepo.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("?ark? bulunamad?: " + id));
+                .orElseThrow(() -> new IllegalArgumentException("Şarkı bulunamadı: " + id));
 
         if (request.getName() != null && !request.getName().isBlank()) {
             song.setName(request.getName());
@@ -91,13 +91,13 @@ public class SongService {
 
         if (request.getArtistId() != null) {
             Artist artist = artistRepo.findById(request.getArtistId())
-                    .orElseThrow(() -> new IllegalArgumentException("Sanat?? bulunamad?: " + request.getArtistId()));
+                    .orElseThrow(() -> new IllegalArgumentException("Sanatçı bulunamadı: " + request.getArtistId()));
             song.setArtist(artist);
         }
 
         if (request.getAlbumId() != null) {
             Album album = albumRepo.findById(request.getAlbumId())
-                    .orElseThrow(() -> new IllegalArgumentException("Alb?m bulunamad?: " + request.getAlbumId()));
+                    .orElseThrow(() -> new IllegalArgumentException("Albüm bulunamadı: " + request.getAlbumId()));
             song.setAlbum(album);
         }
 
@@ -123,16 +123,16 @@ public class SongService {
 
     public Song importJamendoTrack(JamendoImportRequest request) {
         if (request == null) {
-            throw new IllegalArgumentException("Jamendo iste?i bo? olamaz.");
+            throw new IllegalArgumentException("Jamendo isteği boş olamaz.");
         }
         if (request.jamendoId() == null || request.jamendoId().isBlank()) {
             throw new IllegalArgumentException("Jamendo id zorunlu.");
         }
         if (request.name() == null || request.name().isBlank()) {
-            throw new IllegalArgumentException("?ark? ad? zorunlu.");
+            throw new IllegalArgumentException("Şarkı adı zorunlu.");
         }
         if (request.artistName() == null || request.artistName().isBlank()) {
-            throw new IllegalArgumentException("Sanat?? ad? zorunlu.");
+            throw new IllegalArgumentException("Sanatçı adı zorunlu.");
         }
         if (request.audioUrl() == null || request.audioUrl().isBlank()) {
             throw new IllegalArgumentException("Jamendo audio URL zorunlu.");
@@ -223,7 +223,7 @@ public class SongService {
                     "SONG_IMPORTED_JAMENDO_BULK",
                     "SONG",
                     null,
-                    importedSongs.size() + " Jamendo parcasi toplu olarak kutuphaneye eklendi."
+                    importedSongs.size() + " Jamendo parçası toplu olarak kütüphaneye eklendi."
             );
         }
 
@@ -271,7 +271,7 @@ public class SongService {
     @Transactional
     public void deleteSong(Long id) {
         Song song = songRepo.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("?ark? bulunamad?: " + id));
+                .orElseThrow(() -> new IllegalArgumentException("Şarkı bulunamadı: " + id));
 
         if (song.getPlaylists() != null) {
             for (Playlist playlist : song.getPlaylists()) {

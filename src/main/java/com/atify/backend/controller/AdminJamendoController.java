@@ -35,7 +35,7 @@ public class AdminJamendoController {
                 "JAMENDO_PRELOAD_UPDATED",
                 "SYSTEM",
                 null,
-                "Jamendo preload ayarlari guncellendi. enabled=" + response.enabled()
+                "Jamendo preload ayarları güncellendi. enabled=" + response.enabled()
                         + ", limit=" + response.limit()
                         + ", queries=" + String.join("|", response.queries())
         );

@@ -192,20 +192,20 @@
         const password = document.getElementById("regPassword").value.trim();
 
         if (!username || !email || !password) {
-            setStatus("Kullanici adi, email ve sifre zorunlu", false);
+            setStatus("Kullanıcı adı, email ve şifre zorunlu", false);
             return;
         }
 
         const payload = { username, password, email };
         const { status, ok, data } = await apiRequest(CONFIG.endpoints.register, "POST", payload, false);
-        setStatus("Kayit sonucu: HTTP " + status, ok);
+        setStatus("Kayıt sonucu: HTTP " + status, ok);
         console.log("register response:", data);
 
         if (ok) {
-            showPopup("Kayit basarili");
-            showCenterModal("Kayit tamamlandi", "Simdi Giris sayfasindan login olabilirsin.");
+            showPopup("Kayıt başarılı");
+            showCenterModal("Kayıt tamamlandı", "Şimdi Giriş sayfasından login olabilirsin.");
         } else if (data && data.message) {
-            setStatus("Kayit hatasi: " + data.message, false);
+            setStatus("Kayıt hatası: " + data.message, false);
         }
     }
 
@@ -214,7 +214,7 @@
         const password = document.getElementById("loginPassword").value.trim();
 
         if (!username || !password) {
-            setStatus("Kullanici adi ve sifre zorunlu", false);
+            setStatus("Kullanıcı adı ve şifre zorunlu", false);
             return;
         }
 

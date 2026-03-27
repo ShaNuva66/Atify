@@ -64,7 +64,7 @@ public class PlaylistService {
 
     public PlaylistResponse addPlaylist(PlaylistRequest playlistRequest) {
         User user = userRepo.findByUsername(getActiveUsername())
-                .orElseThrow(() -> new RuntimeException("Kullan?c? bulunamad?"));
+                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
 
         Playlist playlist = Playlist.builder()
                 .name(playlistRequest.getName())
@@ -78,15 +78,15 @@ public class PlaylistService {
 
     public PlaylistResponse updatePlaylist(Long playlistId, PlaylistRequest playlistRequest) {
         Playlist playlist = playlistRepo.findById(playlistId)
-                .orElseThrow(() -> new RuntimeException("Playlist bulunamad?"));
+                .orElseThrow(() -> new RuntimeException("Playlist bulunamadı"));
 
         if (!playlist.getUser().getUsername().equals(getActiveUsername())) {
-            throw new RuntimeException("Bu playlist sana ait de?il.");
+            throw new RuntimeException("Bu playlist sana ait değil.");
         }
 
         String newName = playlistRequest.getName();
         if (newName == null || newName.isBlank()) {
-            throw new RuntimeException("Playlist ad? zorunlu.");
+            throw new RuntimeException("Playlist adı zorunlu.");
         }
 
         playlist.setName(newName.trim());
@@ -99,14 +99,14 @@ public class PlaylistService {
 
     public void addSongToPlaylist(Long playlistId, Long songId) {
         Playlist playlist = playlistRepo.findById(playlistId)
-                .orElseThrow(() -> new RuntimeException("Playlist bulunamad?"));
+                .orElseThrow(() -> new RuntimeException("Playlist bulunamadı"));
 
         if (!playlist.getUser().getUsername().equals(getActiveUsername())) {
-            throw new RuntimeException("Bu playlist sana ait de?il.");
+            throw new RuntimeException("Bu playlist sana ait değil.");
         }
 
         Song song = songRepo.findById(songId)
-                .orElseThrow(() -> new RuntimeException("?ark? bulunamad?"));
+                .orElseThrow(() -> new RuntimeException("Şarkı bulunamadı"));
 
         if (playlist.getSongs() == null) {
             playlist.setSongs(new ArrayList<>());
@@ -123,10 +123,10 @@ public class PlaylistService {
 
     public SongResponse addJamendoTrackToPlaylist(Long playlistId, JamendoImportRequest request) {
         Playlist playlist = playlistRepo.findById(playlistId)
-                .orElseThrow(() -> new RuntimeException("Playlist bulunamad?"));
+                .orElseThrow(() -> new RuntimeException("Playlist bulunamadı"));
 
         if (!playlist.getUser().getUsername().equals(getActiveUsername())) {
-            throw new RuntimeException("Bu playlist sana ait de?il.");
+            throw new RuntimeException("Bu playlist sana ait değil.");
         }
 
         Song song = songService.importJamendoTrack(request);
@@ -148,14 +148,14 @@ public class PlaylistService {
 
     public void removeSongFromPlaylist(Long playlistId, Long songId) {
         Playlist playlist = playlistRepo.findById(playlistId)
-                .orElseThrow(() -> new RuntimeException("Playlist bulunamad?"));
+                .orElseThrow(() -> new RuntimeException("Playlist bulunamadı"));
 
         if (!playlist.getUser().getUsername().equals(getActiveUsername())) {
-            throw new RuntimeException("Bu playlist sana ait de?il.");
+            throw new RuntimeException("Bu playlist sana ait değil.");
         }
 
         Song song = songRepo.findById(songId)
-                .orElseThrow(() -> new RuntimeException("?ark? bulunamad?"));
+                .orElseThrow(() -> new RuntimeException("Şarkı bulunamadı"));
 
         playlist.getSongs().remove(song);
         playlistRepo.save(playlist);
@@ -163,10 +163,10 @@ public class PlaylistService {
 
     public void reorderSongInPlaylist(Long playlistId, Long songId, Integer targetIndex) {
         Playlist playlist = playlistRepo.findById(playlistId)
-                .orElseThrow(() -> new RuntimeException("Playlist bulunamad?"));
+                .orElseThrow(() -> new RuntimeException("Playlist bulunamadı"));
 
         if (!playlist.getUser().getUsername().equals(getActiveUsername())) {
-            throw new RuntimeException("Bu playlist sana ait de?il.");
+            throw new RuntimeException("Bu playlist sana ait değil.");
         }
 
         if (songId == null || targetIndex == null) {
@@ -174,7 +174,7 @@ public class PlaylistService {
         }
 
         if (playlist.getSongs() == null || playlist.getSongs().isEmpty()) {
-            throw new RuntimeException("Playlistte s?ralanacak ?ark? yok.");
+            throw new RuntimeException("Playlistte sıralanacak şarkı yok.");
         }
 
         List<Song> songs = new ArrayList<>(playlist.getSongs());
@@ -187,11 +187,11 @@ public class PlaylistService {
         }
 
         if (currentIndex < 0) {
-            throw new RuntimeException("?ark? playlistte bulunamad?.");
+            throw new RuntimeException("Şarkı playlistte bulunamadı.");
         }
 
         if (targetIndex < 0 || targetIndex >= songs.size()) {
-            throw new RuntimeException("Hedef s?ra ge?ersiz.");
+            throw new RuntimeException("Hedef sıra geçersiz.");
         }
 
         Song song = songs.remove(currentIndex);
@@ -202,10 +202,10 @@ public class PlaylistService {
 
     public void deletePlaylist(Long playlistId) {
         Playlist playlist = playlistRepo.findById(playlistId)
-                .orElseThrow(() -> new RuntimeException("Playlist bulunamad?"));
+                .orElseThrow(() -> new RuntimeException("Playlist bulunamadı"));
 
         if (!playlist.getUser().getUsername().equals(getActiveUsername())) {
-            throw new RuntimeException("Bu playlist sana ait de?il.");
+            throw new RuntimeException("Bu playlist sana ait değil.");
         }
 
         playlistRepo.deleteById(playlistId);
@@ -238,10 +238,10 @@ public class PlaylistService {
 
     public List<SongResponse> getSongsByPlaylist(Long playlistId) {
         Playlist playlist = playlistRepo.findById(playlistId)
-                .orElseThrow(() -> new RuntimeException("Playlist bulunamad?"));
+                .orElseThrow(() -> new RuntimeException("Playlist bulunamadı"));
 
         if (!playlist.getUser().getUsername().equals(getActiveUsername())) {
-            throw new RuntimeException("Bu playlist sana ait de?il.");
+            throw new RuntimeException("Bu playlist sana ait değil.");
         }
 
         List<Song> songs = playlist.getSongs() == null

@@ -35,7 +35,7 @@ public class JamendoPreloadService {
 
     private JamendoPreloadRunResponse runPreload(String source, boolean audit) {
         if (!running.compareAndSet(false, true)) {
-            log.info("Jamendo preload zaten calisiyor. source={}", source);
+            log.info("Jamendo preload zaten çalışıyor. source={}", source);
             JamendoPreloadSettingsResponse settings = jamendoPreloadSettingsService.getSettings();
             return new JamendoPreloadRunResponse(
                     source,
@@ -57,7 +57,7 @@ public class JamendoPreloadService {
 
             List<String> queries = settings.queries();
             if (queries.isEmpty()) {
-                log.info("Jamendo preload aktif ama sorgu tanimli degil. source={}", source);
+                log.info("Jamendo preload aktif ama sorgu tanımlı değil. source={}", source);
                 return new JamendoPreloadRunResponse(source, true, settings.limit(), 0, 0, 0, queries);
             }
 
@@ -74,13 +74,13 @@ public class JamendoPreloadService {
                     totalImported += response.imported();
                     totalSkipped += response.skipped();
                     log.info(
-                            "Jamendo preload tamamlandi. query='{}', imported={}, skipped={}",
+                            "Jamendo preload tamamlandı. query='{}', imported={}, skipped={}",
                             query,
                             response.imported(),
                             response.skipped()
                     );
                 } catch (Exception exception) {
-                    log.warn("Jamendo preload basarisiz. query='{}', message={}", query, exception.getMessage());
+                    log.warn("Jamendo preload başarısız. query='{}', message={}", query, exception.getMessage());
                 }
             }
 
@@ -97,7 +97,7 @@ public class JamendoPreloadService {
                         "JAMENDO_PRELOAD_RUN",
                         "SYSTEM",
                         null,
-                        "Jamendo preload manuel calistirildi. imported=" + totalImported + ", skipped=" + totalSkipped
+                        "Jamendo preload manuel çalıştırıldı. imported=" + totalImported + ", skipped=" + totalSkipped
                 );
             }
 

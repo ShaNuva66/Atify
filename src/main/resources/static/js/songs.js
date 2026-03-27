@@ -1,4 +1,4 @@
-﻿function asArrayMaybe(data) {
+function asArrayMaybe(data) {
     if (Array.isArray(data)) return data;
     if (data && Array.isArray(data.content)) return data.content;
     if (data && Array.isArray(data.songs)) return data.songs;
@@ -185,7 +185,7 @@ function renderSongsTable(arr, source = "LOCAL", emptyMessage = "Hiç şarkı bu
         tdPlay.textContent = "▶";
 
         const tdTitle = document.createElement("td");
-        tdTitle.dataset.label = "Sarki";
+        tdTitle.dataset.label = "Şarkı";
         tdTitle.innerHTML = `
             <div class="song-title-cell">
                 <div class="song-cover">${index + 1}</div>
@@ -198,7 +198,7 @@ function renderSongsTable(arr, source = "LOCAL", emptyMessage = "Hiç şarkı bu
         `;
 
         const tdArtist = document.createElement("td");
-        tdArtist.dataset.label = "Sanatci";
+        tdArtist.dataset.label = "Sanatçı";
         tdArtist.textContent = artistName;
 
         const tdDuration = document.createElement("td");
