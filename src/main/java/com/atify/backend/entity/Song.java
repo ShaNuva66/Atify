@@ -38,6 +38,10 @@ public class Song {
     @Column(name = "fingerprint_code", unique = true)
     private String fingerprintCode;
 
+    @Lob
+    @Column(name = "fingerprint_data", columnDefinition = "LONGTEXT")
+    private String fingerprintData;
+
     private String coverUrl;
 
     @Column(name = "external_source")

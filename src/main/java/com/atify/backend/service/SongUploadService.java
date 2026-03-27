@@ -10,7 +10,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
 @Service
@@ -20,6 +23,7 @@ public class SongUploadService {
     private final ArtistRepository artistRepository;
     private final AlbumRepository albumRepository;
     private final MediaProbeService mediaProbeService;
+    private final FingerprintService fingerprintService;
 
     @Value("${music.upload-dir}")
     private String uploadDir;
@@ -28,39 +32,39 @@ public class SongUploadService {
             SongRepository songRepository,
             ArtistRepository artistRepository,
             AlbumRepository albumRepository,
-            MediaProbeService mediaProbeService
+            MediaProbeService mediaProbeService,
+            FingerprintService fingerprintService
     ) {
         this.songRepository = songRepository;
         this.artistRepository = artistRepository;
         this.albumRepository = albumRepository;
         this.mediaProbeService = mediaProbeService;
+        this.fingerprintService = fingerprintService;
     }
 
     public Song uploadMp3(MultipartFile file, String name, Long artistId, Long albumId) {
         if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("file boş olamaz");
+            throw new IllegalArgumentException("file bos olamaz");
         }
         if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException("name boş olamaz");
+            throw new IllegalArgumentException("name bos olamaz");
         }
         if (artistId == null) {
-            throw new IllegalArgumentException("Sanat?? se?imi zorunlu.");
+            throw new IllegalArgumentException("Sanatci secimi zorunlu.");
         }
 
         String original = (file.getOriginalFilename() == null) ? "audio.mp3" : file.getOriginalFilename();
         if (!original.toLowerCase().endsWith(".mp3")) {
-            throw new IllegalArgumentException("Sadece .mp3 dosyalar? y?klenebilir.");
+            throw new IllegalArgumentException("Sadece .mp3 dosyalari yuklenebilir.");
         }
 
-        // artist zorunlu
         Artist artist = artistRepository.findById(artistId)
-                .orElseThrow(() -> new IllegalArgumentException("Sanat?? bulunamad?: " + artistId));
+                .orElseThrow(() -> new IllegalArgumentException("Sanatci bulunamadi: " + artistId));
 
-        // album opsiyonel
         Album album = null;
         if (albumId != null) {
             album = albumRepository.findById(albumId)
-                    .orElseThrow(() -> new IllegalArgumentException("Alb?m bulunamad?: " + albumId));
+                    .orElseThrow(() -> new IllegalArgumentException("Album bulunamadi: " + albumId));
         }
 
         try {
@@ -81,10 +85,11 @@ public class SongUploadService {
             song.setArtist(artist);
             song.setAlbum(album);
 
-            return songRepository.save(song);
-
+            Song saved = songRepository.save(song);
+            fingerprintService.fingerprintSong(saved);
+            return saved;
         } catch (Exception e) {
-            throw new RuntimeException("Upload başarısız: " + e.getMessage(), e);
+            throw new RuntimeException("Upload basarisiz: " + e.getMessage(), e);
         }
     }
 }

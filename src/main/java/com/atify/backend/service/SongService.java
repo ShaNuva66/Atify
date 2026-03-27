@@ -27,6 +27,7 @@ public class SongService {
     private final ArtistRepository artistRepo;
     private final PlaylistRepository playlistRepo;
     private final AuditLogService auditLogService;
+    private final FingerprintService fingerprintService;
 
     private SongResponse toSongResponse(Song song) {
         return new SongResponse(
@@ -149,7 +150,9 @@ public class SongService {
                             .audioUrl(request.audioUrl())
                             .build();
 
-                    return songRepo.save(song);
+                    Song saved = songRepo.save(song);
+                    fingerprintService.fingerprintSong(saved);
+                    return saved;
                 });
     }
 

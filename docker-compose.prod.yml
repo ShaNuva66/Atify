@@ -17,11 +17,12 @@ services:
       - atify-net
 
   recognizer:
-    image: python:3.11-slim
+    build:
+      context: ./recognizer
+      dockerfile: Dockerfile
     container_name: atify-prod-recognizer
     restart: unless-stopped
     working_dir: /app
-    command: ["python", "mock_recognizer.py"]
     volumes:
       - ./recognizer:/app:ro
     networks:

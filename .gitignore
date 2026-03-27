@@ -38,3 +38,5 @@ run.out.log
 run.err.log
 tmp/
 tmp_shots/
+__pycache__/
+*.pyc

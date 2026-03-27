@@ -18,10 +18,11 @@ services:
       retries: 10
 
   recognizer:
-    image: python:3.11-slim
+    build:
+      context: ./recognizer
+      dockerfile: Dockerfile
     container_name: atify-recognizer
     working_dir: /app
-    command: ["python", "mock_recognizer.py"]
     volumes:
       - ./recognizer:/app
     ports:

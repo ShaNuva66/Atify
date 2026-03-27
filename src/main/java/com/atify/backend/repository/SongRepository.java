@@ -16,5 +16,7 @@ public interface SongRepository extends JpaRepository<Song, Long> {
 
     Optional<Song> findByFingerprintCode(String fingerprintCode);
 
+    List<Song> findByFingerprintDataIsNotNull();
+
     Optional<Song> findByExternalSourceAndExternalRef(String externalSource, String externalRef);
 }
