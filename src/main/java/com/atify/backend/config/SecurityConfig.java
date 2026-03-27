@@ -52,7 +52,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/songs/**", "/artists/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/songs/**", "/artists/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/songs/**", "/artists/**").hasRole("ADMIN")
-                        .requestMatchers("/users/**", "/audit-logs/**").hasRole("ADMIN")
+                        .requestMatchers("/users/**", "/audit-logs/**", "/admin/**").hasRole("ADMIN")
                         .requestMatchers("/albums/**").authenticated()
                         .requestMatchers("/playlists/**").authenticated()
                         .anyRequest().authenticated()

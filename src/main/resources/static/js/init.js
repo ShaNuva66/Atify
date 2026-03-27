@@ -78,6 +78,8 @@ function bindStaticEvents() {
     });
     bindIfExists("createSongBtn", "click", () => createSong());
     bindIfExists("uploadSongBtn", "click", () => uploadSongFile());
+    bindIfExists("saveJamendoPreloadBtn", "click", () => saveJamendoPreloadSettings());
+    bindIfExists("runJamendoPreloadBtn", "click", () => runJamendoPreloadNow());
     bindIfExists("loadUsersBtn", "click", () => loadUsersAdmin());
     bindIfExists("loadAuditLogsBtn", "click", () => loadAuditLogs());
     bindIfExists("applyAuditFiltersBtn", "click", () => loadAuditLogs());

@@ -9,7 +9,8 @@
             users: "/users",
             auditLogs: "/audit-logs",
             favorites: "/favorites",
-            history: "/history"
+            history: "/history",
+            jamendoPreloadAdmin: "/admin/jamendo/preload"
         }
     };
 

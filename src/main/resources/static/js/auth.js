@@ -125,6 +125,9 @@
         }
         if (pageId === "addSong" && authToken) {
             loadPlaylists();
+            if (typeof loadJamendoPreloadSettings === "function") {
+                loadJamendoPreloadSettings();
+            }
         }
         if (pageId === "home" && authToken) {
             loadFavorites();
