@@ -84,6 +84,7 @@
         document.getElementById("page-home").classList.add("active");
         document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
         document.querySelector('nav button[data-page="home"]').classList.add("active");
+        if (typeof closeMobileNav === "function") closeMobileNav();
         applyRoleToUI();
         setStatus(role === "ADMIN" ? "Admin paneline geçtin." : "Kullanıcı paneline geçtin.", true);
     }
@@ -106,6 +107,7 @@
             document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
             btn.classList.add("active");
         }
+        if (typeof closeMobileNav === "function") closeMobileNav();
 
         if (pageId === "songs" && authToken) {
             getSongs();
@@ -141,6 +143,7 @@
     }
 
     function goHome() {
+        if (typeof closeMobileNav === "function") closeMobileNav();
         if (!currentRole) {
             document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
             document.getElementById("page-roleSelect").classList.add("active");
@@ -267,6 +270,7 @@
         document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
         document.getElementById("page-roleSelect").classList.add("active");
         document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+        if (typeof closeMobileNav === "function") closeMobileNav();
         applyRoleToUI();
         updateFavoriteButton();
         setStatus("Çıkış yapıldı");

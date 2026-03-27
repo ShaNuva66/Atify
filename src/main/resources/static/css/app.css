@@ -1,7 +1,12 @@
         * { box-sizing: border-box; font-family: Arial, sans-serif; }
 
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
             margin: 0;
+            min-height: 100vh;
             color: #e5e7eb;
             background:
                 radial-gradient(circle at 20% 20%, rgba(90, 255, 120, 0.25), transparent 60%),
@@ -9,25 +14,49 @@
                 radial-gradient(circle at 40% 80%, rgba(0, 150, 70, 0.15), transparent 60%),
                 linear-gradient(160deg, #000000 0%, #030712 40%, #020814 100%);
             background-attachment: fixed;
+            overflow-x: hidden;
         }
 
         header {
             background: #020617;
-            padding: 10px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 8500;
+            padding: 12px 20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            gap: 18px;
+            flex-wrap: wrap;
             border-bottom: 1px solid #111827;
+            backdrop-filter: blur(18px);
         }
         header h1 {
             font-size: 18px;
             margin: 0;
         }
+        .header-brand-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex: 1 1 280px;
+            min-width: 0;
+        }
+        .header-nav-panel {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            flex: 999 1 640px;
+            min-width: 0;
+        }
         nav {
             display: flex;
             flex-wrap: wrap;
             gap: 6px;
-            justify-content: center;
+            justify-content: flex-start;
+            flex: 1 1 auto;
         }
         nav button {
             padding: 6px 10px;
@@ -43,6 +72,29 @@
             color: #022c22;
             font-weight: 600;
         }
+        .header-meta {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        .mobile-nav-toggle {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            min-width: 88px;
+            padding: 10px 14px;
+            border-radius: 999px;
+            border: 1px solid #1f2937;
+            background: #111827;
+            color: #e5e7eb;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
         #userInfo {
             font-size: 12px;
             color: #9ca3af;
@@ -52,8 +104,8 @@
 
         main {
             max-width: 1100px;
-            margin: 16px auto 80px auto;
-            padding: 16px;
+            margin: 18px auto 140px auto;
+            padding: 18px;
             background: rgba(15, 23, 42, 0.9);
             border-radius: 12px;
             border: 1px solid #1f2937;
@@ -631,7 +683,7 @@
             left: 0; right: 0; bottom: 0;
             background: #020617;
             border-top: 1px solid #111827;
-            padding: 8px 16px;
+            padding: 8px 16px calc(8px + env(safe-area-inset-bottom));
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -847,16 +899,60 @@
 
         @media (max-width: 760px) {
             header {
+                padding: 12px 14px;
+                align-items: stretch;
+                gap: 10px;
+            }
+            .header-brand-row,
+            .header-nav-panel,
+            nav,
+            .header-meta {
+                width: 100%;
+            }
+            .mobile-nav-toggle {
+                display: inline-flex;
+            }
+            .header-nav-panel {
+                display: none;
                 flex-direction: column;
                 align-items: stretch;
                 gap: 12px;
+                padding: 12px;
+                border-radius: 14px;
+                border: 1px solid #1f2937;
+                background: rgba(2, 6, 23, 0.96);
+                box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
             }
-            header > div,
-            header nav {
+            body.nav-open .header-nav-panel {
+                display: flex;
+            }
+            nav {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            nav button {
                 width: 100%;
+                text-align: left;
+                padding: 12px 14px;
+                font-size: 14px;
+            }
+            .header-meta {
+                flex-direction: column;
+                align-items: stretch;
             }
             #userInfo {
                 text-align: left;
+            }
+            #headerLogoutBtn {
+                width: 100%;
+            }
+            main {
+                margin: 12px 12px 200px;
+                padding: 14px;
+                border-radius: 16px;
+            }
+            .role-card {
+                min-width: 0;
             }
             .catalog-toolbar,
             .playlist-detail-toolbar,
@@ -881,6 +977,58 @@
             .recommendation-actions {
                 justify-content: flex-start;
             }
+            .songs-table,
+            .songs-table tbody,
+            .songs-table tr {
+                display: block;
+            }
+            .songs-table thead {
+                display: none;
+            }
+            .songs-body-row {
+                border: 1px solid #111827;
+                border-radius: 14px;
+                margin-bottom: 10px;
+                overflow: hidden;
+                background: rgba(2, 6, 23, 0.82);
+            }
+            .songs-body-row td {
+                display: flex;
+                align-items: flex-start;
+                justify-content: space-between;
+                gap: 12px;
+                width: 100%;
+                padding: 10px 12px;
+                border-top: 1px solid #111827;
+                text-align: left !important;
+            }
+            .songs-body-row td::before {
+                content: attr(data-label);
+                font-size: 10px;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: #6b7280;
+                min-width: 62px;
+                flex-shrink: 0;
+            }
+            .songs-body-row td:first-child {
+                border-top: none;
+            }
+            .play-icon-cell {
+                width: 100%;
+                justify-content: flex-start;
+            }
+            .song-title-cell,
+            .song-texts {
+                min-width: 0;
+            }
+            .song-title-cell {
+                flex: 1;
+            }
+            .song-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
             .song-admin-grid {
                 grid-template-columns: 1fr;
             }
@@ -890,6 +1038,19 @@
             }
             .playlist-song-actions {
                 justify-content: flex-start;
+            }
+            .user-admin-row {
+                align-items: stretch;
+            }
+            .user-admin-actions {
+                width: 100%;
+            }
+            .user-admin-actions .btn {
+                width: 100%;
+            }
+            .audit-log-meta {
+                flex-direction: column;
+                align-items: flex-start;
             }
             .player-bar {
                 flex-direction: column;

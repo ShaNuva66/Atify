@@ -2,6 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Atify</title>
 
     <link rel="icon" type="image/png" href="atify_logo.png">
@@ -10,33 +11,38 @@
 <body>
 
 <header>
-    <div id="logoArea" style="display:flex; align-items:center; gap:12px; cursor:pointer;">
-        <img src="atify_logo.png"
-             alt="Atify Logo"
-             style="height:40px; border-radius:50%; box-shadow:0 0 14px rgba(34,197,94,0.7);">
-        <div>
-            <h1>Atify</h1>
-            <div style="font-size:11px;color:#9ca3af;" id="panelLabel">Admin / Kullanıcı Paneli</div>
+    <div class="header-brand-row">
+        <div id="logoArea" style="display:flex; align-items:center; gap:12px; cursor:pointer;">
+            <img src="atify_logo.png"
+                 alt="Atify Logo"
+                 style="height:40px; border-radius:50%; box-shadow:0 0 14px rgba(34,197,94,0.7);">
+            <div>
+                <h1>Atify</h1>
+                <div style="font-size:11px;color:#9ca3af;" id="panelLabel">Admin / Kullanıcı Paneli</div>
+            </div>
         </div>
+        <button id="mobileNavToggle" class="mobile-nav-toggle" type="button" aria-expanded="false" aria-controls="primaryNav">Menu</button>
     </div>
 
-    <nav>
-        <button type="button" data-page="home" data-role="BOTH" class="active">Giriş</button>
-        <button type="button" data-page="register" data-role="BOTH">Kayıt Ol</button>
-        <button type="button" data-page="songs" data-role="BOTH">Şarkılar</button>
-        <button type="button" data-page="artists" data-role="ADMIN">Sanatçılar (Admin)</button>
-        <button type="button" data-page="users" data-role="ADMIN">Kullanıcılar (Admin)</button>
-        <button type="button" data-page="audit" data-role="ADMIN">Audit Log (Admin)</button>
-        <button type="button" data-page="playlists" data-role="BOTH">Playlistler</button>
-        <button type="button" data-page="favorites" data-role="BOTH">Favorilerim</button>
-        <button type="button" data-page="history" data-role="BOTH">Geçmiş</button>
-        <button type="button" data-page="insights" data-role="BOTH">İçgörüler</button>
-        <button type="button" data-page="addSong" data-role="ADMIN">Müzik Ekle (Admin)</button>
-    </nav>
+    <div id="headerNavPanel" class="header-nav-panel">
+        <nav id="primaryNav">
+            <button type="button" data-page="home" data-role="BOTH" class="active">Giriş</button>
+            <button type="button" data-page="register" data-role="BOTH">Kayıt Ol</button>
+            <button type="button" data-page="songs" data-role="BOTH">Şarkılar</button>
+            <button type="button" data-page="artists" data-role="ADMIN">Sanatçılar (Admin)</button>
+            <button type="button" data-page="users" data-role="ADMIN">Kullanıcılar (Admin)</button>
+            <button type="button" data-page="audit" data-role="ADMIN">Audit Log (Admin)</button>
+            <button type="button" data-page="playlists" data-role="BOTH">Playlistler</button>
+            <button type="button" data-page="favorites" data-role="BOTH">Favorilerim</button>
+            <button type="button" data-page="history" data-role="BOTH">Geçmiş</button>
+            <button type="button" data-page="insights" data-role="BOTH">İçgörüler</button>
+            <button type="button" data-page="addSong" data-role="ADMIN">Müzik Ekle (Admin)</button>
+        </nav>
 
-    <div style="display:flex; align-items:center; gap:10px;">
-        <div id="userInfo">Rol seçilmedi</div>
-        <button id="headerLogoutBtn" class="btn gray" style="display:none; margin-top:0;">Hesaptan Çık</button>
+        <div class="header-meta">
+            <div id="userInfo">Rol seçilmedi</div>
+            <button id="headerLogoutBtn" class="btn gray" style="display:none; margin-top:0;">Hesaptan Çık</button>
+        </div>
     </div>
 </header>
 

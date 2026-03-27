@@ -5,8 +5,26 @@ function bindIfExists(id, eventName, handler) {
     }
 }
 
+function setMobileNavOpen(isOpen) {
+    const navToggleBtn = document.getElementById("mobileNavToggle");
+    document.body.classList.toggle("nav-open", Boolean(isOpen));
+    if (navToggleBtn) {
+        navToggleBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+        navToggleBtn.textContent = isOpen ? "Kapat" : "Menu";
+    }
+}
+
+function toggleMobileNav() {
+    setMobileNavOpen(!document.body.classList.contains("nav-open"));
+}
+
+function closeMobileNav() {
+    setMobileNavOpen(false);
+}
+
 function bindStaticEvents() {
     bindIfExists("logoArea", "click", () => goHome());
+    bindIfExists("mobileNavToggle", "click", () => toggleMobileNav());
     bindIfExists("headerLogoutBtn", "click", () => logout());
     bindIfExists("enterAdminBtn", "click", () => enterAs("ADMIN"));
     bindIfExists("enterUserBtn", "click", () => enterAs("USER"));
@@ -121,6 +139,18 @@ function initFromStorage() {
 
     document.addEventListener("click", () => {
         document.querySelectorAll(".song-actions-menu").forEach(m => m.style.display = "none");
+    });
+
+    window.addEventListener("resize", () => {
+        if (window.innerWidth > 760) {
+            closeMobileNav();
+        }
+    });
+
+    document.addEventListener("keydown", (ev) => {
+        if (ev.key === "Escape") {
+            closeMobileNav();
+        }
     });
 }
 

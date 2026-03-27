@@ -165,9 +165,11 @@ function renderSongsTable(arr, source = "LOCAL", emptyMessage = "Hiç şarkı bu
 
         const tdPlay = document.createElement("td");
         tdPlay.className = "play-icon-cell";
+        tdPlay.dataset.label = "Oynat";
         tdPlay.textContent = "▶";
 
         const tdTitle = document.createElement("td");
+        tdTitle.dataset.label = "Sarki";
         tdTitle.innerHTML = `
             <div class="song-title-cell">
                 <div class="song-cover">${index + 1}</div>
@@ -180,9 +182,11 @@ function renderSongsTable(arr, source = "LOCAL", emptyMessage = "Hiç şarkı bu
         `;
 
         const tdArtist = document.createElement("td");
+        tdArtist.dataset.label = "Sanatci";
         tdArtist.textContent = artistName;
 
         const tdDuration = document.createElement("td");
+        tdDuration.dataset.label = "Sure";
         tdDuration.style.textAlign = "right";
         tdDuration.textContent = duration ? formatTime(duration) : "";
 
@@ -192,6 +196,7 @@ function renderSongsTable(arr, source = "LOCAL", emptyMessage = "Hiç şarkı bu
         tr.appendChild(tdDuration);
 
         const tdActions = document.createElement("td");
+        tdActions.dataset.label = "Islem";
         tdActions.style.textAlign = "center";
         const wrapper = document.createElement("div");
         wrapper.className = "song-actions";
