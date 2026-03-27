@@ -48,7 +48,9 @@ public class FingerprintService {
             try {
                 FileSystemResource resource = new FileSystemResource(tempWav.toFile());
                 MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+                String songCode = "song:" + song.getId();
                 body.add("file", resource);
+                body.add("songCode", songCode);
 
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -66,7 +68,7 @@ public class FingerprintService {
                     return;
                 }
 
-                song.setFingerprintCode("song:" + song.getId());
+                song.setFingerprintCode(songCode);
                 song.setFingerprintData(response.getFingerprintData());
                 songRepository.save(song);
 

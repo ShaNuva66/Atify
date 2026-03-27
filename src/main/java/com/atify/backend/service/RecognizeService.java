@@ -1,11 +1,9 @@
 package com.atify.backend.service;
 
-import com.atify.backend.dto.FingerprintCandidateRequest;
 import com.atify.backend.dto.IdentifyResponse;
 import com.atify.backend.dto.RecognizeSimpleResponse;
 import com.atify.backend.entity.Song;
 import com.atify.backend.repository.SongRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
@@ -22,7 +20,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -37,16 +34,9 @@ public class RecognizeService {
 
     private final SongRepository songRepository;
     private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper;
 
     public IdentifyResponse identifySong(MultipartFile sample) throws Exception {
-        List<Song> fingerprintedSongs = songRepository.findByFingerprintDataIsNotNull()
-                .stream()
-                .filter(song -> song.getFingerprintCode() != null && !song.getFingerprintCode().isBlank())
-                .filter(song -> song.getFingerprintData() != null && !song.getFingerprintData().isBlank())
-                .toList();
-
-        if (fingerprintedSongs.isEmpty()) {
+        if (songRepository.findByFingerprintDataIsNotNull().isEmpty()) {
             return new IdentifyResponse(false, null, null, null);
         }
 
@@ -78,11 +68,6 @@ public class RecognizeService {
             FileSystemResource resource = new FileSystemResource(tempWav.toFile());
             MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
             body.add("file", resource);
-            body.add("candidates", objectMapper.writeValueAsString(
-                    fingerprintedSongs.stream()
-                            .map(song -> new FingerprintCandidateRequest(song.getFingerprintCode(), song.getFingerprintData()))
-                            .toList()
-            ));
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);

@@ -12,6 +12,7 @@ import numpy as np
 from flask import Flask, jsonify, request
 
 app = Flask(__name__)
+CATALOG: dict[str, list[tuple[str, int]]] = {}
 
 TARGET_SAMPLE_RATE = 11025
 WINDOW_SIZE = 2048
@@ -244,6 +245,13 @@ def best_match(query_entries: list[tuple[str, int]], candidates: list[dict]) -> 
     return winner
 
 
+def catalog_candidates() -> list[dict]:
+    return [
+        {"songCode": song_code, "fingerprintData": encode_fingerprint(entries)}
+        for song_code, entries in CATALOG.items()
+    ]
+
+
 @app.get("/health")
 def health():
     return jsonify({"status": "ok"})
@@ -254,11 +262,15 @@ def fingerprint_file():
     try:
         raw_audio = read_audio_bytes()
         entries = fingerprint_entries(raw_audio)
+        song_code = request.form.get("songCode")
     except Exception as exc:  # noqa: BLE001
         return jsonify({"status": "error", "message": str(exc)}), 400
 
     if len(entries) < MIN_HASH_COUNT:
         return jsonify({"status": "error", "message": "not enough audio features", "hashCount": len(entries)}), 422
+
+    if song_code:
+        CATALOG[song_code] = entries
 
     return jsonify(
         {
@@ -274,7 +286,7 @@ def recognize_simple():
     try:
         raw_audio = read_audio_bytes()
         entries = fingerprint_entries(raw_audio)
-        candidates = json.loads(request.form.get("candidates", "[]"))
+        candidates = json.loads(request.form.get("candidates", "[]")) if request.form.get("candidates") else catalog_candidates()
     except Exception as exc:  # noqa: BLE001
         return jsonify({"match": False, "songCode": None, "message": str(exc)}), 400
 
