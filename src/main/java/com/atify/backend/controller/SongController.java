@@ -1,6 +1,7 @@
 package com.atify.backend.controller;
 
 import com.atify.backend.dto.RecommendationResponse;
+import com.atify.backend.dto.JamendoBulkImportResponse;
 import com.atify.backend.dto.JamendoImportRequest;
 import com.atify.backend.dto.SongRequest;
 import com.atify.backend.dto.SongResponse;
@@ -55,6 +56,11 @@ public class SongController {
     @PostMapping(value = "/import/jamendo", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public SongResponse importJamendoSong(@RequestBody JamendoImportRequest request) {
         return songService.importJamendoTrackForCatalog(request);
+    }
+
+    @PostMapping(value = "/import/jamendo/bulk", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public JamendoBulkImportResponse bulkImportJamendoSongs(@RequestBody List<JamendoImportRequest> requests) {
+        return songService.importJamendoTracksForCatalog(requests, "manual-bulk");
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)

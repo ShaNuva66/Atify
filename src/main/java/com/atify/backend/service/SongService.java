@@ -1,6 +1,8 @@
 package com.atify.backend.service;
 
 import com.atify.backend.dto.JamendoImportRequest;
+import com.atify.backend.dto.JamendoBulkImportResponse;
+import com.atify.backend.dto.JamendoTrackResponse;
 import com.atify.backend.dto.SongRequest;
 import com.atify.backend.dto.SongResponse;
 import com.atify.backend.entity.Album;
@@ -16,7 +18,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +32,7 @@ public class SongService {
     private final PlaylistRepository playlistRepo;
     private final AuditLogService auditLogService;
     private final FingerprintService fingerprintService;
+    private final JamendoService jamendoService;
 
     private SongResponse toSongResponse(Song song) {
         return new SongResponse(
@@ -184,11 +189,83 @@ public class SongService {
         return toSongResponse(saved);
     }
 
+    public JamendoBulkImportResponse importJamendoTracksForCatalog(List<JamendoImportRequest> requests, String source) {
+        if (requests == null || requests.isEmpty()) {
+            return new JamendoBulkImportResponse(source, 0, 0, 0, 0, List.of());
+        }
+
+        Map<String, JamendoImportRequest> uniqueRequests = new LinkedHashMap<>();
+        for (JamendoImportRequest request : requests) {
+            if (request == null || request.jamendoId() == null || request.jamendoId().isBlank()) {
+                continue;
+            }
+            uniqueRequests.putIfAbsent(request.jamendoId(), request);
+        }
+
+        List<SongResponse> importedSongs = new ArrayList<>();
+        int skipped = 0;
+
+        for (JamendoImportRequest request : uniqueRequests.values()) {
+            Song existing = songRepo.findByExternalSourceAndExternalRef("JAMENDO", request.jamendoId())
+                    .orElse(null);
+
+            if (existing != null) {
+                skipped++;
+                continue;
+            }
+
+            Song saved = importJamendoTrack(request);
+            importedSongs.add(toSongResponse(saved));
+        }
+
+        if (!importedSongs.isEmpty()) {
+            auditLogService.record(
+                    "SONG_IMPORTED_JAMENDO_BULK",
+                    "SONG",
+                    null,
+                    importedSongs.size() + " Jamendo parcasi toplu olarak kutuphaneye eklendi."
+            );
+        }
+
+        return new JamendoBulkImportResponse(
+                source,
+                requests.size(),
+                uniqueRequests.size(),
+                importedSongs.size(),
+                skipped,
+                importedSongs
+        );
+    }
+
+    public JamendoBulkImportResponse importJamendoSearchResults(String query, int limit, String source) {
+        List<JamendoImportRequest> requests = jamendoService.searchTracks(query, limit)
+                .tracks()
+                .stream()
+                .map(this::toJamendoImportRequest)
+                .toList();
+
+        return importJamendoTracksForCatalog(requests, source);
+    }
+
     public List<SongResponse> getAllSongs() {
         return songRepo.findAll()
                 .stream()
                 .map(this::toSongResponse)
                 .toList();
+    }
+
+    private JamendoImportRequest toJamendoImportRequest(JamendoTrackResponse track) {
+        return new JamendoImportRequest(
+                track.jamendoId(),
+                track.name(),
+                track.artistName(),
+                track.albumName(),
+                track.coverUrl(),
+                track.audioUrl(),
+                track.shareUrl(),
+                track.licenseUrl(),
+                track.duration()
+        );
     }
 
     @Transactional

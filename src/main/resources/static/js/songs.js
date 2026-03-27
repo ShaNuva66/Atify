@@ -90,6 +90,22 @@ function updateCatalogSummary(filteredCount, totalCount, source, query, artist) 
     summary.textContent = parts.join(" · ");
 }
 
+function syncJamendoBulkImportButton() {
+    const btn = document.getElementById("importJamendoResultsBtn");
+    if (!btn) return;
+
+    if (currentRole !== "ADMIN") {
+        btn.style.display = "none";
+        return;
+    }
+
+    btn.style.display = "inline-block";
+    btn.disabled = jamendoCache.length === 0;
+    btn.textContent = jamendoCache.length > 0
+        ? `Sonuçları Atify'ye Ekle (${jamendoCache.length})`
+        : "Sonuçları Atify'ye Ekle";
+}
+
 function applyCatalogFilters() {
     const query = (document.getElementById("catalogSearchInput")?.value || "").trim().toLowerCase();
     const source = getCatalogSourceFilterValue();
@@ -323,6 +339,55 @@ async function importJamendoSongToCatalog(song, triggerBtn = null) {
 
     await getSongs();
     showPopup("Jamendo şarkısı kütüphaneye eklendi");
+    syncJamendoBulkImportButton();
+}
+
+async function importCurrentJamendoResults() {
+    if (currentRole !== "ADMIN") {
+        setStatus("Toplu Jamendo import sadece admin için.", false);
+        return;
+    }
+    if (!Array.isArray(jamendoCache) || jamendoCache.length === 0) {
+        setStatus("Önce Jamendo araması yap.", false);
+        return;
+    }
+
+    const importBtn = document.getElementById("importJamendoResultsBtn");
+    if (importBtn) {
+        importBtn.disabled = true;
+    }
+
+    const payload = jamendoCache.map(song => buildJamendoPayload(song));
+    const { status, ok, data } = await apiRequest(
+        `${CONFIG.endpoints.songs}/import/jamendo/bulk`,
+        "POST",
+        payload,
+        true
+    );
+    setStatus("Jamendo toplu import sonucu: HTTP " + status, ok);
+
+    if (importBtn) {
+        importBtn.disabled = false;
+    }
+
+    if (!ok) {
+        const message = data && data.message ? data.message : "Jamendo sonuçları toplu eklenemedi.";
+        showCenterModal("Toplu import başarısız", message);
+        syncJamendoBulkImportButton();
+        return;
+    }
+
+    jamendoCache.forEach(song => {
+        song.libraryAdded = true;
+    });
+
+    await getSongs();
+    applyCatalogFilters();
+    syncJamendoBulkImportButton();
+
+    const importedCount = data && Number.isFinite(data.imported) ? data.imported : 0;
+    const skippedCount = data && Number.isFinite(data.skipped) ? data.skipped : 0;
+    showPopup(`${importedCount} parça eklendi${skippedCount > 0 ? ` · ${skippedCount} parça zaten vardı` : ""}`);
 }
 
 async function getSongs() {
@@ -332,6 +397,7 @@ async function getSongs() {
     const arr = asArrayMaybe(data).map(song => normalizeSongSource(song, "LOCAL"));
     songsCache = ok ? arr : [];
     applyCatalogFilters();
+    syncJamendoBulkImportButton();
 }
 
 function showLocalSongs() {
@@ -358,6 +424,7 @@ async function searchJamendoTracks() {
         jamendoCache = [];
         setCatalogSourceFilterValue("JAMENDO");
         applyCatalogFilters();
+        syncJamendoBulkImportButton();
         return;
     }
 
@@ -377,6 +444,7 @@ async function searchJamendoTracks() {
 
     setCatalogSourceFilterValue("JAMENDO");
     applyCatalogFilters();
+    syncJamendoBulkImportButton();
 }
 
 async function openSongEdit(song) {

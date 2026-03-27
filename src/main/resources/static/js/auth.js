@@ -8,6 +8,7 @@
         const artistRoleText = document.getElementById("artistRoleText");
         const artistAdminBox = document.getElementById("artistAdminBox");
         const songEditContainer = document.getElementById("songEditContainer");
+        const importJamendoResultsBtn = document.getElementById("importJamendoResultsBtn");
         const isLoggedIn = Boolean(authToken && loggedUsername);
 
         if (!currentRole) {
@@ -72,6 +73,13 @@
                 btn.style.display = "inline-block";
             }
         });
+
+        if (importJamendoResultsBtn) {
+            importJamendoResultsBtn.style.display = currentRole === "ADMIN" ? "inline-block" : "none";
+        }
+        if (typeof syncJamendoBulkImportButton === "function") {
+            syncJamendoBulkImportButton();
+        }
 
         updateUserInfo();
     }

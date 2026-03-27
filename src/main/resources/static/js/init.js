@@ -43,6 +43,7 @@ function bindStaticEvents() {
     });
 
     bindIfExists("searchJamendoBtn", "click", () => searchJamendoTracks());
+    bindIfExists("importJamendoResultsBtn", "click", () => importCurrentJamendoResults());
     bindIfExists("showLocalSongsBtn", "click", () => showLocalSongs());
     bindIfExists("applyCatalogFiltersBtn", "click", () => applyCatalogFilters());
     bindIfExists("clearCatalogFiltersBtn", "click", () => resetCatalogFilters());
