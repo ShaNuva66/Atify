@@ -11,17 +11,17 @@
         const importJamendoResultsBtn = document.getElementById("importJamendoResultsBtn");
         const isLoggedIn = Boolean(authToken && loggedUsername);
 
-        if (!currentRole) {
-            panelLabel.textContent = "Admin / Kullanıcı Paneli";
+        if (!isLoggedIn) {
+            panelLabel.textContent = "Atify Paneli";
             homeTitle.textContent = "Giriş";
-            homeDesc.textContent = "Giriş yap, sonra şarkı ve playlist ekranlarına geç.";
+            homeDesc.textContent = "Giriş yap. Hesabın admin ise yönetim araçları otomatik açılır.";
             if (homeNavBtn) homeNavBtn.textContent = "Giriş";
             if (authBox) authBox.style.display = "";
             if (homeDashboard) homeDashboard.style.display = "none";
             if (artistRoleText) artistRoleText.textContent = "";
             if (artistAdminBox) artistAdminBox.style.display = "none";
             if (songEditContainer) songEditContainer.style.display = "none";
-        } else if (currentRole === "ADMIN" && isLoggedIn) {
+        } else if (currentRole === "ADMIN") {
             panelLabel.textContent = "Admin Paneli";
             homeTitle.textContent  = "Admin Ana Sayfa";
             homeDesc.textContent   = "Yönetim araçların, favorilerin ve dinleme özetin burada.";
@@ -31,7 +31,7 @@
             if (artistRoleText) artistRoleText.textContent = "Adminler sanatçı ekleyebilir.";
             if (artistAdminBox) artistAdminBox.style.display = "";
             if (songEditContainer) songEditContainer.style.display = "block";
-        } else if (currentRole === "USER" && isLoggedIn) {
+        } else {
             panelLabel.textContent = "Kullanıcı Paneli";
             homeTitle.textContent  = "Ana Sayfa";
             homeDesc.textContent   = "Favorilerin, en çok dinlediklerin ve hızlı özetin burada.";
@@ -41,27 +41,15 @@
             if (artistRoleText) artistRoleText.textContent = "Kullanıcılar sanatçı ekleyemez.";
             if (artistAdminBox) artistAdminBox.style.display = "none";
             if (songEditContainer) songEditContainer.style.display = "none";
-        } else {
-            panelLabel.textContent = currentRole === "ADMIN" ? "Admin Paneli" : "Kullanıcı Paneli";
-            homeTitle.textContent  = currentRole === "ADMIN" ? "Admin Girişi" : "Kullanıcı Girişi";
-            homeDesc.textContent   = "Giriş yap, sonra şarkı ve playlist ekranlarına geç.";
-            if (homeNavBtn) homeNavBtn.textContent = "Giriş";
-            if (authBox) authBox.style.display = "";
-            if (homeDashboard) homeDashboard.style.display = "none";
-            if (artistRoleText) artistRoleText.textContent = currentRole === "ADMIN"
-                ? "Adminler sanatçı ekleyebilir."
-                : "Kullanıcılar sanatçı ekleyemez.";
-            if (artistAdminBox) artistAdminBox.style.display = currentRole === "ADMIN" ? "" : "none";
-            if (songEditContainer) songEditContainer.style.display = currentRole === "ADMIN" ? "block" : "none";
         }
 
         document.querySelectorAll("nav button").forEach(btn => {
             const needRole = btn.getAttribute("data-role");
             const pageId = btn.getAttribute("data-page");
 
-            if (isLoggedIn && pageId === "register") {
-                btn.style.display = "none";
-            } else if (!isLoggedIn && pageId !== "home" && pageId !== "register") {
+            if (!isLoggedIn) {
+                btn.style.display = (pageId === "home" || pageId === "register") ? "inline-block" : "none";
+            } else if (pageId === "register") {
                 btn.style.display = "none";
             } else if (!needRole || needRole === "BOTH") {
                 btn.style.display = "inline-block";
@@ -75,7 +63,7 @@
         });
 
         if (importJamendoResultsBtn) {
-            importJamendoResultsBtn.style.display = currentRole === "ADMIN" ? "inline-block" : "none";
+            importJamendoResultsBtn.style.display = isLoggedIn && currentRole === "ADMIN" ? "inline-block" : "none";
         }
         if (typeof syncJamendoBulkImportButton === "function") {
             syncJamendoBulkImportButton();
@@ -173,8 +161,12 @@
         localStorage.removeItem("atifyRole");
 
         document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-        document.getElementById("page-roleSelect").classList.add("active");
+        document.getElementById("page-home").classList.add("active");
         document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+        const homeBtn = document.querySelector('nav button[data-page="home"]');
+        if (homeBtn) {
+            homeBtn.classList.add("active");
+        }
         if (typeof closeMobileNav === "function") closeMobileNav();
 
         applyRoleToUI();
@@ -226,25 +218,15 @@
         return false;
     }
 
-    function enterAs(role) {
-        currentRole = role;
-        localStorage.setItem("atifyRole", role);
-
-        document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-        document.getElementById("page-home").classList.add("active");
-        document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
-        document.querySelector('nav button[data-page="home"]').classList.add("active");
-        if (typeof closeMobileNav === "function") closeMobileNav();
-        applyRoleToUI();
-        setStatus(role === "ADMIN" ? "Admin paneline geçtin." : "Kullanıcı paneline geçtin.", true);
-    }
-
     function showPage(pageId, btn) {
-        if (!currentRole) {
-            setStatus("Önce Admin / Kullanıcı olarak giriş tipini seç.", false);
+        const isLoggedIn = Boolean(authToken && loggedUsername);
+
+        if (!isLoggedIn && pageId !== "home" && pageId !== "register") {
+            setStatus("Önce giriş yap.", false);
+            showPage("home", document.querySelector('nav button[data-page="home"]'));
             return;
         }
-        if (currentRole !== "ADMIN" && (pageId === "artists" || pageId === "addSong" || pageId === "users" || pageId === "audit")) {
+        if (isLoggedIn && currentRole !== "ADMIN" && (pageId === "artists" || pageId === "addSong" || pageId === "users" || pageId === "audit")) {
             setStatus("Bu alan sadece admin için.", false);
             return;
         }
@@ -300,13 +282,7 @@
 
     function goHome() {
         if (typeof closeMobileNav === "function") closeMobileNav();
-        if (!currentRole) {
-            document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-            document.getElementById("page-roleSelect").classList.add("active");
-            document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
-        } else {
-            showPage("home", document.querySelector('nav button[data-page="home"]'));
-        }
+        showPage("home", document.querySelector('nav button[data-page="home"]'));
     }
 
     async function apiRequest(path, method = "GET", body = null, withAuth = true, extraHeaders = {}) {
@@ -377,10 +353,10 @@
             if (token) {
                 authToken = token;
                 loggedUsername = username;
-                if (backendRole) currentRole = backendRole;
+                currentRole = backendRole || "USER";
                 localStorage.setItem("atifyToken", token);
                 localStorage.setItem("atifyUser", username);
-                if (currentRole) localStorage.setItem("atifyRole", currentRole);
+                localStorage.setItem("atifyRole", currentRole);
 
                 applyRoleToUI();
                 updateUserInfo();
@@ -405,7 +381,6 @@
             popupMessage: "Çıkış yapıldı"
         });
     }
-
 
 
 

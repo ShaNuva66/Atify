@@ -6,7 +6,7 @@
     <title>Atify</title>
 
     <link rel="icon" type="image/png" href="atify_logo.png">
-    <link rel="stylesheet" href="css/app.css?v=20260328-trfix">
+    <link rel="stylesheet" href="css/app.css?v=20260329-unified-login">
 </head>
 <body>
 
@@ -18,7 +18,7 @@
                  style="height:40px; border-radius:50%; box-shadow:0 0 14px rgba(34,197,94,0.7);">
             <div>
                 <h1>Atify</h1>
-                <div style="font-size:11px;color:#9ca3af;" id="panelLabel">Admin / Kullanıcı Paneli</div>
+                <div style="font-size:11px;color:#9ca3af;" id="panelLabel">Atify Paneli</div>
             </div>
         </div>
         <button id="mobileNavToggle" class="mobile-nav-toggle" type="button" aria-expanded="false" aria-controls="primaryNav">Menü</button>
@@ -40,44 +40,18 @@
         </nav>
 
         <div class="header-meta">
-            <div id="userInfo">Rol seçilmedi</div>
+            <div id="userInfo">Giriş yapılmadı</div>
             <button id="headerLogoutBtn" class="btn gray" style="display:none; margin-top:0;">Hesaptan Çık</button>
         </div>
     </div>
 </header>
 
 <main>
-    <!-- ROL SEÇİM SAYFASI -->
-    <section id="page-roleSelect" class="page active">
-        <h2>Atify'e Hoş Geldin 🎧</h2>
-        <p class="muted">
-            Devam etmeden önce bu oturumda <b>Admin</b> mi yoksa <b>Kullanıcı</b> olarak mı giriş yapacağını seç.
-        </p>
-        <div style="display:flex; gap:16px; flex-wrap:wrap; margin-top:12px;">
-            <div class="role-card">
-                <div class="role-badge">Admin Paneli</div>
-                <div class="role-title">Admin Girişi</div>
-                <p class="muted">
-                    Şarkı ekleme, sanatçı ekleme ve tüm verileri yönetme yetkisi.
-                </p>
-                <button id="enterAdminBtn" class="btn primary">Admin Olarak Devam Et</button>
-            </div>
-            <div class="role-card">
-                <div class="role-badge">Kullanıcı Paneli</div>
-                <div class="role-title">Kullanıcı Girişi</div>
-                <p class="muted">
-                    Şarkıları görüntüle, playlist oluştur, playlist'e şarkı ekle.
-                </p>
-                <button id="enterUserBtn" class="btn secondary">Kullanıcı Olarak Devam Et</button>
-            </div>
-        </div>
-    </section>
-
     <!-- GİRİŞ SAYFASI -->
-    <section id="page-home" class="page">
+    <section id="page-home" class="page active">
         <h2 id="homeTitle">Giriş</h2>
         <p id="homeDesc" style="font-size:13px; color:#e5e7eb;">
-            Giriş yap, sonra şarkı ve playlist ekranlarına geç.
+            Giriş yap. Hesabın admin ise yönetim alanları otomatik açılır.
         </p>
 
         <div id="authBox">
@@ -585,23 +559,21 @@
     </div>
 </div>
 
-<script src="js/app.js?v=20260328-trfix"></script>
-<script src="js/auth.js?v=20260328-trfix"></script>
-<script src="js/favorites.js?v=20260328-trfix"></script>
-<script src="js/songs.js?v=20260328-trfix"></script>
-<script src="js/playlists.js?v=20260328-trfix"></script>
-<script src="js/artists.js?v=20260328-trfix"></script>
-<script src="js/insights.js?v=20260328-trfix"></script>
-<script src="js/users.js?v=20260328-trfix"></script>
-<script src="js/audit.js?v=20260328-trfix"></script>
-<script src="js/jamendo-admin.js?v=20260328-trfix"></script>
-<script src="js/fingerprint-admin.js?v=20260328-trfix"></script>
-<script src="js/init.js?v=20260328-trfix"></script>
+<script src="js/app.js?v=20260329-unified-login"></script>
+<script src="js/auth.js?v=20260329-unified-login"></script>
+<script src="js/favorites.js?v=20260329-unified-login"></script>
+<script src="js/songs.js?v=20260329-unified-login"></script>
+<script src="js/playlists.js?v=20260329-unified-login"></script>
+<script src="js/artists.js?v=20260329-unified-login"></script>
+<script src="js/insights.js?v=20260329-unified-login"></script>
+<script src="js/users.js?v=20260329-unified-login"></script>
+<script src="js/audit.js?v=20260329-unified-login"></script>
+<script src="js/jamendo-admin.js?v=20260329-unified-login"></script>
+<script src="js/fingerprint-admin.js?v=20260329-unified-login"></script>
+<script src="js/init.js?v=20260329-unified-login"></script>
 
 </body>
 </html>
-
-
 
 
 

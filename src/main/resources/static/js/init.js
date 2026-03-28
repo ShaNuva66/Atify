@@ -26,8 +26,6 @@ function bindStaticEvents() {
     bindIfExists("logoArea", "click", () => goHome());
     bindIfExists("mobileNavToggle", "click", () => toggleMobileNav());
     bindIfExists("headerLogoutBtn", "click", () => logout());
-    bindIfExists("enterAdminBtn", "click", () => enterAs("ADMIN"));
-    bindIfExists("enterUserBtn", "click", () => enterAs("USER"));
 
     document.querySelectorAll("nav button[data-page]").forEach(btn => {
         btn.addEventListener("click", () => showPage(btn.dataset.page, btn));
@@ -120,7 +118,7 @@ function initFromStorage() {
     const user = localStorage.getItem("atifyUser");
     const role = localStorage.getItem("atifyRole");
 
-    if (token && role) {
+    if (token && user && role) {
         if (typeof isStoredTokenExpired === "function" && isStoredTokenExpired(token)) {
             handleAuthFailure("Oturum süren dolmuş. Lütfen tekrar giriş yap.");
             return;
@@ -141,8 +139,18 @@ function initFromStorage() {
             loadInsights();
         }
         setStatus("Kaldığın yerden devam ediyorsun.", true);
+    } else if (token || user || role) {
+        handleAuthFailure("Oturum bilgisi eksik ya da bozulmuş. Lütfen tekrar giriş yap.");
     } else {
-        setStatus("Rol seçmeni bekliyorum...", true);
+        document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+        document.getElementById("page-home").classList.add("active");
+        document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+        const homeBtn = document.querySelector('nav button[data-page="home"]');
+        if (homeBtn) {
+            homeBtn.classList.add("active");
+        }
+        applyRoleToUI();
+        setStatus("Giriş yapmanı bekliyorum...", true);
         updateFavoriteButton();
     }
 
@@ -165,7 +173,6 @@ function initFromStorage() {
 
 bindStaticEvents();
 initFromStorage();
-
 
 
 

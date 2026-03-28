@@ -302,19 +302,14 @@
     function updateUserInfo() {
         const el = document.getElementById("userInfo");
         const logoutBtn = document.getElementById("headerLogoutBtn");
-        if (!currentRole) {
-            el.textContent = "Rol seçilmedi";
+        if (!authToken || !loggedUsername) {
+            el.textContent = "Giriş yapılmadı";
             if (logoutBtn) logoutBtn.style.display = "none";
             return;
         }
         const roleText = currentRole === "ADMIN" ? "Admin" : "Kullanıcı";
-        if (authToken && loggedUsername) {
-            el.innerHTML = `Rol: <b>${roleText}</b> | Giriş yapan: <b>${loggedUsername}</b>`;
-            if (logoutBtn) logoutBtn.style.display = "inline-block";
-        } else {
-            el.innerHTML = `Rol: <b>${roleText}</b> | Giriş yapılmamış`;
-            if (logoutBtn) logoutBtn.style.display = "none";
-        }
+        el.innerHTML = `Rol: <b>${roleText}</b> | Giriş yapan: <b>${loggedUsername}</b>`;
+        if (logoutBtn) logoutBtn.style.display = "inline-block";
     }
 
 
