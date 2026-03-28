@@ -1,4 +1,4 @@
-﻿    function applyRoleToUI() {
+    function applyRoleToUI() {
         const panelLabel = document.getElementById("panelLabel");
         const homeTitle  = document.getElementById("homeTitle");
         const homeDesc   = document.getElementById("homeDesc");
@@ -12,10 +12,10 @@
         const isLoggedIn = Boolean(authToken && loggedUsername);
 
         if (!currentRole) {
-            panelLabel.textContent = "Admin / KullanÄ±cÄ± Paneli";
-            homeTitle.textContent = "GiriÅŸ";
-            homeDesc.textContent = "GiriÅŸ yap, sonra ÅŸarkÄ± ve playlist ekranlarÄ±na geÃ§.";
-            if (homeNavBtn) homeNavBtn.textContent = "GiriÅŸ";
+            panelLabel.textContent = "Admin / Kullanıcı Paneli";
+            homeTitle.textContent = "Giriş";
+            homeDesc.textContent = "Giriş yap, sonra şarkı ve playlist ekranlarına geç.";
+            if (homeNavBtn) homeNavBtn.textContent = "Giriş";
             if (authBox) authBox.style.display = "";
             if (homeDashboard) homeDashboard.style.display = "none";
             if (artistRoleText) artistRoleText.textContent = "";
@@ -24,33 +24,33 @@
         } else if (currentRole === "ADMIN" && isLoggedIn) {
             panelLabel.textContent = "Admin Paneli";
             homeTitle.textContent  = "Admin Ana Sayfa";
-            homeDesc.textContent   = "YÃ¶netim araÃ§larÄ±n, favorilerin ve dinleme Ã¶zetin burada.";
+            homeDesc.textContent   = "Yönetim araçların, favorilerin ve dinleme özetin burada.";
             if (homeNavBtn) homeNavBtn.textContent = "Ana Sayfa";
             if (authBox) authBox.style.display = "none";
             if (homeDashboard) homeDashboard.style.display = "block";
-            if (artistRoleText) artistRoleText.textContent = "Adminler sanatÃ§Ä± ekleyebilir.";
+            if (artistRoleText) artistRoleText.textContent = "Adminler sanatçı ekleyebilir.";
             if (artistAdminBox) artistAdminBox.style.display = "";
             if (songEditContainer) songEditContainer.style.display = "block";
         } else if (currentRole === "USER" && isLoggedIn) {
-            panelLabel.textContent = "KullanÄ±cÄ± Paneli";
+            panelLabel.textContent = "Kullanıcı Paneli";
             homeTitle.textContent  = "Ana Sayfa";
-            homeDesc.textContent   = "Favorilerin, en Ã§ok dinlediklerin ve hÄ±zlÄ± Ã¶zetin burada.";
+            homeDesc.textContent   = "Favorilerin, en çok dinlediklerin ve hızlı özetin burada.";
             if (homeNavBtn) homeNavBtn.textContent = "Ana Sayfa";
             if (authBox) authBox.style.display = "none";
             if (homeDashboard) homeDashboard.style.display = "block";
-            if (artistRoleText) artistRoleText.textContent = "KullanÄ±cÄ±lar sanatÃ§Ä± ekleyemez.";
+            if (artistRoleText) artistRoleText.textContent = "Kullanıcılar sanatçı ekleyemez.";
             if (artistAdminBox) artistAdminBox.style.display = "none";
             if (songEditContainer) songEditContainer.style.display = "none";
         } else {
-            panelLabel.textContent = currentRole === "ADMIN" ? "Admin Paneli" : "KullanÄ±cÄ± Paneli";
-            homeTitle.textContent  = currentRole === "ADMIN" ? "Admin GiriÅŸi" : "KullanÄ±cÄ± GiriÅŸi";
-            homeDesc.textContent   = "GiriÅŸ yap, sonra ÅŸarkÄ± ve playlist ekranlarÄ±na geÃ§.";
-            if (homeNavBtn) homeNavBtn.textContent = "GiriÅŸ";
+            panelLabel.textContent = currentRole === "ADMIN" ? "Admin Paneli" : "Kullanıcı Paneli";
+            homeTitle.textContent  = currentRole === "ADMIN" ? "Admin Girişi" : "Kullanıcı Girişi";
+            homeDesc.textContent   = "Giriş yap, sonra şarkı ve playlist ekranlarına geç.";
+            if (homeNavBtn) homeNavBtn.textContent = "Giriş";
             if (authBox) authBox.style.display = "";
             if (homeDashboard) homeDashboard.style.display = "none";
             if (artistRoleText) artistRoleText.textContent = currentRole === "ADMIN"
-                ? "Adminler sanatÃ§Ä± ekleyebilir."
-                : "KullanÄ±cÄ±lar sanatÃ§Ä± ekleyemez.";
+                ? "Adminler sanatçı ekleyebilir."
+                : "Kullanıcılar sanatçı ekleyemez.";
             if (artistAdminBox) artistAdminBox.style.display = currentRole === "ADMIN" ? "" : "none";
             if (songEditContainer) songEditContainer.style.display = currentRole === "ADMIN" ? "block" : "none";
         }
@@ -194,7 +194,7 @@
         }, 0);
     }
 
-    function handleAuthFailure(message = "Oturum sÃ¼ren doldu ya da geÃ§ersiz hale geldi. LÃ¼tfen tekrar giriÅŸ yap.") {
+    function handleAuthFailure(message = "Oturum süren doldu ya da geçersiz hale geldi. Lütfen tekrar giriş yap.") {
         if (typeof suppressUnauthorizedStatus === "function") {
             suppressUnauthorizedStatus();
         }
@@ -210,7 +210,7 @@
         if (!authToken) return false;
 
         if (status === 401) {
-            handleAuthFailure(extractApiMessage(data) || "Oturum doÄŸrulanamadÄ±. LÃ¼tfen tekrar giriÅŸ yap.");
+            handleAuthFailure(extractApiMessage(data) || "Oturum doğrulanamadı. Lütfen tekrar giriş yap.");
             return true;
         }
 
@@ -218,7 +218,7 @@
             const adminOnlyRequest = isAdminOnlyRequest(path, method);
             const shouldReset = !adminOnlyRequest || currentRole === "ADMIN";
             if (shouldReset) {
-                handleAuthFailure(extractApiMessage(data) || "Bu oturum artÄ±k geÃ§erli deÄŸil. LÃ¼tfen yeniden giriÅŸ yap.");
+                handleAuthFailure(extractApiMessage(data) || "Bu oturum artık geçerli değil. Lütfen yeniden giriş yap.");
                 return true;
             }
         }
@@ -236,16 +236,16 @@
         document.querySelector('nav button[data-page="home"]').classList.add("active");
         if (typeof closeMobileNav === "function") closeMobileNav();
         applyRoleToUI();
-        setStatus(role === "ADMIN" ? "Admin paneline geÃ§tin." : "KullanÄ±cÄ± paneline geÃ§tin.", true);
+        setStatus(role === "ADMIN" ? "Admin paneline geçtin." : "Kullanıcı paneline geçtin.", true);
     }
 
     function showPage(pageId, btn) {
         if (!currentRole) {
-            setStatus("Ã–nce Admin / KullanÄ±cÄ± olarak giriÅŸ tipini seÃ§.", false);
+            setStatus("Önce Admin / Kullanıcı olarak giriş tipini seç.", false);
             return;
         }
         if (currentRole !== "ADMIN" && (pageId === "artists" || pageId === "addSong" || pageId === "users" || pageId === "audit")) {
-            setStatus("Bu alan sadece admin iÃ§in.", false);
+            setStatus("Bu alan sadece admin için.", false);
             return;
         }
 
@@ -329,7 +329,7 @@
             }
             return { status: res.status, ok: res.ok, data: json };
         } catch (e) {
-            setStatus("Ä°stek hatasÄ±: " + e.message, false);
+            setStatus("İstek hatası: " + e.message, false);
             throw e;
         }
     }
@@ -340,20 +340,20 @@
         const password = document.getElementById("regPassword").value.trim();
 
         if (!username || !email || !password) {
-            setStatus("KullanÄ±cÄ± adÄ±, email ve ÅŸifre zorunlu", false);
+            setStatus("Kullanıcı adı, email ve şifre zorunlu", false);
             return;
         }
 
         const payload = { username, password, email };
         const { status, ok, data } = await apiRequest(CONFIG.endpoints.register, "POST", payload, false);
-        setStatus("KayÄ±t sonucu: HTTP " + status, ok);
+        setStatus("Kayıt sonucu: HTTP " + status, ok);
         console.log("register response:", data);
 
         if (ok) {
-            showPopup("KayÄ±t baÅŸarÄ±lÄ±");
-            showCenterModal("KayÄ±t tamamlandÄ±", "Åimdi GiriÅŸ sayfasÄ±ndan login olabilirsin.");
+            showPopup("Kayıt başarılı");
+            showCenterModal("Kayıt tamamlandı", "Şimdi Giriş sayfasından login olabilirsin.");
         } else if (data && data.message) {
-            setStatus("KayÄ±t hatasÄ±: " + data.message, false);
+            setStatus("Kayıt hatası: " + data.message, false);
         }
     }
 
@@ -362,13 +362,13 @@
         const password = document.getElementById("loginPassword").value.trim();
 
         if (!username || !password) {
-            setStatus("KullanÄ±cÄ± adÄ± ve ÅŸifre zorunlu", false);
+            setStatus("Kullanıcı adı ve şifre zorunlu", false);
             return;
         }
 
         const payload = { username, password };
         const { status, ok, data } = await apiRequest(CONFIG.endpoints.login, "POST", payload, false);
-        setStatus("GiriÅŸ sonucu: HTTP " + status, ok);
+        setStatus("Giriş sonucu: HTTP " + status, ok);
         console.log("login response:", data);
 
         if (ok) {
@@ -384,7 +384,7 @@
 
                 applyRoleToUI();
                 updateUserInfo();
-                showPopup("GiriÅŸ baÅŸarÄ±lÄ±");
+                showPopup("Giriş başarılı");
                 showPage("songs", document.querySelector('nav button[data-page="songs"]'));
                 getSongs();
                 loadPlaylists();
@@ -394,15 +394,15 @@
                     loadInsights();
                 }
             } else {
-                setStatus("Login OK ama token alanÄ± bulunamadÄ±.", false);
+                setStatus("Login OK ama token alanı bulunamadı.", false);
             }
         }
     }
 
     function logout() {
         resetClientSession({
-            statusMessage: "Ã‡Ä±kÄ±ÅŸ yapÄ±ldÄ±",
-            popupMessage: "Ã‡Ä±kÄ±ÅŸ yapÄ±ldÄ±"
+            statusMessage: "Çıkış yapıldı",
+            popupMessage: "Çıkış yapıldı"
         });
     }
 

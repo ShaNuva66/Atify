@@ -1,4 +1,4 @@
-﻿function bindIfExists(id, eventName, handler) {
+function bindIfExists(id, eventName, handler) {
     const el = document.getElementById(id);
     if (el) {
         el.addEventListener(eventName, handler);
@@ -122,7 +122,7 @@ function initFromStorage() {
 
     if (token && role) {
         if (typeof isStoredTokenExpired === "function" && isStoredTokenExpired(token)) {
-            handleAuthFailure("Oturum sÃ¼ren dolmuÅŸ. LÃ¼tfen tekrar giriÅŸ yap.");
+            handleAuthFailure("Oturum süren dolmuş. Lütfen tekrar giriş yap.");
             return;
         }
         authToken = token;
@@ -140,9 +140,9 @@ function initFromStorage() {
         if (typeof loadInsights === "function") {
             loadInsights();
         }
-        setStatus("KaldÄ±ÄŸÄ±n yerden devam ediyorsun.", true);
+        setStatus("Kaldığın yerden devam ediyorsun.", true);
     } else {
-        setStatus("Rol seÃ§meni bekliyorum...", true);
+        setStatus("Rol seçmeni bekliyorum...", true);
         updateFavoriteButton();
     }
 
