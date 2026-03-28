@@ -212,6 +212,10 @@ async function uploadSongFile() {
             data = text;
         }
 
+        if (maybeHandleAuthFailure(response.status, data, "/songs/upload", "POST")) {
+            return;
+        }
+
         setStatus("MP3 yükleme sonucu: HTTP " + response.status, response.ok);
 
         if (!response.ok) {

@@ -119,6 +119,10 @@ function initFromStorage() {
     const role = localStorage.getItem("atifyRole");
 
     if (token && role) {
+        if (typeof isStoredTokenExpired === "function" && isStoredTokenExpired(token)) {
+            handleAuthFailure("Oturum süren dolmuş. Lütfen tekrar giriş yap.");
+            return;
+        }
         authToken = token;
         loggedUsername = user;
         currentRole = role;

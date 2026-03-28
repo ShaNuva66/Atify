@@ -84,6 +84,146 @@
         updateUserInfo();
     }
 
+    let authResetInProgress = false;
+
+    function decodeJwtPayload(token) {
+        if (!token) return null;
+        const parts = token.split(".");
+        if (parts.length < 2) return null;
+
+        try {
+            const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+            const padded = base64 + "=".repeat((4 - (base64.length % 4)) % 4);
+            const json = decodeURIComponent(Array.from(atob(padded))
+                .map(ch => "%" + ch.charCodeAt(0).toString(16).padStart(2, "0"))
+                .join(""));
+            return JSON.parse(json);
+        } catch {
+            return null;
+        }
+    }
+
+    function isStoredTokenExpired(token) {
+        const payload = decodeJwtPayload(token);
+        if (!payload || typeof payload.exp !== "number") {
+            return true;
+        }
+        return Date.now() >= payload.exp * 1000;
+    }
+
+    function extractApiMessage(data) {
+        if (!data) return "";
+        if (typeof data === "string") return data.trim();
+        if (typeof data.message === "string") return data.message.trim();
+        return "";
+    }
+
+    function isAdminOnlyRequest(path, method = "GET") {
+        if (!path) return false;
+        const upperMethod = (method || "GET").toUpperCase();
+
+        if (path.startsWith(CONFIG.endpoints.users) ||
+            path.startsWith(CONFIG.endpoints.auditLogs) ||
+            path.startsWith(CONFIG.endpoints.jamendoPreloadAdmin) ||
+            path.startsWith("/admin/")) {
+            return true;
+        }
+
+        return ["POST", "PUT", "DELETE"].includes(upperMethod) &&
+            (path.startsWith(CONFIG.endpoints.songs) || path.startsWith(CONFIG.endpoints.artists));
+    }
+
+    function resetClientSession({
+        statusMessage = "",
+        statusOk = true,
+        popupMessage = null,
+        modalTitle = null,
+        modalText = null
+    } = {}) {
+        if (authResetInProgress) return;
+        authResetInProgress = true;
+
+        authToken = null;
+        loggedUsername = null;
+        currentRole = null;
+        currentSong = null;
+        favoritesCache = [];
+        favoriteSongIds = new Set();
+        favoriteExternalRefs = new Map();
+        recentHistoryCache = [];
+        topHistoryCache = [];
+        dashboardStatsCache = null;
+        topArtistsInsightsCache = [];
+        personalRecommendationsCache = [];
+
+        if (audio) {
+            audio.pause();
+            audio.removeAttribute("src");
+            audio.load();
+        }
+        if (playerBar) {
+            playerBar.classList.add("hidden");
+        }
+        if (typeof renderPlayerCover === "function") {
+            renderPlayerCover(null);
+        }
+
+        localStorage.removeItem("atifyToken");
+        localStorage.removeItem("atifyUser");
+        localStorage.removeItem("atifyRole");
+
+        document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+        document.getElementById("page-roleSelect").classList.add("active");
+        document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+        if (typeof closeMobileNav === "function") closeMobileNav();
+
+        applyRoleToUI();
+        updateFavoriteButton();
+
+        if (statusMessage) {
+            setStatus(statusMessage, statusOk);
+        }
+        if (popupMessage) {
+            showPopup(popupMessage);
+        }
+        if (modalTitle || modalText) {
+            showCenterModal(modalTitle || "Bilgi", modalText || "");
+        }
+
+        setTimeout(() => {
+            authResetInProgress = false;
+        }, 0);
+    }
+
+    function handleAuthFailure(message = "Oturum süren doldu ya da geçersiz hale geldi. Lütfen tekrar giriş yap.") {
+        resetClientSession({
+            statusMessage: message,
+            statusOk: false,
+            modalTitle: "Oturum yeniden gerekli",
+            modalText: message
+        });
+    }
+
+    function maybeHandleAuthFailure(status, data, path, method = "GET") {
+        if (!authToken) return false;
+
+        if (status === 401) {
+            handleAuthFailure(extractApiMessage(data) || "Oturum doğrulanamadı. Lütfen tekrar giriş yap.");
+            return true;
+        }
+
+        if (status === 403) {
+            const adminOnlyRequest = isAdminOnlyRequest(path, method);
+            const shouldReset = !adminOnlyRequest || currentRole === "ADMIN";
+            if (shouldReset) {
+                handleAuthFailure(extractApiMessage(data) || "Bu oturum artık geçerli değil. Lütfen yeniden giriş yap.");
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     function enterAs(role) {
         currentRole = role;
         localStorage.setItem("atifyRole", role);
@@ -179,6 +319,9 @@
             const text = await res.text();
             let json;
             try { json = text ? JSON.parse(text) : null; } catch { json = text; }
+            if (withAuth) {
+                maybeHandleAuthFailure(res.status, json, path, method);
+            }
             return { status: res.status, ok: res.ok, data: json };
         } catch (e) {
             setStatus("İstek hatası: " + e.message, false);
@@ -252,42 +395,11 @@
     }
 
     function logout() {
-        authToken = null;
-        loggedUsername = null;
-        currentRole = null;
-        currentSong = null;
-        favoritesCache = [];
-        favoriteSongIds = new Set();
-        favoriteExternalRefs = new Map();
-        recentHistoryCache = [];
-        topHistoryCache = [];
-        dashboardStatsCache = null;
-        topArtistsInsightsCache = [];
-        personalRecommendationsCache = [];
-        if (audio) {
-            audio.pause();
-            audio.removeAttribute("src");
-            audio.load();
-        }
-        if (playerBar) {
-            playerBar.classList.add("hidden");
-        }
-        if (typeof renderPlayerCover === "function") {
-            renderPlayerCover(null);
-        }
-        localStorage.removeItem("atifyToken");
-        localStorage.removeItem("atifyUser");
-        localStorage.removeItem("atifyRole");
-        document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-        document.getElementById("page-roleSelect").classList.add("active");
-        document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
-        if (typeof closeMobileNav === "function") closeMobileNav();
-        applyRoleToUI();
-        updateFavoriteButton();
-        setStatus("Çıkış yapıldı");
-        showPopup("Çıkış yapıldı");
+        resetClientSession({
+            statusMessage: "Çıkış yapıldı",
+            popupMessage: "Çıkış yapıldı"
+        });
     }
-
 
 
 

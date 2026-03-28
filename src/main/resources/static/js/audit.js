@@ -264,6 +264,22 @@ async function exportAuditLogsCsv() {
     });
 
     if (!response.ok) {
+        let errorData = null;
+        try {
+            const text = await response.text();
+            try {
+                errorData = text ? JSON.parse(text) : null;
+            } catch {
+                errorData = text;
+            }
+        } catch {
+            errorData = null;
+        }
+
+        if (maybeHandleAuthFailure(response.status, errorData, `${CONFIG.endpoints.auditLogs}/export`, "GET")) {
+            return;
+        }
+
         setStatus(`Audit export sonucu: HTTP ${response.status}`, false);
         showCenterModal("Export başarısız", "Audit log CSV indirilemedi.");
         return;
