@@ -200,8 +200,6 @@ SELECT username FROM app_user WHERE username IN ({quoted});
 
     def login(self, driver: webdriver.Chrome, wait: WebDriverWait, credentials: Credentials, role: str, viewport: str, is_mobile: bool) -> None:
         self.reset_state(driver, wait)
-        enter_button_id = "enterAdminBtn" if role == "ADMIN" else "enterUserBtn"
-        wait.until(EC.element_to_be_clickable((By.ID, enter_button_id))).click()
         wait.until(EC.visibility_of_element_located((By.ID, "loginUsername")))
         driver.find_element(By.ID, "loginUsername").clear()
         driver.find_element(By.ID, "loginUsername").send_keys(credentials.username)
