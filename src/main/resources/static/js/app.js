@@ -38,6 +38,7 @@
     let dashboardStatsCache = null;
     let topArtistsInsightsCache = [];
     let personalRecommendationsCache = [];
+    let suppressUnauthorizedStatusUntil = 0;
 
     const audio = document.getElementById("audioPlayer");
     const playerTitleEl = document.getElementById("playerTitle");
@@ -139,8 +140,16 @@
     }
 
     function setStatus(msg, ok = true) {
+        const text = typeof msg === "string" ? msg : String(msg ?? "");
+        if (Date.now() < suppressUnauthorizedStatusUntil && /HTTP\s+(401|403)\b/i.test(text)) {
+            return;
+        }
         const el = document.getElementById("status");
         el.innerHTML = `Durum: ${ok ? '<span class="ok">'+msg+'</span>' : '<span class="err">'+msg+'</span>'}`;
+    }
+
+    function suppressUnauthorizedStatus(durationMs = 1500) {
+        suppressUnauthorizedStatusUntil = Date.now() + durationMs;
     }
 
     function extractUnexpectedErrorMessage(raw) {
@@ -306,5 +315,4 @@
             if (logoutBtn) logoutBtn.style.display = "none";
         }
     }
-
 

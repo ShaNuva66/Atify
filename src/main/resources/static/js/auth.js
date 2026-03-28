@@ -195,6 +195,9 @@
     }
 
     function handleAuthFailure(message = "Oturum süren doldu ya da geçersiz hale geldi. Lütfen tekrar giriş yap.") {
+        if (typeof suppressUnauthorizedStatus === "function") {
+            suppressUnauthorizedStatus();
+        }
         resetClientSession({
             statusMessage: message,
             statusOk: false,
@@ -399,7 +402,6 @@
             popupMessage: "Çıkış yapıldı"
         });
     }
-
 
 
 
