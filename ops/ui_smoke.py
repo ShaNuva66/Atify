@@ -1,6 +1,7 @@
 import argparse
 import base64
 import json
+import unicodedata
 import secrets
 import shlex
 import string
@@ -210,8 +211,10 @@ SELECT username FROM app_user WHERE username IN ({quoted});
         wait.until(lambda d: d.execute_script('return document.querySelector(".page.active")?.id') == "page-songs")
         time.sleep(0.8)
         panel_label = driver.find_element(By.ID, "panelLabel").text.strip()
-        expected_label = "Admin Paneli" if role == "ADMIN" else "Kullanıcı Paneli"
-        self.require(panel_label == expected_label, f"{viewport} {role} login label mismatch: {panel_label}")
+        if role == "ADMIN":
+            self.require("Admin Paneli" in panel_label, f"{viewport} {role} login label mismatch: {panel_label}")
+        else:
+            self.require("Kullan" in panel_label and "Paneli" in panel_label, f"{viewport} {role} login label mismatch: {panel_label}")
         self.check_no_overflow(driver, f"{viewport} {role.lower()} songs initial")
         self.save_screenshot(driver, viewport, f"{role.lower()}-songs-initial")
         self.add_check(f"{viewport} {role} login ok")

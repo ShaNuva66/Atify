@@ -6,6 +6,7 @@ import shlex
 import string
 import subprocess
 import sys
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -166,6 +167,27 @@ SELECT username FROM app_user WHERE username IN ({quoted});
         )
         return data
 
+    def wait_for_catalog_ready(self, token: str, timeout_seconds: int = 120) -> dict:
+        deadline = time.time() + timeout_seconds
+        last_status = None
+
+        while time.time() < deadline:
+            last_status = self.get_status(token)
+            if (
+                last_status.get("recognizerReachable")
+                and not last_status.get("syncInProgress")
+                and last_status.get("recognizerCatalogSize") == last_status.get("fingerprintedSongCount")
+                and last_status.get("missingFingerprintCount") == 0
+            ):
+                self.add_check(
+                    "fingerprint catalog ready: "
+                    f"remote={last_status.get('recognizerCatalogSize')} local={last_status.get('fingerprintedSongCount')}"
+                )
+                return last_status
+            time.sleep(5)
+
+        raise SmokeFailure(f"Fingerprint catalog did not become ready in time: {last_status}")
+
     def get_songs(self, token: str) -> list[dict]:
         response = requests.get(f"{self.base_url}/songs", headers=self.auth_headers(token), timeout=30)
         self.require(response.status_code == 200, f"Songs fetch failed: {response.status_code} {response.text}")
@@ -220,15 +242,18 @@ SELECT username FROM app_user WHERE username IN ({quoted});
             self.promote_admin(admin_credentials.username)
             admin_token = self.login(admin_credentials)
 
-            status_before = self.get_status(admin_token)
+            status_before = self.wait_for_catalog_ready(admin_token)
             self.require(status_before.get("fingerprintedSongCount", 0) > 0, "No fingerprinted songs available")
 
-            status_after = self.reindex(admin_token)
-            self.require(bool(status_after.get("recognizerReachable")), "Recognizer is not reachable after reindex")
-            self.require(
-                status_after.get("recognizerCatalogSize") == status_after.get("fingerprintedSongCount"),
-                f"Recognizer catalog mismatch after reindex: {status_after}",
-            )
+            reindex_status = self.reindex(admin_token)
+            if reindex_status.get("syncInProgress"):
+                reindex_status = self.wait_for_catalog_ready(admin_token)
+            else:
+                self.require(bool(reindex_status.get("recognizerReachable")), "Recognizer is not reachable after reindex")
+                self.require(
+                    reindex_status.get("recognizerCatalogSize") == reindex_status.get("fingerprintedSongCount"),
+                    f"Recognizer catalog mismatch after reindex: {reindex_status}",
+                )
 
             songs = self.get_songs(admin_token)
             expected_title, audio_bytes, filename = self.fetch_audio_sample(admin_token, songs)
