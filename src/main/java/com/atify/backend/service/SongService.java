@@ -273,6 +273,8 @@ public class SongService {
         Song song = songRepo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Şarkı bulunamadı: " + id));
 
+        fingerprintService.unregisterFingerprint(song);
+
         if (song.getPlaylists() != null) {
             for (Playlist playlist : song.getPlaylists()) {
                 if (playlist.getSongs() != null) {
@@ -292,3 +294,5 @@ public class SongService {
         );
     }
 }
+
+

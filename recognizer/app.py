@@ -257,6 +257,29 @@ def health():
     return jsonify({"status": "ok"})
 
 
+@app.get("/catalog-status")
+def catalog_status():
+    return jsonify({"status": "ok", "catalogSize": len(CATALOG)})
+
+
+@app.post("/reset-catalog")
+def reset_catalog():
+    CATALOG.clear()
+    return jsonify({"status": "ok", "catalogSize": len(CATALOG)})
+
+
+@app.post("/unregister-fingerprint")
+def unregister_fingerprint():
+    payload = request.get_json(silent=True) or {}
+    song_code = payload.get("songCode")
+
+    if not song_code:
+        return jsonify({"status": "error", "message": "songCode is required"}), 400
+
+    removed = CATALOG.pop(song_code, None) is not None
+    return jsonify({"status": "ok", "removed": removed, "catalogSize": len(CATALOG)})
+
+
 @app.post("/fingerprint-file")
 def fingerprint_file():
     try:

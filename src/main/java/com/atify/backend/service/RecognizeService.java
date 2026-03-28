@@ -34,8 +34,11 @@ public class RecognizeService {
 
     private final SongRepository songRepository;
     private final RestTemplate restTemplate;
+    private final FingerprintCatalogService fingerprintCatalogService;
 
     public IdentifyResponse identifySong(MultipartFile sample) throws Exception {
+        fingerprintCatalogService.ensureCatalogReady();
+
         if (songRepository.findByFingerprintDataIsNotNull().isEmpty()) {
             return new IdentifyResponse(false, null, null, null);
         }

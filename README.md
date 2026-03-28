@@ -1,4 +1,4 @@
-# Atify Backend
+﻿# Atify Backend
 
 Atify, Spring Boot tabanli muzik uygulamasi backend'idir. Static frontend dosyalari da ayni uygulama icinden servis edilir.
 
@@ -39,6 +39,22 @@ Notlar:
 - `selenium` ve `requests` kurulu bir Python ortami bekler.
 - Screenshot almak istersen `--artifacts-dir .\tmp\ui-smoke` ekleyebilirsin.
 
+Fingerprint smoke testi:
+
+```powershell
+python .\ops\fingerprint_smoke.py
+```
+
+Canli production fingerprint smoke testi:
+
+```powershell
+python .\ops\fingerprint_live_smoke.py `
+  --base-url https://atify.com.tr `
+  --ssh-host 89.47.113.106 `
+  --ssh-user atify `
+  --ssh-key "$env:USERPROFILE\.ssh\atify_prod_ed25519"
+```
+
 ## Production
 
 Production deploy ve operasyon notlari:
@@ -54,3 +70,5 @@ Ana script'ler:
 - `deploy/harden-server.sh`
 - `ops/sync-prod.ps1`
 - `ops/setup-prod-access.ps1`
+
+

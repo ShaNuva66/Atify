@@ -1,4 +1,4 @@
-    const CONFIG = {
+﻿    const CONFIG = {
         baseUrl: window.location.origin,
         endpoints: {
             register: "/auth/register",
@@ -10,7 +10,8 @@
             auditLogs: "/audit-logs",
             favorites: "/favorites",
             history: "/history",
-            jamendoPreloadAdmin: "/admin/jamendo/preload"
+            jamendoPreloadAdmin: "/admin/jamendo/preload",
+            fingerprintAdmin: "/admin/fingerprints"
         }
     };
 
@@ -29,7 +30,7 @@
     let allArtistsCache = [];
     let currentSongsSource = "LOCAL";
     let currentCatalogItems = [];
-    let currentCatalogEmptyMessage = "Hiç şarkı bulunamadı.";
+    let currentCatalogEmptyMessage = "HiÃ§ ÅŸarkÄ± bulunamadÄ±.";
     let favoritesCache = [];
     let favoriteSongIds = new Set();
     let favoriteExternalRefs = new Map();
@@ -82,7 +83,7 @@
 
     audio.addEventListener("ended", () => {
         isPlaying = false;
-        playPauseBtn.textContent = "▶";
+        playPauseBtn.textContent = "â–¶";
     });
 
     function togglePlay() {
@@ -91,15 +92,15 @@
         if (audio.paused) {
             audio.play().then(() => {
                 isPlaying = true;
-                playPauseBtn.textContent = "⏸";
+                playPauseBtn.textContent = "â¸";
             }).catch(err => {
                 console.error(err);
-                setStatus("Şarkı çalınırken hata: " + err.message, false);
+                setStatus("ÅarkÄ± Ã§alÄ±nÄ±rken hata: " + err.message, false);
             });
         } else {
             audio.pause();
             isPlaying = false;
-            playPauseBtn.textContent = "▶";
+            playPauseBtn.textContent = "â–¶";
         }
     }
 
@@ -165,14 +166,14 @@
         const message = extractUnexpectedErrorMessage(event.error || event.message);
         if (!message) return;
         console.error("Unhandled UI error:", event.error || event.message);
-        setStatus("Beklenmeyen arayüz hatası: " + message, false);
+        setStatus("Beklenmeyen arayÃ¼z hatasÄ±: " + message, false);
     });
 
     window.addEventListener("unhandledrejection", (event) => {
         const message = extractUnexpectedErrorMessage(event.reason);
         if (!message) return;
         console.error("Unhandled promise rejection:", event.reason);
-        setStatus("İşlem sırasında beklenmeyen hata: " + message, false);
+        setStatus("Ä°ÅŸlem sÄ±rasÄ±nda beklenmeyen hata: " + message, false);
     });
 
     function showPopup(message) {
@@ -200,22 +201,22 @@
             : "Atify";
 
         if (coverUrl) {
-            playerCoverEl.innerHTML = `<img src="${coverUrl}" alt="${title} kapağı">`;
+            playerCoverEl.innerHTML = `<img src="${coverUrl}" alt="${title} kapaÄŸÄ±">`;
             playerCoverEl.classList.add("has-image");
         } else {
-            playerCoverEl.textContent = "♪";
+            playerCoverEl.textContent = "â™ª";
             playerCoverEl.classList.remove("has-image");
         }
     }
 
     function openPlaylistModalForSong(song) {
         if (!song || !song.id) {
-            setStatus("Önce bir şarkı seçip çal.", false);
+            setStatus("Ã–nce bir ÅŸarkÄ± seÃ§ip Ã§al.", false);
             return;
         }
         if (!playlistsCache || playlistsCache.length === 0) {
-            setStatus("Önce bir playlist oluştur.", false);
-            showCenterModal("Playlist yok", "Şarkıyı eklemek için önce en az bir playlist oluştur.");
+            setStatus("Ã–nce bir playlist oluÅŸtur.", false);
+            showCenterModal("Playlist yok", "ÅarkÄ±yÄ± eklemek iÃ§in Ã¶nce en az bir playlist oluÅŸtur.");
             return;
         }
         pendingPlaylistSong = song;
@@ -228,7 +229,7 @@
             const count = pl.songCount ?? (Array.isArray(pl.songs) ? pl.songs.length : null);
             div.innerHTML = `
                 <div>${name}</div>
-                <div style="font-size:11px;color:#9ca3af;">${count != null ? count + ' şarkı' : ''}</div>
+                <div style="font-size:11px;color:#9ca3af;">${count != null ? count + ' ÅŸarkÄ±' : ''}</div>
             `;
             div.onclick = () => addSongToPlaylistFromModal(pl.id);
             playlistModalList.appendChild(div);
@@ -270,7 +271,7 @@
         }
 
         const { status, ok, data } = await apiRequest(path, "POST", body, true);
-        setStatus("Playlist'e şarkı ekleme sonucu: HTTP " + status, ok);
+        setStatus("Playlist'e ÅŸarkÄ± ekleme sonucu: HTTP " + status, ok);
         console.log("addSongToPlaylistFromModal response:", data);
 
         if (ok) {
@@ -278,14 +279,14 @@
                 pendingPlaylistSong.name ||
                 pendingPlaylistSong.title ||
                 pendingPlaylistSong.songName ||
-                "Şarkı";
+                "ÅarkÄ±";
             if (pendingPlaylistSong.source === "JAMENDO" && data && data.id) {
                 pendingPlaylistSong.id = data.id;
                 pendingPlaylistSong.source = data.source || "JAMENDO";
             }
             closePlaylistModal();
-            showPopup("Şarkı playlistine eklendi");
-            showCenterModal("Başarılı", `"${title}" playlistine eklendi.`);
+            showPopup("ÅarkÄ± playlistine eklendi");
+            showCenterModal("BaÅŸarÄ±lÄ±", `"${title}" playlistine eklendi.`);
             if (Number(playlistId) === Number(activePlaylistId)) {
                 loadPlaylistContent(playlistId);
             }
@@ -293,8 +294,8 @@
         } else {
             const errorText = data && data.message
                 ? data.message
-                : (typeof data === "string" ? data : "Şarkı playlist'e eklenemedi.");
-            showCenterModal("Ekleme başarısız", errorText);
+                : (typeof data === "string" ? data : "ÅarkÄ± playlist'e eklenemedi.");
+            showCenterModal("Ekleme baÅŸarÄ±sÄ±z", errorText);
         }
     }
 
@@ -302,17 +303,19 @@
         const el = document.getElementById("userInfo");
         const logoutBtn = document.getElementById("headerLogoutBtn");
         if (!currentRole) {
-            el.textContent = "Rol seçilmedi";
+            el.textContent = "Rol seÃ§ilmedi";
             if (logoutBtn) logoutBtn.style.display = "none";
             return;
         }
-        const roleText = currentRole === "ADMIN" ? "Admin" : "Kullanıcı";
+        const roleText = currentRole === "ADMIN" ? "Admin" : "KullanÄ±cÄ±";
         if (authToken && loggedUsername) {
-            el.innerHTML = `Rol: <b>${roleText}</b> | Giriş yapan: <b>${loggedUsername}</b>`;
+            el.innerHTML = `Rol: <b>${roleText}</b> | GiriÅŸ yapan: <b>${loggedUsername}</b>`;
             if (logoutBtn) logoutBtn.style.display = "inline-block";
         } else {
-            el.innerHTML = `Rol: <b>${roleText}</b> | Giriş yapılmamış`;
+            el.innerHTML = `Rol: <b>${roleText}</b> | GiriÅŸ yapÄ±lmamÄ±ÅŸ`;
             if (logoutBtn) logoutBtn.style.display = "none";
         }
     }
+
+
 
