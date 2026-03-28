@@ -180,17 +180,16 @@
         applyRoleToUI();
         updateFavoriteButton();
 
-        if (statusMessage) {
-            setStatus(statusMessage, statusOk);
-        }
-        if (popupMessage) {
-            showPopup(popupMessage);
-        }
-        if (modalTitle || modalText) {
-            showCenterModal(modalTitle || "Bilgi", modalText || "");
-        }
-
         setTimeout(() => {
+            if (statusMessage) {
+                setStatus(statusMessage, statusOk);
+            }
+            if (popupMessage) {
+                showPopup(popupMessage);
+            }
+            if (modalTitle || modalText) {
+                showCenterModal(modalTitle || "Bilgi", modalText || "");
+            }
             authResetInProgress = false;
         }, 0);
     }
@@ -400,7 +399,6 @@
             popupMessage: "Çıkış yapıldı"
         });
     }
-
 
 
 
