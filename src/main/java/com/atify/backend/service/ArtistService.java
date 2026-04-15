@@ -4,6 +4,8 @@ import com.atify.backend.dto.ArtistRequest;
 import com.atify.backend.dto.ArtistResponse;
 import com.atify.backend.entity.Artist;
 import com.atify.backend.repository.ArtistRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,6 +22,7 @@ public class ArtistService {
         this.auditLogService = auditLogService;
     }
 
+    @CacheEvict(value = {"artists", "search"}, allEntries = true)
     public ArtistResponse addArtist(ArtistRequest request) {
         boolean exists = artistRepo.existsByName(request.getName());
         if (exists) {
@@ -41,29 +44,17 @@ public class ArtistService {
                 savedArtist.getName() + " sanatçısı eklendi."
         );
 
-        return new ArtistResponse(
-                savedArtist.getId(),
-                savedArtist.getName(),
-                savedArtist.getCountry(),
-                savedArtist.getBirthDate(),
-                savedArtist.getBiography(),
-                savedArtist.getProfileImageUrl()
-        );
+        return toResponse(savedArtist);
     }
 
+    @Cacheable("artists")
     public List<ArtistResponse> getAllArtists() {
         return artistRepo.findAll().stream()
-                .map(artist -> new ArtistResponse(
-                        artist.getId(),
-                        artist.getName(),
-                        artist.getCountry(),
-                        artist.getBirthDate(),
-                        artist.getBiography(),
-                        artist.getProfileImageUrl()
-                ))
+                .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
+    @CacheEvict(value = {"artists", "search"}, allEntries = true)
     public void deleteArtist(Long id) {
         Artist artist = artistRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Artist not found."));
@@ -76,6 +67,7 @@ public class ArtistService {
         );
     }
 
+    @CacheEvict(value = {"artists", "search"}, allEntries = true)
     public ArtistResponse updateArtist(Long id, ArtistRequest request) {
         Artist artist = artistRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Artist to update not found."));
@@ -94,13 +86,17 @@ public class ArtistService {
                 updatedArtist.getName() + " sanatçısı güncellendi."
         );
 
+        return toResponse(updatedArtist);
+    }
+
+    private ArtistResponse toResponse(Artist artist) {
         return new ArtistResponse(
-                updatedArtist.getId(),
-                updatedArtist.getName(),
-                updatedArtist.getCountry(),
-                updatedArtist.getBirthDate(),
-                updatedArtist.getBiography(),
-                updatedArtist.getProfileImageUrl()
+                artist.getId(),
+                artist.getName(),
+                artist.getCountry(),
+                artist.getBirthDate(),
+                artist.getBiography(),
+                artist.getProfileImageUrl()
         );
     }
 }

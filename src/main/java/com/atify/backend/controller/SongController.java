@@ -1,5 +1,6 @@
 package com.atify.backend.controller;
 
+import com.atify.backend.dto.PageResponse;
 import com.atify.backend.dto.RecommendationResponse;
 import com.atify.backend.dto.JamendoBulkImportResponse;
 import com.atify.backend.dto.JamendoImportRequest;
@@ -68,8 +69,19 @@ public class SongController {
         return songService.updateSong(id, request);
     }
 
+    /**
+     * Tüm şarkıları sayfalı döndürür.
+     * GET /songs?page=0&size=20
+     * page/size verilmezse tüm liste döner (geriye dönük uyum).
+     */
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<SongResponse> getAllSongs() {
+    public Object getAllSongs(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size
+    ) {
+        if (page != null && size != null) {
+            return songService.getAllSongs(page, size);
+        }
         return songService.getAllSongs();
     }
 

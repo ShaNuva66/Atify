@@ -48,7 +48,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/jamendo/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/songs/**", "/artists/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/songs/**", "/artists/**", "/search/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/songs/**", "/artists/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/songs/**", "/artists/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/songs/**", "/artists/**").hasRole("ADMIN")

@@ -13,6 +13,7 @@ import com.atify.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,6 +63,7 @@ public class PlaylistService {
         return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 
+    @Transactional
     public PlaylistResponse addPlaylist(PlaylistRequest playlistRequest) {
         User user = userRepo.findByUsername(getActiveUsername())
                 .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
@@ -76,6 +78,7 @@ public class PlaylistService {
         return toPlaylistResponse(savedPlaylist);
     }
 
+    @Transactional
     public PlaylistResponse updatePlaylist(Long playlistId, PlaylistRequest playlistRequest) {
         Playlist playlist = playlistRepo.findById(playlistId)
                 .orElseThrow(() -> new RuntimeException("Playlist bulunamadı"));
@@ -97,6 +100,7 @@ public class PlaylistService {
         return toPlaylistResponse(updatedPlaylist);
     }
 
+    @Transactional
     public void addSongToPlaylist(Long playlistId, Long songId) {
         Playlist playlist = playlistRepo.findById(playlistId)
                 .orElseThrow(() -> new RuntimeException("Playlist bulunamadı"));
@@ -121,6 +125,7 @@ public class PlaylistService {
         playlistRepo.save(playlist);
     }
 
+    @Transactional
     public SongResponse addJamendoTrackToPlaylist(Long playlistId, JamendoImportRequest request) {
         Playlist playlist = playlistRepo.findById(playlistId)
                 .orElseThrow(() -> new RuntimeException("Playlist bulunamadı"));
@@ -146,6 +151,7 @@ public class PlaylistService {
         return toSongResponse(song);
     }
 
+    @Transactional
     public void removeSongFromPlaylist(Long playlistId, Long songId) {
         Playlist playlist = playlistRepo.findById(playlistId)
                 .orElseThrow(() -> new RuntimeException("Playlist bulunamadı"));
@@ -154,13 +160,13 @@ public class PlaylistService {
             throw new RuntimeException("Bu playlist sana ait değil.");
         }
 
-        Song song = songRepo.findById(songId)
-                .orElseThrow(() -> new RuntimeException("Şarkı bulunamadı"));
-
-        playlist.getSongs().remove(song);
+        if (playlist.getSongs() != null) {
+            playlist.getSongs().removeIf(s -> s.getId().equals(songId));
+        }
         playlistRepo.save(playlist);
     }
 
+    @Transactional
     public void reorderSongInPlaylist(Long playlistId, Long songId, Integer targetIndex) {
         Playlist playlist = playlistRepo.findById(playlistId)
                 .orElseThrow(() -> new RuntimeException("Playlist bulunamadı"));
@@ -219,23 +225,27 @@ public class PlaylistService {
         return trimmed.isBlank() ? null : trimmed;
     }
 
+    @Transactional(readOnly = true)
     public List<PlaylistResponse> getAllPlaylists() {
-        String activeUsername = getActiveUsername();
-
-        return playlistRepo.findAll()
+        User user = userRepo.findByUsername(getActiveUsername())
+                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
+        return playlistRepo.findByUser(user)
                 .stream()
-                .filter(p -> p.getUser() != null && activeUsername.equals(p.getUser().getUsername()))
                 .map(this::toPlaylistResponse)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<PlaylistResponse> getPlaylistsByUser(Long userId) {
-        return playlistRepo.findAll().stream()
-                .filter(p -> p.getUser().getId().equals(userId))
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
+        return playlistRepo.findByUser(user)
+                .stream()
                 .map(this::toPlaylistResponse)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<SongResponse> getSongsByPlaylist(Long playlistId) {
         Playlist playlist = playlistRepo.findById(playlistId)
                 .orElseThrow(() -> new RuntimeException("Playlist bulunamadı"));

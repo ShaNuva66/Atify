@@ -38,6 +38,8 @@ services:
         condition: service_healthy
       recognizer:
         condition: service_started
+      redis:
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/atify?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: root
@@ -45,10 +47,26 @@ services:
       SHAZAM_PYTHON_BASE_URL: http://recognizer:5001
       MUSIC_UPLOAD_DIR: /data/uploads
       MUSIC_TEMP_DIR: /data/tmp
+      SPRING_CACHE_TYPE: redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     ports:
       - "8080:8080"
     volumes:
       - atify_media:/data
+
+  redis:
+    image: redis:7.4-alpine
+    container_name: atify-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   prometheus:
     image: prom/prometheus:v2.54.1
@@ -79,3 +97,4 @@ volumes:
   mysql_data:
   atify_media:
   grafana_data:
+  redis_data:

@@ -3,6 +3,7 @@ package com.atify.backend.service;
 import com.atify.backend.dto.JamendoImportRequest;
 import com.atify.backend.dto.JamendoBulkImportResponse;
 import com.atify.backend.dto.JamendoTrackResponse;
+import com.atify.backend.dto.PageResponse;
 import com.atify.backend.dto.SongRequest;
 import com.atify.backend.dto.SongResponse;
 import com.atify.backend.entity.Album;
@@ -15,6 +16,10 @@ import com.atify.backend.repository.PlaylistRepository;
 import com.atify.backend.repository.SongRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -34,7 +39,7 @@ public class SongService {
     private final FingerprintService fingerprintService;
     private final JamendoService jamendoService;
 
-    private SongResponse toSongResponse(Song song) {
+    public SongResponse toSongResponse(Song song) {
         return new SongResponse(
                 song.getId(),
                 song.getName(),
@@ -46,6 +51,7 @@ public class SongService {
         );
     }
 
+    @CacheEvict(value = {"songs", "search"}, allEntries = true)
     public SongResponse addSong(SongRequest request) {
         Artist artist = artistRepo.findById(request.getArtistId())
                 .orElseThrow(() -> new IllegalArgumentException("Sanatçı bulunamadı: " + request.getArtistId()));
@@ -79,6 +85,7 @@ public class SongService {
         return toSongResponse(saved);
     }
 
+    @CacheEvict(value = {"songs", "search"}, allEntries = true)
     public SongResponse updateSong(Long id, SongRequest request) {
         Song song = songRepo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Şarkı bulunamadı: " + id));
@@ -161,6 +168,7 @@ public class SongService {
                 });
     }
 
+    @CacheEvict(value = {"songs", "search"}, allEntries = true)
     public SongResponse importJamendoTrackForCatalog(JamendoImportRequest request) {
         if (request == null || request.jamendoId() == null || request.jamendoId().isBlank()) {
             throw new IllegalArgumentException("Jamendo id zorunlu.");
@@ -189,6 +197,7 @@ public class SongService {
         return toSongResponse(saved);
     }
 
+    @CacheEvict(value = {"songs", "search"}, allEntries = true)
     public JamendoBulkImportResponse importJamendoTracksForCatalog(List<JamendoImportRequest> requests, String source) {
         if (requests == null || requests.isEmpty()) {
             return new JamendoBulkImportResponse(source, 0, 0, 0, 0, List.of());
@@ -247,8 +256,18 @@ public class SongService {
         return importJamendoTracksForCatalog(requests, source);
     }
 
+    @Cacheable(value = "songs", key = "'page-' + #page + '-' + #size")
+    public PageResponse<SongResponse> getAllSongs(int page, int size) {
+        return PageResponse.of(
+                songRepo.findAll(PageRequest.of(page, size, Sort.by("name")))
+                        .map(this::toSongResponse)
+        );
+    }
+
+    // Geriye dönük uyumluluk — tüm şarkıları tek seferde döndürür
+    @Cacheable(value = "songs", key = "'all'")
     public List<SongResponse> getAllSongs() {
-        return songRepo.findAll()
+        return songRepo.findAll(Sort.by("name"))
                 .stream()
                 .map(this::toSongResponse)
                 .toList();
@@ -269,6 +288,7 @@ public class SongService {
     }
 
     @Transactional
+    @CacheEvict(value = {"songs", "search"}, allEntries = true)
     public void deleteSong(Long id) {
         Song song = songRepo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Şarkı bulunamadı: " + id));
@@ -294,5 +314,3 @@ public class SongService {
         );
     }
 }
-
-
