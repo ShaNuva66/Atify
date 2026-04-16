@@ -178,9 +178,22 @@
 
     function showPopup(message) {
         const p = document.getElementById("popup");
+        clearTimeout(p._hideTimer);
+        clearTimeout(p._fadeTimer);
         p.textContent = message;
+        p.classList.remove("fading");
         p.style.display = "block";
-        setTimeout(() => { p.style.display = "none"; }, 2000);
+        // Force reflow to restart animation
+        void p.offsetWidth;
+        p.classList.add("show");
+        p._hideTimer = setTimeout(() => {
+            p.classList.remove("show");
+            p.classList.add("fading");
+            p._fadeTimer = setTimeout(() => {
+                p.style.display = "none";
+                p.classList.remove("fading");
+            }, 280);
+        }, 1800);
     }
 
     function showCenterModal(title, text) {
