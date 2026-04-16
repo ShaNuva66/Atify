@@ -40,7 +40,7 @@ public class RecognizeService {
         fingerprintCatalogService.ensureCatalogReady();
 
         if (songRepository.findByFingerprintDataIsNotNull().isEmpty()) {
-            return new IdentifyResponse(false, null, null, null);
+            return new IdentifyResponse(false, null, null, null, null, null, null);
         }
 
         Files.createDirectories(Paths.get(tempDir));
@@ -85,22 +85,26 @@ public class RecognizeService {
 
             RecognizeSimpleResponse recog = resp.getBody();
             if (recog == null || !recog.isMatch() || recog.getSongCode() == null || recog.getSongCode().isBlank()) {
-                return new IdentifyResponse(false, null, null, null);
+                return new IdentifyResponse(false, null, null, null, null, null, null);
             }
 
             Optional<Song> optSong = songRepository.findByFingerprintCode(recog.getSongCode());
             if (optSong.isEmpty()) {
-                return new IdentifyResponse(false, null, null, null);
+                return new IdentifyResponse(false, null, null, null, null, null, null);
             }
 
             Song song = optSong.get();
             String artistName = song.getArtist() != null ? song.getArtist().getName() : null;
+            String source = song.getExternalSource() != null ? song.getExternalSource() : "LOCAL";
 
             return new IdentifyResponse(
                     true,
+                    song.getId(),
                     song.getName(),
                     artistName,
-                    song.getCoverUrl()
+                    song.getCoverUrl(),
+                    song.getAudioUrl(),
+                    source
             );
         } finally {
             Files.deleteIfExists(tempInput);

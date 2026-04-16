@@ -10,7 +10,10 @@ import lombok.NoArgsConstructor;
 public class IdentifyResponse {
 
     private boolean found;
+    private Long songId;
     private String title;
     private String artist;
     private String coverUrl;
+    private String audioUrl;
+    private String source;
 }

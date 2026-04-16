@@ -32,7 +32,7 @@ public class IdentifyController {
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new IdentifyResponse(false, null, null, null));
+                    .body(new IdentifyResponse(false, null, null, null, null, null, null));
         }
     }
 }

@@ -6,7 +6,7 @@
     <title>Atify</title>
 
     <link rel="icon" type="image/png" href="atify_logo.png">
-    <link rel="stylesheet" href="css/app.css?v=20260416-animations">
+    <link rel="stylesheet" href="css/app.css?v=20260416-shazam">
 </head>
 <body>
 
@@ -37,6 +37,7 @@
             <button type="button" data-page="history" data-role="BOTH">Geçmiş</button>
             <button type="button" data-page="insights" data-role="BOTH">İçgörüler</button>
             <button type="button" data-page="addSong" data-role="ADMIN">Müzik Ekle (Admin)</button>
+            <button type="button" data-page="identify" data-role="BOTH" id="identifyNavBtn">🎵 Şarkı Tanı</button>
         </nav>
 
         <div class="header-meta">
@@ -559,18 +560,67 @@
     </div>
 </div>
 
-<script src="js/app.js?v=20260416-animations"></script>
-<script src="js/auth.js?v=20260416-animations"></script>
-<script src="js/favorites.js?v=20260416-animations"></script>
-<script src="js/songs.js?v=20260416-animations"></script>
-<script src="js/playlists.js?v=20260416-animations"></script>
-<script src="js/artists.js?v=20260416-animations"></script>
-<script src="js/insights.js?v=20260416-animations"></script>
-<script src="js/users.js?v=20260416-animations"></script>
-<script src="js/audit.js?v=20260416-animations"></script>
-<script src="js/jamendo-admin.js?v=20260416-animations"></script>
-<script src="js/fingerprint-admin.js?v=20260416-animations"></script>
-<script src="js/init.js?v=20260416-animations"></script>
+<!-- SHAZAM / ŞARKI TANIMA MODALI -->
+<div id="identifyModalOverlay">
+    <div id="identifyModal">
+        <button id="identifyModalCloseBtn" class="identify-close-btn">✕</button>
+
+        <div id="identifyIdleView">
+            <div class="identify-logo">🎵</div>
+            <h2 class="identify-title">Şarkı Tanı</h2>
+            <p class="identify-subtitle">Mikrofona 10 saniye müzik tut, şarkıyı tanıyalım.</p>
+            <button id="identifyStartBtn" class="identify-start-btn">
+                <span class="identify-btn-icon">🎤</span>
+                <span>Dinlemeye Başla</span>
+            </button>
+        </div>
+
+        <div id="identifyListeningView" style="display:none;">
+            <div class="identify-pulse-ring">
+                <div class="identify-pulse-circle">
+                    <span class="identify-mic-icon">🎤</span>
+                </div>
+            </div>
+            <p class="identify-listen-label" id="identifyCountdownLabel">Dinleniyor...</p>
+            <p class="identify-listen-sub">Müziği mikrofona yaklaştır</p>
+            <button id="identifyCancelBtn" class="identify-cancel-btn">İptal</button>
+        </div>
+
+        <div id="identifyResultView" style="display:none;">
+            <div id="identifyResultCover" class="identify-result-cover">♪</div>
+            <div class="identify-result-info">
+                <div class="identify-result-title" id="identifyResultTitle">—</div>
+                <div class="identify-result-artist" id="identifyResultArtist">—</div>
+            </div>
+            <div class="identify-result-actions">
+                <button id="identifyPlayBtn" class="btn primary" style="display:none;">▶ Şimdi Çal</button>
+                <button id="identifyAddPlaylistBtn" class="btn secondary" style="display:none;">+ Playlist'e Ekle</button>
+                <button id="identifyRetryBtn" class="identify-retry-btn">🔄 Tekrar Dene</button>
+            </div>
+        </div>
+
+        <div id="identifyNotFoundView" style="display:none;">
+            <div class="identify-notfound-icon">🔍</div>
+            <p class="identify-notfound-text">Şarkı tanınamadı.</p>
+            <p class="identify-notfound-sub">Müziği mikrofona daha yakın tut veya tekrar dene.</p>
+            <button id="identifyRetryBtn2" class="identify-retry-btn">🔄 Tekrar Dene</button>
+        </div>
+    </div>
+</div>
+
+<script src="js/app.js?v=20260416-shazam"></script>
+<script src="js/auth.js?v=20260416-shazam"></script>
+<script src="js/favorites.js?v=20260416-shazam"></script>
+<script src="js/songs.js?v=20260416-shazam"></script>
+<script src="js/playlists.js?v=20260416-shazam"></script>
+<script src="js/artists.js?v=20260416-shazam"></script>
+<script src="js/insights.js?v=20260416-shazam"></script>
+<script src="js/users.js?v=20260416-shazam"></script>
+<script src="js/audit.js?v=20260416-shazam"></script>
+<script src="js/jamendo-admin.js?v=20260416-shazam"></script>
+<script src="js/fingerprint-admin.js?v=20260416-shazam"></script>
+<script src="js/identify.js?v=20260416-shazam"></script>
+<script src="js/init.js?v=20260416-shazam"></script>
 
 </body>
 </html>

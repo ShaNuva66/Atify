@@ -219,6 +219,11 @@
     }
 
     function showPage(pageId, btn) {
+        if (pageId === "identify") {
+            if (typeof openIdentifyModal === "function") openIdentifyModal();
+            return;
+        }
+
         const isLoggedIn = Boolean(authToken && loggedUsername);
 
         if (!isLoggedIn && pageId !== "home" && pageId !== "register") {

@@ -100,6 +100,15 @@ function bindStaticEvents() {
         }
     });
 
+    bindIfExists("identifyNavBtn", "click", () => openIdentifyModal());
+    bindIfExists("identifyModalCloseBtn", "click", () => closeIdentifyModal());
+    bindIfExists("identifyStartBtn", "click", () => startIdentifyRecording());
+    bindIfExists("identifyCancelBtn", "click", () => { stopIdentifyRecording(); showIdentifyView("idle"); });
+    bindIfExists("identifyRetryBtn",  "click", () => startIdentifyRecording());
+    bindIfExists("identifyRetryBtn2", "click", () => startIdentifyRecording());
+    bindIfExists("identifyPlayBtn",   "click", () => identifyPlayNow());
+    bindIfExists("identifyAddPlaylistBtn", "click", () => identifyAddToPlaylist());
+
     bindIfExists("seekBackBtn", "click", () => seekRelative(-5));
     bindIfExists("jumpMiddleBtn", "click", () => jumpToMiddle());
     bindIfExists("playPauseBtn", "click", () => togglePlay());
