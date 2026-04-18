@@ -6,7 +6,7 @@
     <title>Atify</title>
 
     <link rel="icon" type="image/png" href="atify_logo.png">
-    <link rel="stylesheet" href="css/app.css?v=20260416-shazam">
+    <link rel="stylesheet" href="css/app.css?v=20260418-confirm">
 </head>
 <body>
 
@@ -560,6 +560,19 @@
     </div>
 </div>
 
+<!-- ONAY / CONFIRM MODALI -->
+<div id="confirmModalOverlay" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle">
+    <div id="confirmModal" class="confirm-modal">
+        <div class="confirm-modal-icon" id="confirmModalIcon">🔐</div>
+        <div class="modal-title" id="confirmModalTitle">Emin misin?</div>
+        <div class="modal-text" id="confirmModalText">Bu işlemi gerçekleştirmek istediğine emin misin?</div>
+        <div class="confirm-modal-actions">
+            <button type="button" id="confirmModalCancelBtn" class="btn gray">Vazgeç</button>
+            <button type="button" id="confirmModalConfirmBtn" class="btn primary">Onayla</button>
+        </div>
+    </div>
+</div>
+
 <!-- SHAZAM / ŞARKI TANIMA MODALI -->
 <div id="identifyModalOverlay">
     <div id="identifyModal">
@@ -608,19 +621,19 @@
     </div>
 </div>
 
-<script src="js/app.js?v=20260416-shazam"></script>
-<script src="js/auth.js?v=20260416-shazam"></script>
-<script src="js/favorites.js?v=20260416-shazam"></script>
-<script src="js/songs.js?v=20260416-shazam"></script>
-<script src="js/playlists.js?v=20260416-shazam"></script>
-<script src="js/artists.js?v=20260416-shazam"></script>
-<script src="js/insights.js?v=20260416-shazam"></script>
-<script src="js/users.js?v=20260416-shazam"></script>
-<script src="js/audit.js?v=20260416-shazam"></script>
-<script src="js/jamendo-admin.js?v=20260416-shazam"></script>
-<script src="js/fingerprint-admin.js?v=20260416-shazam"></script>
-<script src="js/identify.js?v=20260416-shazam"></script>
-<script src="js/init.js?v=20260416-shazam"></script>
+<script src="js/app.js?v=20260418-confirm"></script>
+<script src="js/auth.js?v=20260418-confirm"></script>
+<script src="js/favorites.js?v=20260418-confirm"></script>
+<script src="js/songs.js?v=20260418-confirm"></script>
+<script src="js/playlists.js?v=20260418-confirm"></script>
+<script src="js/artists.js?v=20260418-confirm"></script>
+<script src="js/insights.js?v=20260418-confirm"></script>
+<script src="js/users.js?v=20260418-confirm"></script>
+<script src="js/audit.js?v=20260418-confirm"></script>
+<script src="js/jamendo-admin.js?v=20260418-confirm"></script>
+<script src="js/fingerprint-admin.js?v=20260418-confirm"></script>
+<script src="js/identify.js?v=20260418-confirm"></script>
+<script src="js/init.js?v=20260418-confirm"></script>
 
 </body>
 </html>

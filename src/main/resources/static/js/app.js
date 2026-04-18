@@ -204,6 +204,67 @@
         }, 1800);
     }
 
+    function showConfirmModal(title, text, opts) {
+        const options = opts || {};
+        const overlay = document.getElementById("confirmModalOverlay");
+        const titleEl = document.getElementById("confirmModalTitle");
+        const textEl = document.getElementById("confirmModalText");
+        const iconEl = document.getElementById("confirmModalIcon");
+        const cancelBtn = document.getElementById("confirmModalCancelBtn");
+        const confirmBtn = document.getElementById("confirmModalConfirmBtn");
+
+        if (!overlay || !titleEl || !textEl || !cancelBtn || !confirmBtn) {
+            return Promise.resolve(false);
+        }
+
+        titleEl.textContent = title || "Emin misin?";
+        textEl.textContent = text || "Bu işlemi gerçekleştirmek istediğine emin misin?";
+        if (iconEl) iconEl.textContent = options.icon || "🔐";
+        confirmBtn.textContent = options.confirmLabel || "Onayla";
+        cancelBtn.textContent = options.cancelLabel || "Vazgeç";
+
+        confirmBtn.classList.remove("danger", "primary", "secondary");
+        confirmBtn.classList.add(options.confirmVariant || "primary");
+
+        return new Promise((resolve) => {
+            let closed = false;
+
+            const close = (result) => {
+                if (closed) return;
+                closed = true;
+                overlay.classList.add("closing");
+                cancelBtn.removeEventListener("click", onCancel);
+                confirmBtn.removeEventListener("click", onConfirm);
+                overlay.removeEventListener("click", onOverlay);
+                document.removeEventListener("keydown", onKey);
+                setTimeout(() => {
+                    overlay.classList.remove("open", "closing");
+                    overlay.style.display = "none";
+                    resolve(result);
+                }, 230);
+            };
+
+            const onCancel = () => close(false);
+            const onConfirm = () => close(true);
+            const onOverlay = (ev) => { if (ev.target === overlay) close(false); };
+            const onKey = (ev) => {
+                if (ev.key === "Escape") close(false);
+                else if (ev.key === "Enter") close(true);
+            };
+
+            cancelBtn.addEventListener("click", onCancel);
+            confirmBtn.addEventListener("click", onConfirm);
+            overlay.addEventListener("click", onOverlay);
+            document.addEventListener("keydown", onKey);
+
+            overlay.classList.remove("closing");
+            overlay.style.display = "flex";
+            void overlay.offsetWidth;
+            overlay.classList.add("open");
+            setTimeout(() => confirmBtn.focus(), 60);
+        });
+    }
+
     function showCenterModal(title, text) {
         centerModalTitle.textContent = title || "Bilgi";
         centerModalText.textContent = text || "";

@@ -36,6 +36,8 @@ async function loadUsersAdmin() {
 
         const actions = row.querySelector(".user-admin-actions");
 
+        const displayName = item.username || "(kullanıcı adı yok)";
+
         if (primaryRole !== "ADMIN") {
             const adminBtn = document.createElement("button");
             adminBtn.type = "button";
@@ -43,7 +45,12 @@ async function loadUsersAdmin() {
             adminBtn.style.marginTop = "0";
             adminBtn.textContent = "Admin Yap";
             adminBtn.onclick = async () => {
-                await updateUserRole(item.id, "ADMIN");
+                const confirmed = await showConfirmModal(
+                    "Admin yetkisi ver",
+                    `"${displayName}" kullanıcısına ADMIN yetkisi verilecek. Bu kullanıcı tüm yönetim alanlarına erişebilir. Emin misin?`,
+                    { icon: "🛡️", confirmLabel: "Evet, Admin Yap", confirmVariant: "primary" }
+                );
+                if (confirmed) await updateUserRole(item.id, "ADMIN");
             };
             actions.appendChild(adminBtn);
         }
@@ -55,7 +62,12 @@ async function loadUsersAdmin() {
             userBtn.style.marginTop = "0";
             userBtn.textContent = "Kullanıcı Yap";
             userBtn.onclick = async () => {
-                await updateUserRole(item.id, "USER");
+                const confirmed = await showConfirmModal(
+                    "Admin yetkisini kaldır",
+                    `"${displayName}" kullanıcısının ADMIN yetkisi alınacak ve USER'a indirilecek. Emin misin?`,
+                    { icon: "⚠️", confirmLabel: "Evet, İndirge", confirmVariant: "danger" }
+                );
+                if (confirmed) await updateUserRole(item.id, "USER");
             };
             actions.appendChild(userBtn);
         }
@@ -94,9 +106,12 @@ async function updateUserRole(userId, role) {
 }
 
 async function deleteUserAdmin(userId, username) {
-    if (!confirm(`${username} kullanıcısını silmek istediğine emin misin?`)) {
-        return;
-    }
+    const confirmed = await showConfirmModal(
+        "Kullanıcıyı sil",
+        `"${username}" kullanıcısı kalıcı olarak silinecek. Bu işlem geri alınamaz. Emin misin?`,
+        { icon: "🗑️", confirmLabel: "Evet, Sil", confirmVariant: "danger" }
+    );
+    if (!confirmed) return;
 
     const { status, ok, data } = await apiRequest(`${CONFIG.endpoints.users}/${userId}`, "DELETE", null, true);
     setStatus(`Kullanıcı silme sonucu: HTTP ${status}`, ok);
