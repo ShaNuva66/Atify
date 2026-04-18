@@ -84,6 +84,7 @@
     audio.addEventListener("ended", () => {
         isPlaying = false;
         playPauseBtn.textContent = "▶";
+        playPauseBtn.classList.remove("is-playing");
     });
 
     function togglePlay() {
@@ -93,6 +94,7 @@
             audio.play().then(() => {
                 isPlaying = true;
                 playPauseBtn.textContent = "⏸";
+                playPauseBtn.classList.add("is-playing");
             }).catch(err => {
                 console.error(err);
                 setStatus("Şarkı çalınırken hata: " + err.message, false);
@@ -101,6 +103,7 @@
             audio.pause();
             isPlaying = false;
             playPauseBtn.textContent = "▶";
+            playPauseBtn.classList.remove("is-playing");
         }
     }
 
@@ -146,7 +149,12 @@
             return;
         }
         const el = document.getElementById("status");
-        el.innerHTML = `Durum: ${ok ? '<span class="ok">'+msg+'</span>' : '<span class="err">'+msg+'</span>'}`;
+        el.textContent = "";
+        el.appendChild(document.createTextNode("Durum: "));
+        const span = document.createElement("span");
+        span.className = ok ? "ok" : "err";
+        span.textContent = text;
+        el.appendChild(span);
     }
 
     function suppressUnauthorizedStatus(durationMs = 1500) {
@@ -199,9 +207,16 @@
     function showCenterModal(title, text) {
         centerModalTitle.textContent = title || "Bilgi";
         centerModalText.textContent = text || "";
+        centerModalOverlay.classList.remove("closing");
+        centerModalOverlay.classList.add("open");
         centerModalOverlay.style.display = "flex";
         setTimeout(() => {
-            centerModalOverlay.style.display = "none";
+            centerModalOverlay.classList.add("closing");
+            setTimeout(() => {
+                centerModalOverlay.classList.remove("open");
+                centerModalOverlay.classList.remove("closing");
+                centerModalOverlay.style.display = "none";
+            }, 230);
         }, 1500);
     }
 
@@ -213,8 +228,13 @@
             ? (song.name || song.title || song.songName)
             : "Atify";
 
+        playerCoverEl.textContent = "";
         if (coverUrl) {
-            playerCoverEl.innerHTML = `<img src="${coverUrl}" alt="${title} kapağı">`;
+            const img = document.createElement("img");
+            img.src = coverUrl;
+            img.alt = title + " kapağı";
+            img.className = "cover-fade";
+            playerCoverEl.appendChild(img);
             playerCoverEl.classList.add("has-image");
         } else {
             playerCoverEl.textContent = "♪";
@@ -240,14 +260,23 @@
             div.className = "playlist-modal-item";
             const name = pl.name || "(isim yok)";
             const count = pl.songCount ?? (Array.isArray(pl.songs) ? pl.songs.length : null);
-            div.innerHTML = `
-                <div>${name}</div>
-                <div style="font-size:11px;color:#9ca3af;">${count != null ? count + ' şarkı' : ''}</div>
-            `;
+
+            const nameLine = document.createElement("div");
+            nameLine.textContent = name;
+            div.appendChild(nameLine);
+
+            const countLine = document.createElement("div");
+            countLine.style.fontSize = "11px";
+            countLine.style.color = "#9ca3af";
+            countLine.textContent = count != null ? count + " şarkı" : "";
+            div.appendChild(countLine);
+
             div.onclick = () => addSongToPlaylistFromModal(pl.id);
             playlistModalList.appendChild(div);
         });
 
+        playlistModalOverlay.classList.remove("closing");
+        playlistModalOverlay.classList.add("open");
         playlistModalOverlay.style.display = "flex";
     }
 
@@ -256,8 +285,13 @@
     }
 
     function closePlaylistModal() {
-        playlistModalOverlay.style.display = "none";
+        playlistModalOverlay.classList.add("closing");
         pendingPlaylistSong = null;
+        setTimeout(() => {
+            playlistModalOverlay.classList.remove("open");
+            playlistModalOverlay.classList.remove("closing");
+            playlistModalOverlay.style.display = "none";
+        }, 230);
     }
 
     async function addSongToPlaylistFromModal(playlistId) {

@@ -14,6 +14,7 @@ import com.atify.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -32,6 +33,7 @@ public class ListeningHistoryService {
     private final UserRepository userRepository;
     private final SongService songService;
 
+    @Transactional
     public void recordPlay(Long songId) {
         User user = getActiveUser();
         Song song = songRepository.findById(songId)
@@ -49,6 +51,7 @@ public class ListeningHistoryService {
         recordPlay(song.getId());
     }
 
+    @Transactional(readOnly = true)
     public List<ListeningHistoryResponse> getRecentHistory(int limit) {
         User user = getActiveUser();
         List<ListeningHistory> history = listeningHistoryRepository.findAllByUserOrderByListenedAtDesc(user);
@@ -66,6 +69,7 @@ public class ListeningHistoryService {
         return uniqueBySong.values().stream().toList();
     }
 
+    @Transactional(readOnly = true)
     public List<ListeningHistoryResponse> getTopHistory(int limit) {
         User user = getActiveUser();
         List<ListeningHistory> history = listeningHistoryRepository.findAllByUserOrderByListenedAtDesc(user);
@@ -87,6 +91,7 @@ public class ListeningHistoryService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public ListeningStatsResponse getStats() {
         User user = getActiveUser();
         List<ListeningHistory> history = listeningHistoryRepository.findAllByUserOrderByListenedAtDesc(user);
@@ -123,6 +128,7 @@ public class ListeningHistoryService {
         );
     }
 
+    @Transactional(readOnly = true)
     public List<ArtistInsightResponse> getTopArtists(int limit) {
         User user = getActiveUser();
         List<ListeningHistory> history = listeningHistoryRepository.findAllByUserOrderByListenedAtDesc(user);

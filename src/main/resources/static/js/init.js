@@ -120,6 +120,28 @@ function bindStaticEvents() {
     bindIfExists("addToPlaylistBtn", "click", () => openPlaylistModalForCurrentSong());
     bindIfExists("favoriteToggleBtn", "click", () => toggleFavoriteCurrentSong());
     bindIfExists("playlistModalCloseBtn", "click", () => closePlaylistModal());
+
+    const plOverlay = document.getElementById("playlistModalOverlay");
+    if (plOverlay) {
+        plOverlay.addEventListener("click", (ev) => {
+            if (ev.target === plOverlay) closePlaylistModal();
+        });
+    }
+    const idOverlay = document.getElementById("identifyModalOverlay");
+    if (idOverlay) {
+        idOverlay.addEventListener("click", (ev) => {
+            if (ev.target === idOverlay) closeIdentifyModal();
+        });
+    }
+    document.addEventListener("keydown", (ev) => {
+        if (ev.key === "Escape") {
+            if (plOverlay && plOverlay.classList.contains("open")) {
+                closePlaylistModal();
+            } else if (idOverlay && idOverlay.classList.contains("open")) {
+                closeIdentifyModal();
+            }
+        }
+    });
 }
 
 function initFromStorage() {

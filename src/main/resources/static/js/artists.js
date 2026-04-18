@@ -17,7 +17,12 @@ async function getArtists() {
         div.className = "item";
         const id = a.id ?? "";
         const name = a.name || "(isim yok)";
-        div.innerHTML = `<b>${name}</b> ${id !== "" ? "(#" + id + ")" : ""}`;
+        const bold = document.createElement("b");
+        bold.textContent = name;
+        div.appendChild(bold);
+        if (id !== "") {
+            div.appendChild(document.createTextNode(" (#" + id + ")"));
+        }
         list.appendChild(div);
     });
 }
@@ -63,6 +68,9 @@ function clearArtistSelection(inputId, hiddenId, suggestionsId) {
     }
 }
 
+const _artistAutocompleteBoxes = [];
+let _artistAutocompleteDocBound = false;
+
 function bindArtistAutocomplete(inputId, hiddenId, boxId, suggestionsId) {
     const input = document.getElementById(inputId);
     const hidden = document.getElementById(hiddenId);
@@ -70,6 +78,8 @@ function bindArtistAutocomplete(inputId, hiddenId, boxId, suggestionsId) {
     const suggestions = document.getElementById(suggestionsId);
 
     if (!input || !hidden || !box || !suggestions) return;
+
+    _artistAutocompleteBoxes.push({ box, suggestions });
 
     input.addEventListener("input", async () => {
         const query = input.value.trim().toLowerCase();
@@ -108,11 +118,16 @@ function bindArtistAutocomplete(inputId, hiddenId, boxId, suggestionsId) {
         suggestions.style.display = "block";
     });
 
-    document.addEventListener("click", (e) => {
-        if (!box.contains(e.target)) {
-            suggestions.style.display = "none";
-        }
-    });
+    if (!_artistAutocompleteDocBound) {
+        _artistAutocompleteDocBound = true;
+        document.addEventListener("click", (e) => {
+            _artistAutocompleteBoxes.forEach(({ box: b, suggestions: s }) => {
+                if (!b.contains(e.target)) {
+                    s.style.display = "none";
+                }
+            });
+        });
+    }
 }
 
 bindArtistAutocomplete("songArtistNameInput", "songArtistIdHidden", "artistSuggestBox", "artistSuggestions");

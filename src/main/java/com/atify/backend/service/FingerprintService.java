@@ -165,7 +165,9 @@ public class FingerprintService {
             throw new IllegalStateException("Song için fingerprint kaynak dosyası yok");
         }
 
-        pb.redirectErrorStream(true);
+        // Discard ffmpeg output so the pipe buffer can never fill up and deadlock waitFor().
+        pb.redirectOutput(ProcessBuilder.Redirect.DISCARD);
+        pb.redirectError(ProcessBuilder.Redirect.DISCARD);
         Process process = pb.start();
         int exitCode = process.waitFor();
 

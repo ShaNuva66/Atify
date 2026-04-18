@@ -11,6 +11,7 @@ import com.atify.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,6 +25,7 @@ public class FavoriteService {
     private final UserRepository userRepository;
     private final SongService songService;
 
+    @Transactional(readOnly = true)
     public List<FavoriteResponse> getFavorites() {
         User user = getActiveUser();
         return favoriteRepository.findAllByUserOrderByCreatedAtDesc(user)
@@ -32,6 +34,7 @@ public class FavoriteService {
                 .toList();
     }
 
+    @Transactional
     public FavoriteResponse addFavorite(Long songId) {
         User user = getActiveUser();
         Song song = songRepository.findById(songId)
@@ -52,6 +55,7 @@ public class FavoriteService {
         return addFavorite(song.getId());
     }
 
+    @Transactional
     public void removeFavorite(Long songId) {
         User user = getActiveUser();
         Favorite favorite = favoriteRepository.findByUserIdAndSongId(user.getId(), songId)

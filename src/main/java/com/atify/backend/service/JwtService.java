@@ -38,8 +38,12 @@ public class JwtService {
 
     // Validate token
     public boolean isTokenValid(String token, String username) {
-        String subject = extractUsername(token);
-        return (subject.equals(username)) && !isTokenExpired(token);
+        try {
+            String subject = extractUsername(token);
+            return subject != null && subject.equals(username) && !isTokenExpired(token);
+        } catch (JwtException ex) {
+            return false;
+        }
     }
 
     // Check if token is expired

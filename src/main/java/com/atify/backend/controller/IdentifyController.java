@@ -3,6 +3,7 @@ package com.atify.backend.controller;
 import com.atify.backend.dto.IdentifyResponse;
 import com.atify.backend.service.RecognizeService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
+@Slf4j
 @Controller
 @RequiredArgsConstructor
 public class IdentifyController {
@@ -30,7 +32,7 @@ public class IdentifyController {
             IdentifyResponse resp = recognizeService.identifySong(file);
             return ResponseEntity.ok(resp);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Identify failed", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new IdentifyResponse(false, null, null, null, null, null, null));
         }

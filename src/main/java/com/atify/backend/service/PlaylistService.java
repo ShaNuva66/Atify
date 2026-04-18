@@ -206,6 +206,7 @@ public class PlaylistService {
         playlistRepo.save(playlist);
     }
 
+    @Transactional
     public void deletePlaylist(Long playlistId) {
         Playlist playlist = playlistRepo.findById(playlistId)
                 .orElseThrow(() -> new RuntimeException("Playlist bulunamadı"));
@@ -239,6 +240,9 @@ public class PlaylistService {
     public List<PlaylistResponse> getPlaylistsByUser(Long userId) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
+        if (!user.getUsername().equals(getActiveUsername())) {
+            throw new RuntimeException("Bu kullanıcının playlistlerini görüntüleme yetkin yok.");
+        }
         return playlistRepo.findByUser(user)
                 .stream()
                 .map(this::toPlaylistResponse)

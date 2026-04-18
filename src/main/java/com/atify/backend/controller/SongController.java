@@ -131,7 +131,11 @@ public class SongController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Song does not have a fileName");
         }
 
-        Path path = Path.of(uploadDir).resolve(song.getFileName());
+        Path baseDir = Path.of(uploadDir).toAbsolutePath().normalize();
+        Path path = baseDir.resolve(song.getFileName()).normalize();
+        if (!path.startsWith(baseDir)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Invalid file path");
+        }
         if (!Files.exists(path)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found on disk: " + path);
         }

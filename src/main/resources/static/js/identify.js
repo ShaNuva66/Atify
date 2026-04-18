@@ -25,8 +25,14 @@
 
     function closeIdentifyModal() {
         stopIdentifyRecording();
-        getIdEl("identifyModalOverlay").classList.remove("open");
+        const overlay = getIdEl("identifyModalOverlay");
+        if (!overlay) return;
+        overlay.classList.add("closing");
         document.body.classList.remove("identify-open");
+        setTimeout(() => {
+            overlay.classList.remove("open");
+            overlay.classList.remove("closing");
+        }, 240);
     }
 
     // ─── View switcher ───────────────────────────────────────────────────────
@@ -143,7 +149,18 @@
                 return;
             }
 
-            const data = await res.json();
+            if (!res.ok) {
+                setStatus("Tanıma isteği başarısız: HTTP " + res.status, false);
+                showIdentifyView("notfound");
+                return;
+            }
+
+            let data = null;
+            try {
+                data = await res.json();
+            } catch (_) {
+                data = null;
+            }
 
             if (data && data.found) {
                 identifyFoundSong = data;
@@ -172,8 +189,12 @@
         if (artistEl) artistEl.textContent = data.artist || "Bilinmiyor";
 
         if (coverEl) {
+            coverEl.textContent = "";
             if (data.coverUrl) {
-                coverEl.innerHTML = `<img src="${data.coverUrl}" alt="Kapak">`;
+                const img = document.createElement("img");
+                img.src = data.coverUrl;
+                img.alt = "Kapak";
+                coverEl.appendChild(img);
                 coverEl.classList.add("has-image");
             } else {
                 coverEl.textContent = "♪";

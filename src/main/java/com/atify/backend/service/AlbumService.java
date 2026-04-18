@@ -61,8 +61,7 @@ public class AlbumService {
     }
 
     public List<AlbumResponse> getAlbumsByArtist(Long artistId) {
-        return albumRepo.findAll().stream()
-                .filter(a -> a.getArtist().getId().equals(artistId))
+        return albumRepo.findByArtistId(artistId).stream()
                 .map(a -> new AlbumResponse(a.getId(), a.getName(), a.getCoverUrl()))
                 .collect(Collectors.toList());
     }
