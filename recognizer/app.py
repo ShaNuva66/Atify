@@ -3,6 +3,7 @@ from __future__ import annotations
 import base64
 import io
 import json
+import logging
 import wave
 import zlib
 from collections import Counter, defaultdict
@@ -12,19 +13,27 @@ import numpy as np
 from flask import Flask, jsonify, request
 
 app = Flask(__name__)
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+logger = logging.getLogger("recognizer")
+
 CATALOG: dict[str, list[tuple[str, int]]] = {}
+
+FP_VERSION = 2
 
 TARGET_SAMPLE_RATE = 11025
 WINDOW_SIZE = 2048
 HOP_SIZE = 512
-FRAME_STRIDE = 2
-FUTURE_WINDOW = 20
-FAN_OUT = 4
+FRAME_STRIDE = 1
+FUTURE_WINDOW = 60
+FAN_OUT = 6
 BAND_EDGES_HZ = (60, 180, 320, 560, 1000, 1800, 3200, 5000)
-MIN_HASH_COUNT = 24
-MIN_SHARED_HASHES = 10
-MIN_OFFSET_MATCHES = 6
-MIN_OFFSET_RATIO = 0.03
+ENERGY_FLOOR_PERCENTILE = 20.0
+MIN_HASH_COUNT = 16
+MIN_SHARED_HASHES = 6
+MIN_OFFSET_MATCHES = 5
+MIN_OFFSET_RATIO = 0.02
+SECOND_BEST_MARGIN = 1.4
 
 
 def read_audio_bytes() -> bytes:
@@ -107,7 +116,7 @@ def fingerprint_entries(raw_audio: bytes) -> list[tuple[str, int]]:
     spectrum = np.abs(np.fft.rfft(frames, axis=1))
     spectrum = np.log1p(spectrum)
     frame_energy = spectrum.mean(axis=1)
-    energy_floor = float(np.percentile(frame_energy, 40))
+    energy_floor = float(np.percentile(frame_energy, ENERGY_FLOOR_PERCENTILE))
 
     freqs = np.fft.rfftfreq(WINDOW_SIZE, d=1.0 / TARGET_SAMPLE_RATE)
     band_indices = [int(np.searchsorted(freqs, edge)) for edge in BAND_EDGES_HZ]
@@ -138,7 +147,7 @@ def fingerprint_entries(raw_audio: bytes) -> list[tuple[str, int]]:
             if delta_time > FUTURE_WINDOW:
                 break
 
-            hash_key = f"{anchor_freq // 2}:{target_freq // 2}:{delta_time}"
+            hash_key = f"{anchor_freq}:{target_freq}:{delta_time}"
             entries.append((hash_key, anchor_time))
             pair_count += 1
 
@@ -149,7 +158,7 @@ def fingerprint_entries(raw_audio: bytes) -> list[tuple[str, int]]:
 
 
 def encode_fingerprint(entries: list[tuple[str, int]]) -> str:
-    payload = {"version": 1, "hashes": entries}
+    payload = {"version": FP_VERSION, "hashes": entries}
     packed = json.dumps(payload, separators=(",", ":")).encode("utf-8")
     return base64.b64encode(zlib.compress(packed, level=9)).decode("ascii")
 
@@ -192,7 +201,7 @@ def score_candidate(
             continue
 
         shared_hashes += 1
-        for target_time in target_times[:4]:
+        for target_time in target_times:
             offset_counts[target_time - anchor_time] += 1
 
     best_offset_matches = offset_counts.most_common(1)[0][1] if offset_counts else 0
@@ -201,9 +210,10 @@ def score_candidate(
 
 def best_match(query_entries: list[tuple[str, int]], candidates: list[dict]) -> dict | None:
     if len(query_entries) < MIN_HASH_COUNT:
+        logger.info("query rejected: hashCount=%d below MIN_HASH_COUNT=%d", len(query_entries), MIN_HASH_COUNT)
         return None
 
-    winner: dict | None = None
+    scored: list[dict] = []
     for candidate in candidates:
         song_code = candidate.get("songCode")
         fingerprint_data = candidate.get("fingerprintData")
@@ -218,31 +228,49 @@ def best_match(query_entries: list[tuple[str, int]], candidates: list[dict]) -> 
         offset_matches, shared_hashes = score_candidate(query_entries, candidate_entries)
         offset_ratio = offset_matches / max(len(query_entries), 1)
 
-        if offset_matches < MIN_OFFSET_MATCHES:
-            continue
-        if shared_hashes < MIN_SHARED_HASHES:
-            continue
-        if offset_ratio < MIN_OFFSET_RATIO:
-            continue
-
-        current = {
+        scored.append({
             "songCode": song_code,
             "offsetMatches": offset_matches,
             "sharedHashes": shared_hashes,
             "offsetRatio": offset_ratio,
-        }
+        })
 
-        if winner is None:
-            winner = current
-            continue
+    if not scored:
+        logger.info("query evaluated: candidates=%d matches=0", len(candidates))
+        return None
 
-        if current["offsetMatches"] > winner["offsetMatches"]:
-            winner = current
-            continue
-        if current["offsetMatches"] == winner["offsetMatches"] and current["sharedHashes"] > winner["sharedHashes"]:
-            winner = current
+    scored.sort(key=lambda item: (item["offsetMatches"], item["sharedHashes"], item["offsetRatio"]), reverse=True)
+    top = scored[0]
+    runner = scored[1] if len(scored) > 1 else None
 
-    return winner
+    logger.info(
+        "query evaluated: hashCount=%d candidates=%d top={code=%s offset=%d shared=%d ratio=%.4f} runner=%s",
+        len(query_entries),
+        len(candidates),
+        top["songCode"],
+        top["offsetMatches"],
+        top["sharedHashes"],
+        top["offsetRatio"],
+        None if runner is None else (runner["songCode"], runner["offsetMatches"], runner["sharedHashes"]),
+    )
+
+    if top["offsetMatches"] < MIN_OFFSET_MATCHES:
+        return None
+    if top["sharedHashes"] < MIN_SHARED_HASHES:
+        return None
+    if top["offsetRatio"] < MIN_OFFSET_RATIO:
+        return None
+    if runner is not None and runner["offsetMatches"] > 0:
+        if top["offsetMatches"] < runner["offsetMatches"] * SECOND_BEST_MARGIN:
+            logger.info(
+                "query rejected: ambiguous top (%d vs runner %d, margin=%.2f required)",
+                top["offsetMatches"],
+                runner["offsetMatches"],
+                SECOND_BEST_MARGIN,
+            )
+            return None
+
+    return top
 
 
 def catalog_candidates() -> list[dict]:
@@ -254,12 +282,12 @@ def catalog_candidates() -> list[dict]:
 
 @app.get("/health")
 def health():
-    return jsonify({"status": "ok"})
+    return jsonify({"status": "ok", "fpVersion": FP_VERSION})
 
 
 @app.get("/catalog-status")
 def catalog_status():
-    return jsonify({"status": "ok", "catalogSize": len(CATALOG)})
+    return jsonify({"status": "ok", "catalogSize": len(CATALOG), "fpVersion": FP_VERSION})
 
 
 @app.post("/reset-catalog")
@@ -300,6 +328,7 @@ def fingerprint_file():
             "status": "ok",
             "fingerprintData": encode_fingerprint(entries),
             "hashCount": len(entries),
+            "fpVersion": FP_VERSION,
         }
     )
 
@@ -328,13 +357,26 @@ def recognize_simple():
         entries = fingerprint_entries(raw_audio)
         candidates = json.loads(request.form.get("candidates", "[]")) if request.form.get("candidates") else catalog_candidates()
     except Exception as exc:  # noqa: BLE001
+        logger.warning("recognize-simple failed: %s", exc)
         return jsonify({"match": False, "songCode": None, "message": str(exc)}), 400
 
     winner = best_match(entries, candidates)
     if winner is None:
-        return jsonify({"match": False, "songCode": None})
+        return jsonify({
+            "match": False,
+            "songCode": None,
+            "hashCount": len(entries),
+            "catalogSize": len(CATALOG),
+        })
 
-    return jsonify({"match": True, "songCode": winner["songCode"]})
+    return jsonify({
+        "match": True,
+        "songCode": winner["songCode"],
+        "offsetMatches": winner["offsetMatches"],
+        "sharedHashes": winner["sharedHashes"],
+        "offsetRatio": winner["offsetRatio"],
+        "hashCount": len(entries),
+    })
 
 
 if __name__ == "__main__":

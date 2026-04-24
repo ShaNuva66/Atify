@@ -2,16 +2,21 @@ package com.atify.backend.service;
 
 import com.atify.backend.dto.FingerprintCatalogStatusResponse;
 import com.atify.backend.dto.RecognizerCatalogStatusResponse;
+import com.atify.backend.entity.AppSetting;
 import com.atify.backend.entity.Song;
+import com.atify.backend.repository.AppSettingRepository;
 import com.atify.backend.repository.SongRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
@@ -19,11 +24,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @RequiredArgsConstructor
 public class FingerprintCatalogService {
 
+    public static final String FP_VERSION = "2";
+    private static final String FP_VERSION_SETTING_KEY = "fingerprint.version";
+
     @Value("${shazam.python-base-url:http://127.0.0.1:5001}")
     private String pythonBaseUrl;
 
     private final SongRepository songRepository;
     private final FingerprintService fingerprintService;
+    private final AppSettingRepository appSettingRepository;
     private final RestTemplate restTemplate;
     private final AtomicBoolean syncInProgress = new AtomicBoolean(false);
 
@@ -57,6 +66,12 @@ public class FingerprintCatalogService {
 
         int registeredCount = 0;
         try {
+            boolean versionChanged = ensureFingerprintVersion();
+            if (versionChanged) {
+                log.info("Fingerprint version changed — clearing stored payloads before re-fingerprinting.");
+                clearStoredFingerprints();
+            }
+
             List<Song> fingerprintableSongs = loadFingerprintableSongs();
             for (Song song : fingerprintableSongs) {
                 if (!hasFingerprintPayload(song)) {
@@ -153,5 +168,30 @@ public class FingerprintCatalogService {
                 && !song.getFingerprintCode().isBlank()
                 && song.getFingerprintData() != null
                 && !song.getFingerprintData().isBlank();
+    }
+
+    private boolean ensureFingerprintVersion() {
+        Optional<AppSetting> existing = appSettingRepository.findById(FP_VERSION_SETTING_KEY);
+        String current = existing.map(AppSetting::getSettingValue).orElse(null);
+        if (FP_VERSION.equals(current)) {
+            return false;
+        }
+        AppSetting setting = existing.orElseGet(() -> AppSetting.builder().settingKey(FP_VERSION_SETTING_KEY).build());
+        setting.setSettingValue(FP_VERSION);
+        setting.setUpdatedAt(LocalDateTime.now());
+        appSettingRepository.save(setting);
+        log.info("Fingerprint version bumped: {} -> {}", current, FP_VERSION);
+        return current != null;
+    }
+
+    @Transactional
+    protected void clearStoredFingerprints() {
+        List<Song> songs = songRepository.findByFingerprintDataIsNotNull();
+        for (Song song : songs) {
+            song.setFingerprintData(null);
+            song.setFingerprintCode(null);
+        }
+        songRepository.saveAll(songs);
+        log.info("Cleared fingerprint payloads for {} songs.", songs.size());
     }
 }

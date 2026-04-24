@@ -4,7 +4,7 @@
     let identifyCountdownTimer = null;
     let identifyFoundSong = null;   // last IdentifyResponse with found=true
 
-    const RECORD_SECONDS = 10;
+    const RECORD_SECONDS = 12;
 
     // DOM refs (safe — called after DOMContentLoaded via init.js)
     function getIdEl(id) { return document.getElementById(id); }
@@ -61,7 +61,14 @@
 
         let stream;
         try {
-            stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            stream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    echoCancellation: false,
+                    noiseSuppression: false,
+                    autoGainControl: false,
+                    channelCount: 1
+                }
+            });
         } catch (err) {
             setStatus("Mikrofon erişimi reddedildi: " + err.message, false);
             showIdentifyView("idle");
@@ -86,7 +93,7 @@
             ? "audio/webm;codecs=opus"
             : "audio/webm";
 
-        identifyMediaRecorder = new MediaRecorder(stream, { mimeType });
+        identifyMediaRecorder = new MediaRecorder(stream, { mimeType, audioBitsPerSecond: 128000 });
 
         identifyMediaRecorder.ondataavailable = (e) => {
             if (e.data && e.data.size > 0) identifyRecordingChunks.push(e.data);

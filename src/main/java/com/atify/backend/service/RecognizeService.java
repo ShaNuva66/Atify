@@ -5,6 +5,7 @@ import com.atify.backend.dto.RecognizeSimpleResponse;
 import com.atify.backend.entity.Song;
 import com.atify.backend.repository.SongRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpEntity;
@@ -22,9 +23,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RecognizeService {
+
+    public static final String AUDIO_FILTER = "highpass=f=80,lowpass=f=5200,dynaudnorm=f=250:g=15";
 
     @Value("${music.temp-dir}")
     private String tempDir;
@@ -57,18 +61,22 @@ public class RecognizeService {
                     "-vn",
                     "-ac", "1",
                     "-ar", "11025",
+                    "-af", AUDIO_FILTER,
                     "-c:a", "pcm_s16le",
                     tempWav.toString()
             );
-            // Discard ffmpeg output so the pipe buffer can never fill up and deadlock waitFor().
             pb.redirectOutput(ProcessBuilder.Redirect.DISCARD);
-            pb.redirectError(ProcessBuilder.Redirect.DISCARD);
+            Path ffmpegLog = Files.createTempFile(Paths.get(tempDir), "ffmpeg-identify-", ".log");
+            pb.redirectError(ffmpegLog.toFile());
             Process process = pb.start();
             int exitCode = process.waitFor();
 
             if (exitCode != 0) {
-                throw new IllegalStateException("ffmpeg failed with exit code " + exitCode);
+                String tail = readTail(ffmpegLog);
+                Files.deleteIfExists(ffmpegLog);
+                throw new IllegalStateException("ffmpeg failed with exit code " + exitCode + ": " + tail);
             }
+            Files.deleteIfExists(ffmpegLog);
 
             FileSystemResource resource = new FileSystemResource(tempWav.toFile());
             MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
@@ -87,8 +95,10 @@ public class RecognizeService {
 
             RecognizeSimpleResponse recog = resp.getBody();
             if (recog == null || !recog.isMatch() || recog.getSongCode() == null || recog.getSongCode().isBlank()) {
+                log.info("Identify: no match (response={})", recog);
                 return new IdentifyResponse(false, null, null, null, null, null, null);
             }
+            log.info("Identify: match songCode={}", recog.getSongCode());
 
             Optional<Song> optSong = songRepository.findByFingerprintCode(recog.getSongCode());
             if (optSong.isEmpty()) {
@@ -111,6 +121,17 @@ public class RecognizeService {
         } finally {
             Files.deleteIfExists(tempInput);
             Files.deleteIfExists(tempWav);
+        }
+    }
+
+    private String readTail(Path logFile) {
+        try {
+            byte[] bytes = Files.readAllBytes(logFile);
+            String text = new String(bytes);
+            int max = 500;
+            return text.length() > max ? text.substring(text.length() - max) : text;
+        } catch (Exception ignored) {
+            return "<no log>";
         }
     }
 }

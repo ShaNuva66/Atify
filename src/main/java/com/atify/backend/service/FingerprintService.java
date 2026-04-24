@@ -147,6 +147,7 @@ public class FingerprintService {
                     "-vn",
                     "-ac", "1",
                     "-ar", "11025",
+                    "-af", RecognizeService.AUDIO_FILTER,
                     "-c:a", "pcm_s16le",
                     tempWav.toString()
             );
@@ -157,6 +158,7 @@ public class FingerprintService {
                     "-vn",
                     "-ac", "1",
                     "-ar", "11025",
+                    "-af", RecognizeService.AUDIO_FILTER,
                     "-c:a", "pcm_s16le",
                     tempWav.toString()
             );
@@ -165,16 +167,26 @@ public class FingerprintService {
             throw new IllegalStateException("Song için fingerprint kaynak dosyası yok");
         }
 
-        // Discard ffmpeg output so the pipe buffer can never fill up and deadlock waitFor().
         pb.redirectOutput(ProcessBuilder.Redirect.DISCARD);
-        pb.redirectError(ProcessBuilder.Redirect.DISCARD);
+        Path ffmpegLog = Files.createTempFile(Paths.get(tempDir), "ffmpeg-fp-", ".log");
+        pb.redirectError(ffmpegLog.toFile());
         Process process = pb.start();
         int exitCode = process.waitFor();
 
         if (exitCode != 0) {
+            String tail;
+            try {
+                byte[] bytes = Files.readAllBytes(ffmpegLog);
+                String text = new String(bytes);
+                tail = text.length() > 500 ? text.substring(text.length() - 500) : text;
+            } catch (Exception ignored) {
+                tail = "<no log>";
+            }
+            Files.deleteIfExists(ffmpegLog);
             Files.deleteIfExists(tempWav);
-            throw new IllegalStateException("ffmpeg fingerprint wav oluşturma hatası: " + exitCode);
+            throw new IllegalStateException("ffmpeg fingerprint wav oluşturma hatası: " + exitCode + ": " + tail);
         }
+        Files.deleteIfExists(ffmpegLog);
 
         return tempWav;
     }
