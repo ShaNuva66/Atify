@@ -4,6 +4,7 @@ import base64
 import io
 import json
 import logging
+import threading
 import wave
 import zlib
 from collections import Counter, defaultdict
@@ -18,6 +19,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 logger = logging.getLogger("recognizer")
 
 CATALOG: dict[str, list[tuple[str, int]]] = {}
+CATALOG_LOCK = threading.RLock()
 
 FP_VERSION = 2
 
@@ -274,9 +276,11 @@ def best_match(query_entries: list[tuple[str, int]], candidates: list[dict]) -> 
 
 
 def catalog_candidates() -> list[dict]:
+    with CATALOG_LOCK:
+        snapshot = list(CATALOG.items())
     return [
         {"songCode": song_code, "fingerprintData": encode_fingerprint(entries)}
-        for song_code, entries in CATALOG.items()
+        for song_code, entries in snapshot
     ]
 
 
@@ -287,13 +291,17 @@ def health():
 
 @app.get("/catalog-status")
 def catalog_status():
-    return jsonify({"status": "ok", "catalogSize": len(CATALOG), "fpVersion": FP_VERSION})
+    with CATALOG_LOCK:
+        size = len(CATALOG)
+    return jsonify({"status": "ok", "catalogSize": size, "fpVersion": FP_VERSION})
 
 
 @app.post("/reset-catalog")
 def reset_catalog():
-    CATALOG.clear()
-    return jsonify({"status": "ok", "catalogSize": len(CATALOG)})
+    with CATALOG_LOCK:
+        CATALOG.clear()
+        size = len(CATALOG)
+    return jsonify({"status": "ok", "catalogSize": size})
 
 
 @app.post("/unregister-fingerprint")
@@ -304,8 +312,10 @@ def unregister_fingerprint():
     if not song_code:
         return jsonify({"status": "error", "message": "songCode is required"}), 400
 
-    removed = CATALOG.pop(song_code, None) is not None
-    return jsonify({"status": "ok", "removed": removed, "catalogSize": len(CATALOG)})
+    with CATALOG_LOCK:
+        removed = CATALOG.pop(song_code, None) is not None
+        size = len(CATALOG)
+    return jsonify({"status": "ok", "removed": removed, "catalogSize": size})
 
 
 @app.post("/fingerprint-file")
@@ -321,7 +331,8 @@ def fingerprint_file():
         return jsonify({"status": "error", "message": "not enough audio features", "hashCount": len(entries)}), 422
 
     if song_code:
-        CATALOG[song_code] = entries
+        with CATALOG_LOCK:
+            CATALOG[song_code] = entries
 
     return jsonify(
         {
@@ -343,11 +354,14 @@ def register_fingerprint():
         return jsonify({"status": "error", "message": "songCode and fingerprintData are required"}), 400
 
     try:
-        CATALOG[song_code] = decode_fingerprint(fingerprint_data)
+        decoded = decode_fingerprint(fingerprint_data)
     except ValueError as exc:
         return jsonify({"status": "error", "message": str(exc)}), 400
+    with CATALOG_LOCK:
+        CATALOG[song_code] = decoded
+        size = len(CATALOG)
 
-    return jsonify({"status": "ok", "catalogSize": len(CATALOG)})
+    return jsonify({"status": "ok", "catalogSize": size})
 
 
 @app.post("/recognize-simple")
