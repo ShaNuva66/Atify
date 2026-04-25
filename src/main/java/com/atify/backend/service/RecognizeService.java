@@ -41,7 +41,7 @@ public class RecognizeService {
     private final FingerprintCatalogService fingerprintCatalogService;
 
     public IdentifyResponse identifySong(MultipartFile sample) throws Exception {
-        if (songRepository.findByFingerprintDataIsNotNull().isEmpty()) {
+        if (songRepository.countByFingerprintDataIsNotNull() == 0) {
             return new IdentifyResponse(false, null, null, null, null, null, null);
         }
 

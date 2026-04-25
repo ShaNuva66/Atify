@@ -22,6 +22,8 @@ public interface SongRepository extends JpaRepository<Song, Long> {
 
     List<Song> findByFingerprintDataIsNotNull();
 
+    long countByFingerprintDataIsNotNull();
+
     Optional<Song> findByExternalSourceAndExternalRef(String externalSource, String externalRef);
 
     // Pagination
