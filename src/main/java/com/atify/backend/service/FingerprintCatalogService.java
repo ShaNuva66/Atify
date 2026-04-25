@@ -70,6 +70,7 @@ public class FingerprintCatalogService {
             if (versionChanged) {
                 log.info("Fingerprint version changed — clearing stored payloads before re-fingerprinting.");
                 clearStoredFingerprints();
+                resetRemoteCatalog();
             }
 
             List<Song> fingerprintableSongs = loadFingerprintableSongs();
@@ -78,8 +79,6 @@ public class FingerprintCatalogService {
                     fingerprintService.fingerprintSong(song);
                 }
             }
-
-            resetRemoteCatalog();
 
             List<Song> fingerprintedSongs = loadFingerprintableSongs()
                     .stream()
