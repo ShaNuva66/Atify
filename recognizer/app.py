@@ -210,32 +210,43 @@ def score_candidate(
     return best_offset_matches, shared_hashes
 
 
-def best_match(query_entries: list[tuple[str, int]], candidates: list[dict]) -> dict | None:
+def best_match(query_entries: list[tuple[str, int]], candidates: list[dict] | None = None) -> dict | None:
     if len(query_entries) < MIN_HASH_COUNT:
         logger.info("query rejected: hashCount=%d below MIN_HASH_COUNT=%d", len(query_entries), MIN_HASH_COUNT)
         return None
 
     scored: list[dict] = []
-    for candidate in candidates:
-        song_code = candidate.get("songCode")
-        fingerprint_data = candidate.get("fingerprintData")
-        if not song_code or not fingerprint_data:
-            continue
 
-        try:
-            candidate_entries = decode_fingerprint(fingerprint_data)
-        except ValueError:
-            continue
-
-        offset_matches, shared_hashes = score_candidate(query_entries, candidate_entries)
-        offset_ratio = offset_matches / max(len(query_entries), 1)
-
-        scored.append({
-            "songCode": song_code,
-            "offsetMatches": offset_matches,
-            "sharedHashes": shared_hashes,
-            "offsetRatio": offset_ratio,
-        })
+    if candidates is None:
+        with CATALOG_LOCK:
+            snapshot = list(CATALOG.items())
+        for song_code, candidate_entries in snapshot:
+            offset_matches, shared_hashes = score_candidate(query_entries, candidate_entries)
+            offset_ratio = offset_matches / max(len(query_entries), 1)
+            scored.append({
+                "songCode": song_code,
+                "offsetMatches": offset_matches,
+                "sharedHashes": shared_hashes,
+                "offsetRatio": offset_ratio,
+            })
+    else:
+        for candidate in candidates:
+            song_code = candidate.get("songCode")
+            fingerprint_data = candidate.get("fingerprintData")
+            if not song_code or not fingerprint_data:
+                continue
+            try:
+                candidate_entries = decode_fingerprint(fingerprint_data)
+            except ValueError:
+                continue
+            offset_matches, shared_hashes = score_candidate(query_entries, candidate_entries)
+            offset_ratio = offset_matches / max(len(query_entries), 1)
+            scored.append({
+                "songCode": song_code,
+                "offsetMatches": offset_matches,
+                "sharedHashes": shared_hashes,
+                "offsetRatio": offset_ratio,
+            })
 
     if not scored:
         logger.info("query evaluated: candidates=%d matches=0", len(candidates))
@@ -369,7 +380,8 @@ def recognize_simple():
     try:
         raw_audio = read_audio_bytes()
         entries = fingerprint_entries(raw_audio)
-        candidates = json.loads(request.form.get("candidates", "[]")) if request.form.get("candidates") else catalog_candidates()
+        candidates_raw = request.form.get("candidates")
+        candidates = json.loads(candidates_raw) if candidates_raw else None
     except Exception as exc:  # noqa: BLE001
         logger.warning("recognize-simple failed: %s", exc)
         return jsonify({"match": False, "songCode": None, "message": str(exc)}), 400
