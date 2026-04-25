@@ -41,8 +41,6 @@ public class RecognizeService {
     private final FingerprintCatalogService fingerprintCatalogService;
 
     public IdentifyResponse identifySong(MultipartFile sample) throws Exception {
-        fingerprintCatalogService.ensureCatalogReady();
-
         if (songRepository.findByFingerprintDataIsNotNull().isEmpty()) {
             return new IdentifyResponse(false, null, null, null, null, null, null);
         }
@@ -69,7 +67,13 @@ public class RecognizeService {
             Path ffmpegLog = Files.createTempFile(Paths.get(tempDir), "ffmpeg-identify-", ".log");
             pb.redirectError(ffmpegLog.toFile());
             Process process = pb.start();
-            int exitCode = process.waitFor();
+            boolean finished = process.waitFor(30, java.util.concurrent.TimeUnit.SECONDS);
+            if (!finished) {
+                process.destroyForcibly();
+                Files.deleteIfExists(ffmpegLog);
+                throw new IllegalStateException("ffmpeg timed out after 30 seconds");
+            }
+            int exitCode = process.exitValue();
 
             if (exitCode != 0) {
                 String tail = readTail(ffmpegLog);
