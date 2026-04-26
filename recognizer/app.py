@@ -249,17 +249,18 @@ def best_match(query_entries: list[tuple[str, int]], candidates: list[dict] | No
             })
 
     if not scored:
-        logger.info("query evaluated: candidates=%d matches=0", len(candidates))
+        logger.info("query evaluated: candidates=0 matches=0")
         return None
 
     scored.sort(key=lambda item: (item["offsetMatches"], item["sharedHashes"], item["offsetRatio"]), reverse=True)
     top = scored[0]
     runner = scored[1] if len(scored) > 1 else None
 
+    candidate_count = len(candidates) if candidates is not None else len(scored)
     logger.info(
         "query evaluated: hashCount=%d candidates=%d top={code=%s offset=%d shared=%d ratio=%.4f} runner=%s",
         len(query_entries),
-        len(candidates),
+        candidate_count,
         top["songCode"],
         top["offsetMatches"],
         top["sharedHashes"],
