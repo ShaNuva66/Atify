@@ -1,0 +1,23 @@
+%% Sekil 2.1 - PRISMA 2020 Akis Semasi
+%% Render: https://mermaid.live/
+
+flowchart TB
+    A["Tanimlama - Veri tabani taramasi - n = 412 (IEEE Xplore, ACM DL, ScienceDirect, Google Scholar)"]
+    B["Tekrarlanan kayitlarin kaldirilmasi - n = 125 silindi"]
+    C["Taranan kayitlar - n = 287"]
+    D["Baslik/ozet okumasi sonrasi dislanan - n = 223"]
+    E["Tam metin degerlendirmeye alinan calismalar - n = 64"]
+    F["Tam metin sonrasi dislanan calismalar - n = 26 (konu disi, erisilemez, ozet yalniz)"]
+    G["Tezde alintilanan birincil calismalar - n = 38"]
+
+    A --> B
+    B --> C
+    C --> D
+    C --> E
+    E --> F
+    E --> G
+
+    classDef header fill:#1f4e79,color:#fff,stroke:#0b2545
+    classDef result fill:#2e7d32,color:#fff,stroke:#1b5e20
+    class A header
+    class G result

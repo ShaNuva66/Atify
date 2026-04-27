@@ -1,0 +1,41 @@
+%% Sekil 4.1 - Sistem Bilesen Semasi
+%% Render: https://mermaid.live/
+
+flowchart TB
+    User["Son Kullanici (Tarayici)"]
+
+    subgraph Internet["Internet"]
+        DNS["DNS: atify.com.tr"]
+        LE["Let's Encrypt ACME"]
+    end
+
+    subgraph VPS["Uretim Sunucusu - 89.47.113.106"]
+        subgraph DockerNet["Docker Bridge Agi"]
+            Caddy["Caddy 2.8 - Ters Vekil + TLS - Port 80, 443"]
+            Backend["Spring Boot Backend - Java 17 - Port 8080"]
+            Recognizer["Recognizer - Python 3.11 + Flask - Port 5001"]
+            MySQL["MySQL 8.4 - Port 3306"]
+        end
+    end
+
+    subgraph External["Dis Servisler"]
+        Jamendo["Jamendo API - Sarki katalogu"]
+    end
+
+    User -->|"HTTPS 443"| Caddy
+    User -.->|"DNS sorgusu"| DNS
+    Caddy <-->|"ACME"| LE
+    Caddy -->|"HTTP 8080"| Backend
+    Backend -->|"JDBC"| MySQL
+    Backend -->|"HTTP 5001 JSON"| Recognizer
+    Backend -.->|"HTTPS Jamendo API"| Jamendo
+
+    classDef edge fill:#1f4e79,color:#fff,stroke:#0b2545
+    classDef app fill:#2e7d32,color:#fff,stroke:#1b5e20
+    classDef data fill:#6a1b9a,color:#fff,stroke:#4a148c
+    classDef ext fill:#ef6c00,color:#fff,stroke:#e65100
+
+    class Caddy edge
+    class Backend,Recognizer app
+    class MySQL data
+    class Jamendo,LE,DNS ext

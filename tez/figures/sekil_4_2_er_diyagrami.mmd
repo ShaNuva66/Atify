@@ -1,0 +1,100 @@
+%% Şekil 4.2 — Atify Veri Tabanı ER Diyagramı
+%% Render: https://mermaid.live/
+
+erDiagram
+    USER ||--o{ REFRESH_TOKEN : "sahibi"
+    USER ||--o{ FAVORITE : "favorisi"
+    USER ||--o{ LISTENING_HISTORY : "dinleme"
+    USER ||--o{ PLAYLIST : "oluşturan"
+    USER ||--o{ AUDIT_LOG : "eylem"
+
+    ARTIST ||--o{ ALBUM : "sahibi"
+    ARTIST ||--o{ SONG : "sanatçısı"
+    ALBUM ||--o{ SONG : "içeriği"
+
+    SONG ||--o{ FAVORITE : "favorilenen"
+    SONG ||--o{ LISTENING_HISTORY : "dinlenen"
+    PLAYLIST }o--o{ SONG : "playlist_song"
+
+    USER {
+        bigint id PK
+        string email UK
+        string password "BCrypt"
+        string username UK
+        enum role "USER, ADMIN"
+        datetime created_at
+    }
+
+    REFRESH_TOKEN {
+        bigint id PK
+        bigint user_id FK
+        string token UK
+        datetime expires_at
+        boolean revoked
+    }
+
+    ARTIST {
+        bigint id PK
+        string name
+        string bio
+        string image_url
+    }
+
+    ALBUM {
+        bigint id PK
+        bigint artist_id FK
+        string name
+        int year
+        string cover_url
+    }
+
+    SONG {
+        bigint id PK
+        bigint artist_id FK
+        bigint album_id FK "nullable"
+        string name
+        int duration "saniye"
+        string file_name
+        string audio_url
+        string fingerprint_code UK
+        longtext fingerprint_data "zlib+base64"
+        string cover_url
+        string license
+    }
+
+    FAVORITE {
+        bigint id PK
+        bigint user_id FK
+        bigint song_id FK
+        datetime created_at
+    }
+
+    LISTENING_HISTORY {
+        bigint id PK
+        bigint user_id FK
+        bigint song_id FK
+        datetime listened_at
+        int played_seconds
+    }
+
+    PLAYLIST {
+        bigint id PK
+        bigint owner_id FK
+        string name
+        boolean is_public
+        datetime created_at
+    }
+
+    AUDIT_LOG {
+        bigint id PK
+        bigint user_id FK
+        string action
+        string target
+        datetime created_at
+    }
+
+    APP_SETTING {
+        string setting_key PK
+        string setting_value
+        datetime updated_at
+    }

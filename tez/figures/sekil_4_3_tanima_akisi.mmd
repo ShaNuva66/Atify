@@ -1,0 +1,36 @@
+%% Sekil 4.3 - Sarki Tanima Akisi (Sequence Diagram)
+%% Render: https://mermaid.live/
+
+sequenceDiagram
+    autonumber
+    actor U as Kullanici
+    participant B as Tarayici
+    participant C as Caddy
+    participant API as Backend
+    participant FF as ffmpeg
+    participant R as Recognizer
+    participant DB as MySQL
+
+    U->>B: "Sarki Tani" tikla
+    B->>B: getUserMedia (DSP kapali)
+    B->>B: 12 sn kayit (Opus/WebM)
+    B->>+C: POST /api/songs/recognize
+    C->>+API: HTTP 8080
+    API->>API: Gecici dosyaya yaz
+    API->>+FF: webm to wav (highpass+lowpass+dynaudnorm)
+    FF-->>-API: WAV (11025 Hz mono)
+    API->>+R: POST /recognize-simple
+    R->>R: STFT + bant tepe secimi
+    R->>R: Hash uretimi
+    R->>R: CATALOG snapshot (RLock)
+    R->>R: Ofset histogrami + second-best margin
+    R-->>-API: match, songCode, offsetMatches
+    alt match true
+        API->>+DB: SELECT song WHERE fp_code
+        DB-->>-API: Sarki detaylari
+        API-->>C: 200 OK + sarki JSON
+    else match false
+        API-->>C: 200 OK + match false
+    end
+    C-->>-B: HTTPS yanit
+    B->>U: Sarki bilgisi / Taninmadi
