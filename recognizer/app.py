@@ -19,7 +19,32 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 logger = logging.getLogger("recognizer")
 
 CATALOG: dict[str, list[tuple[str, int]]] = {}
+# Ters indeks: hash -> [(song_code, anchor_time), ...]
+# Sorgu sırasında yalnızca query hash'lerinin değdiği şarkılara bakar.
+HASH_INDEX: dict[str, list[tuple[str, int]]] = defaultdict(list)
 CATALOG_LOCK = threading.RLock()
+
+
+def _index_add(song_code: str, entries: list[tuple[str, int]]) -> None:
+    for hash_key, anchor_time in entries:
+        HASH_INDEX[hash_key].append((song_code, anchor_time))
+
+
+def _index_remove(song_code: str) -> None:
+    empty_keys: list[str] = []
+    for hash_key, postings in HASH_INDEX.items():
+        filtered = [p for p in postings if p[0] != song_code]
+        if len(filtered) != len(postings):
+            if filtered:
+                HASH_INDEX[hash_key] = filtered
+            else:
+                empty_keys.append(hash_key)
+    for key in empty_keys:
+        del HASH_INDEX[key]
+
+
+def _index_clear() -> None:
+    HASH_INDEX.clear()
 
 FP_VERSION = 2
 
@@ -210,6 +235,40 @@ def score_candidate(
     return best_offset_matches, shared_hashes
 
 
+def _score_via_index(query_entries: list[tuple[str, int]]) -> list[dict]:
+    """
+    Ters indeks (HASH_INDEX) kullanarak skorla.
+    Sorgunun hash'lerine matching olan tüm (şarkı, ofset) çiftlerini
+    biriktirip her şarkı için (offset_matches, shared_hashes) hesaplar.
+    """
+    # song_code -> Counter[delta_offset]
+    song_offset_counts: dict[str, Counter[int]] = defaultdict(Counter)
+    # song_code -> set[query_hash_key] (shared_hashes için)
+    song_shared: dict[str, set[str]] = defaultdict(set)
+
+    with CATALOG_LOCK:
+        for hash_key, query_anchor in query_entries:
+            postings = HASH_INDEX.get(hash_key)
+            if not postings:
+                continue
+            for song_code, target_time in postings:
+                song_offset_counts[song_code][target_time - query_anchor] += 1
+                song_shared[song_code].add(hash_key)
+
+    scored: list[dict] = []
+    for song_code, offset_counter in song_offset_counts.items():
+        offset_matches = offset_counter.most_common(1)[0][1] if offset_counter else 0
+        shared_hashes = len(song_shared[song_code])
+        offset_ratio = offset_matches / max(len(query_entries), 1)
+        scored.append({
+            "songCode": song_code,
+            "offsetMatches": offset_matches,
+            "sharedHashes": shared_hashes,
+            "offsetRatio": offset_ratio,
+        })
+    return scored
+
+
 def best_match(query_entries: list[tuple[str, int]], candidates: list[dict] | None = None) -> dict | None:
     if len(query_entries) < MIN_HASH_COUNT:
         logger.info("query rejected: hashCount=%d below MIN_HASH_COUNT=%d", len(query_entries), MIN_HASH_COUNT)
@@ -218,18 +277,10 @@ def best_match(query_entries: list[tuple[str, int]], candidates: list[dict] | No
     scored: list[dict] = []
 
     if candidates is None:
-        with CATALOG_LOCK:
-            snapshot = list(CATALOG.items())
-        for song_code, candidate_entries in snapshot:
-            offset_matches, shared_hashes = score_candidate(query_entries, candidate_entries)
-            offset_ratio = offset_matches / max(len(query_entries), 1)
-            scored.append({
-                "songCode": song_code,
-                "offsetMatches": offset_matches,
-                "sharedHashes": shared_hashes,
-                "offsetRatio": offset_ratio,
-            })
+        # Hızlı yol: ters indeks
+        scored = _score_via_index(query_entries)
     else:
+        # Harici candidates verildi (encoded fingerprintData) — eski yol
         for candidate in candidates:
             song_code = candidate.get("songCode")
             fingerprint_data = candidate.get("fingerprintData")
@@ -312,6 +363,7 @@ def catalog_status():
 def reset_catalog():
     with CATALOG_LOCK:
         CATALOG.clear()
+        _index_clear()
         size = len(CATALOG)
     return jsonify({"status": "ok", "catalogSize": size})
 
@@ -326,6 +378,8 @@ def unregister_fingerprint():
 
     with CATALOG_LOCK:
         removed = CATALOG.pop(song_code, None) is not None
+        if removed:
+            _index_remove(song_code)
         size = len(CATALOG)
     return jsonify({"status": "ok", "removed": removed, "catalogSize": size})
 
@@ -344,7 +398,10 @@ def fingerprint_file():
 
     if song_code:
         with CATALOG_LOCK:
+            if song_code in CATALOG:
+                _index_remove(song_code)
             CATALOG[song_code] = entries
+            _index_add(song_code, entries)
 
     return jsonify(
         {
@@ -370,7 +427,10 @@ def register_fingerprint():
     except ValueError as exc:
         return jsonify({"status": "error", "message": str(exc)}), 400
     with CATALOG_LOCK:
+        if song_code in CATALOG:
+            _index_remove(song_code)
         CATALOG[song_code] = decoded
+        _index_add(song_code, decoded)
         size = len(CATALOG)
 
     return jsonify({"status": "ok", "catalogSize": size})
