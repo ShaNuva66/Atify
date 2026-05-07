@@ -2,7 +2,9 @@ package com.atify.backend.service;
 
 import com.atify.backend.dto.IdentifyResponse;
 import com.atify.backend.dto.RecognizeSimpleResponse;
+import com.atify.backend.entity.RecognitionAttempt;
 import com.atify.backend.entity.Song;
+import com.atify.backend.repository.RecognitionAttemptRepository;
 import com.atify.backend.repository.SongRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +14,8 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -21,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Slf4j
@@ -39,9 +44,12 @@ public class RecognizeService {
     private final SongRepository songRepository;
     private final RestTemplate restTemplate;
     private final FingerprintCatalogService fingerprintCatalogService;
+    private final RecognitionAttemptRepository recognitionAttemptRepository;
 
     public IdentifyResponse identifySong(MultipartFile sample) throws Exception {
+        long startMs = System.currentTimeMillis();
         if (songRepository.countByFingerprintDataIsNotNull() == 0) {
+            recordAttempt(null, null, null, false, null, null, null, null, startMs);
             return new IdentifyResponse(false, null, null, null, null, null, null);
         }
 
@@ -98,20 +106,30 @@ public class RecognizeService {
             );
 
             RecognizeSimpleResponse recog = resp.getBody();
+            Integer hashCount = recog != null ? recog.getHashCount() : null;
+            Integer catalogSize = recog != null ? recog.getCatalogSize() : null;
+            Integer sharedHashes = recog != null ? recog.getSharedHashes() : null;
+            Integer offsetMatches = recog != null ? recog.getOffsetMatches() : null;
+            Double offsetRatio = recog != null ? recog.getOffsetRatio() : null;
+
             if (recog == null || !recog.isMatch() || recog.getSongCode() == null || recog.getSongCode().isBlank()) {
                 log.info("Identify: no match (response={})", recog);
+                recordAttempt(hashCount, catalogSize, null, false, sharedHashes, offsetMatches, offsetRatio, null, startMs);
                 return new IdentifyResponse(false, null, null, null, null, null, null);
             }
             log.info("Identify: match songCode={}", recog.getSongCode());
 
             Optional<Song> optSong = songRepository.findByFingerprintCode(recog.getSongCode());
             if (optSong.isEmpty()) {
+                recordAttempt(hashCount, catalogSize, null, false, sharedHashes, offsetMatches, offsetRatio, null, startMs);
                 return new IdentifyResponse(false, null, null, null, null, null, null);
             }
 
             Song song = optSong.get();
             String artistName = song.getArtist() != null ? song.getArtist().getName() : null;
             String source = song.getExternalSource() != null ? song.getExternalSource() : "LOCAL";
+
+            recordAttempt(hashCount, catalogSize, song.getId(), true, sharedHashes, offsetMatches, offsetRatio, null, startMs);
 
             return new IdentifyResponse(
                     true,
@@ -126,6 +144,50 @@ public class RecognizeService {
             Files.deleteIfExists(tempInput);
             Files.deleteIfExists(tempWav);
         }
+    }
+
+    private void recordAttempt(
+            Integer hashCount,
+            Integer catalogSize,
+            Long matchedSongId,
+            boolean matched,
+            Integer sharedHashes,
+            Integer offsetMatches,
+            Double offsetRatio,
+            String fpVersion,
+            long startMs
+    ) {
+        try {
+            String username = currentUsername();
+            RecognitionAttempt attempt = RecognitionAttempt.builder()
+                    .actorUsername(username)
+                    .hashCount(hashCount)
+                    .catalogSize(catalogSize)
+                    .matched(matched)
+                    .matchedSongId(matchedSongId)
+                    .sharedHashes(sharedHashes)
+                    .offsetMatches(offsetMatches)
+                    .offsetRatio(offsetRatio)
+                    .processingMs(System.currentTimeMillis() - startMs)
+                    .fpVersion(fpVersion != null ? fpVersion : FingerprintCatalogService.FP_VERSION)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            recognitionAttemptRepository.save(attempt);
+        } catch (Exception e) {
+            log.warn("recordAttempt failed: {}", e.getMessage());
+        }
+    }
+
+    private String currentUsername() {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.isAuthenticated()) {
+                return auth.getName();
+            }
+        } catch (Exception ignored) {
+            // ignore
+        }
+        return null;
     }
 
     private String readTail(Path logFile) {
