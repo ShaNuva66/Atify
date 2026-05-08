@@ -23,7 +23,9 @@ durumları aşağıdaki tabloda özetlenmiştir:
 | Wang algoritmasının Türkçe literatürde belgelenmesi | Tamamlandı | Bu tez Bölüm 5 |
 | Mikroservis mimarisinin pratik avantaj/dezavantajlarının deneyimlenmesi | Tamamlandı | Bölüm 6.4 sorun günlüğü |
 | Sürekli teslim (CI/CD) iş akışı | Tamamlandı | `sync-prod.ps1` + Docker Compose |
-| Üretim sorunlarının kalıcı çözümü | Tamamlandı | 3 commit (`7ddd830`, `230bce5`, `b4e37be`) |
+| Üretim sorunlarının kalıcı çözümü | Tamamlandı | 7 commit (`7ddd830`, `230bce5`, `b4e37be`, `b126f62`, `0b186f5`, `00f568e`, `351089e`) |
+| Algoritma performansı (sub-saniye) | Tamamlandı | Ters indeks (commit `00f568e`) ile 45× hızlanma |
+| Tanıma davranışı gözlemlenebilirliği | Tamamlandı | recognition_attempt tablosu (commit `351089e`) |
 | Açık kaynak yayını + veri seti paylaşımı | Tez teslimiyle eş zamanlı | GitHub + Zenodo (planlanmıştır) |
 
 ### 7.1.2. Sayısal Sonuçlar
@@ -33,7 +35,8 @@ durumları aşağıdaki tabloda özetlenmiştir:
 - **Veri tabanı:** 10 ana varlık tablosu, 67 fingerprintable şarkı
 - **Tanıma doğruluğu:** Synthetic testte 10/10 başarı; mikrofon
   testinde gürültü kontrolünden sonra başarılı
-- **Tanıma gecikmesi:** Kayıt süresi hariç ~1 saniye
+- **Tanıma gecikmesi:** Kayıt süresi hariç ortalama 0.5-1 saniye
+  (ters indeks optimizasyonu öncesi 24 saniyenin üzerindeydi)
 - **Üretim erişimi:** `https://atify.com.tr` 7/24 erişilebilir
 
 ### 7.1.3. Literatüre Sağlanan Katkı

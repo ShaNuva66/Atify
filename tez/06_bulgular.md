@@ -161,7 +161,7 @@ ve 100 eşzamanlı kullanıcı için yeterli kaynak rezervine sahiptir.
 
 ## 6.4. Operasyonel Sorun Günlüğü
 
-Tez yazımı sürecinde üretim ortamında **beş adet kritik sorun**
+Tez yazımı sürecinde üretim ortamında **yedi adet kritik sorun**
 tespit edilip kalıcı olarak çözülmüştür. Bu bölümde her sorun, *belirti
 → kök neden → çözüm → doğrulama* dörtgeni ile sunulmuştur.
 
@@ -379,11 +379,137 @@ sonrasında, aynı 12 saniyelik sentetik girdi için sorgu süresi
 (daha az query hash) tanıma uçtan uca yaklaşık 1-2 saniyede
 tamamlanmaktadır.
 
-### 6.4.6. Operasyonel Bulguların Genel Değerlendirmesi
+### 6.4.6. Sorun #6: Doğrusal Tarama ile Eşleştirme Performansı
 
-Beş sorunun ortak yanı, **ilk geliştirme aşamasında öngörülmeyen
-eşzamanlılık, tutarlılık veya performans probleminin** üretim
-trafiği altında ortaya çıkmasıdır. Bu durum, Tanenbaum'un [@tanenbaum2017dist]
+**Belirti.** Sorun #5'in çözülmesinden sonra recognizer artık makul
+sürelerde yanıt veriyordu, ancak katalog büyüdükçe (79 şarkıdan
+binler ölçeğine doğru) sorgu süresinin doğrusal olarak artacağı
+açıktı. 12 saniyelik bir sentetik girdi (8.526 sorgu hash'i) için
+79 şarkılı katalogda yapılan yarı-naif eşleştirme yaklaşık 1-3
+saniye sürmekteydi. Aynı işlem 1.000 şarkılık bir katalogda
+~30 saniyeye çıkacaktı.
+
+**Kök neden.** Eşleştirme algoritmasının orijinal hâli her sorgu
+için **her aday şarkıya** ayrı ayrı bakıyor, her aday için ayrı
+bir `defaultdict[hash → list[time]]` yapı inşa ediyordu. Bu işlem
+her sorguda toplam $O(\sum_s |\mathcal{H}_s|)$ kadar bellek erişimi
+gerektiriyor — büyük katalogda lineer büyüyen bir maliyet.
+
+**Çözüm.** Recognizer servisine kalıcı bir **ters indeks
+(`HASH_INDEX`)** veri yapısı eklendi:
+
+```python
+HASH_INDEX: dict[str, list[tuple[str, int]]] = defaultdict(list)
+```
+
+Bu yapı, bir hash anahtarı verildiğinde o hash'i içeren tüm
+(şarkı, ankor zamanı) çiftlerini doğrudan döndürmektedir. Şarkı
+ekleme (`/fingerprint-file`, `/register-fingerprint`) ve silme
+(`/unregister-fingerprint`, `/reset-catalog`) işlemleri sırasında
+indeks otomatik güncellenmektedir. Sorgu sırasında ise yalnızca
+**sorgu hash'lerinin değdiği** girdiler taranmakta, bu sayede
+sorgu zamanı katalog boyutundan değil sorgu hash sayısından
+türetilmektedir.
+
+**Doğrulama.** `git commit 00f568e` ile dağıtılan bu iyileştirme
+ölçülmüştür. Aynı sentetik 12 saniyelik girdi için tanıma süresi
+karşılaştırması Çizelge 6.3'te sunulmuştur.
+
+**Çizelge 6.3.** Ters indeks öncesi/sonrası tanıma süresi
+karşılaştırması (Atify üretim ortamı, 89 şarkılı katalog,
+sentetik 12 sn girdi).
+
+| Sorgu # | Önce (doğrusal tarama) | Sonra (ters indeks) | İyileşme |
+|---|---|---|---|
+| 1 | ~24 s | 1.44 s | 17× |
+| 2 | ~24 s | 0.59 s | 41× |
+| 3 | ~24 s | 0.53 s | 45× |
+
+İlk sorgudaki nispeten yüksek süre, JIT/cache ısınma (warm-up)
+maliyetinden kaynaklanmaktadır. İkinci sorgudan itibaren elde
+edilen ~0.5 saniyelik süre, kullanıcı tarafından "anında" olarak
+algılanan yanıt süresi eşiğine girmektedir.
+
+### 6.4.7. Sorun #7: Tanıma Davranışının Gözlemlenebilir Olmaması
+
+**Belirti.** Üretim ortamına dağıtılmış sistemde her tanıma
+isteğinin sonucu yalnızca uygulama günlüklerinde tutulmakta;
+agregat sorgular (örn. *"toplam kaç tanıma yapıldı?"*, *"başarı
+oranı nedir?"*, *"hangi şarkı en sık tanınıyor?"*) için elle
+günlük dosyaları taranmak zorunda kalınıyordu.
+
+**Kök neden.** İlk geliştirme aşamasında sistemin operasyonel
+gözlemlenebilirliği (observability) öncelikli görülmemiş;
+yalnızca eşleşme/eşleşmeme sonucu metin günlüğüne yazılmıştı.
+Bu yaklaşım, tez kapsamında elde edilen ölçümlerin akademik
+düzeyde raporlanmasını zorlaştırmaktaydı.
+
+**Çözüm.** `recognition_attempt` adında yeni bir veri tabanı
+tablosu oluşturuldu ve `RecognizeService.identifySong()` her
+tanıma denemesini (başarılı veya başarısız) bu tabloya
+kaydedecek şekilde değiştirildi. Tablonun şeması Çizelge 6.4'te
+gösterilmiştir.
+
+**Çizelge 6.4.** `recognition_attempt` tablosu şeması.
+
+| Sütun | Tip | Açıklama |
+|---|---|---|
+| `id` | BIGINT, PK | Birincil anahtar |
+| `actor_username` | VARCHAR | Tanımayı tetikleyen kullanıcı (varsa) |
+| `hash_count` | INT | Sorgu örneğinden çıkarılan hash sayısı |
+| `catalog_size` | INT | Sorgu sırasındaki recognizer katalog boyutu |
+| `matched` | BOOLEAN | Eşleşme bulundu mu |
+| `matched_song_id` | BIGINT | Eşleşen şarkı (varsa) |
+| `shared_hashes` | INT | $|\mathcal{H}_q \cap \mathcal{H}_{s^*}|$ |
+| `offset_matches` | INT | En yüksek histogram tepesi |
+| `offset_ratio` | DOUBLE | offset_matches / hash_count |
+| `processing_ms` | BIGINT | Uçtan uca işlem süresi |
+| `fp_version` | VARCHAR | Algoritma sürümü |
+| `created_at` | DATETIME | Oluşturulma anı |
+
+Bu tablonun varlığı sayesinde aşağıdaki gibi tez sonuçlarına
+ilişkin doğrudan SQL sorguları yazılabilmektedir:
+
+```sql
+-- Genel başarı oranı
+SELECT COUNT(*) AS total,
+       SUM(matched) / COUNT(*) AS success_rate
+FROM recognition_attempt;
+
+-- Hash sayısı dağılımı
+SELECT hash_count, COUNT(*) AS attempts
+FROM recognition_attempt
+GROUP BY hash_count
+ORDER BY hash_count;
+
+-- Ortalama gecikme (kullanıcı bazlı)
+SELECT actor_username,
+       COUNT(*) AS attempts,
+       AVG(processing_ms) AS avg_ms,
+       SUM(matched) / COUNT(*) AS success_rate
+FROM recognition_attempt
+GROUP BY actor_username;
+
+-- En sık tanınan şarkılar
+SELECT s.name, s.fingerprint_code,
+       COUNT(*) AS recognitions
+FROM recognition_attempt a
+JOIN song s ON s.id = a.matched_song_id
+WHERE a.matched = TRUE
+GROUP BY s.id
+ORDER BY recognitions DESC
+LIMIT 10;
+```
+
+**Doğrulama.** `git commit 351089e` ile dağıtılan bu özellik,
+tezin ilerleyen sürümlerinde bu sorgular aracılığıyla elde
+edilen gerçek üretim verisini içerecektir.
+
+### 6.4.8. Operasyonel Bulguların Genel Değerlendirmesi
+
+Yedi sorunun ortak yanı, **ilk geliştirme aşamasında öngörülmeyen
+eşzamanlılık, tutarlılık, performans veya gözlemlenebilirlik
+probleminin** üretim trafiği altında ortaya çıkmasıdır. Bu durum, Tanenbaum'un [@tanenbaum2017dist]
 *"Distributed Systems"* eserindeki "yerel ortamda olmayan başlıca
 zorluk: aynı anda çalışmak" tespitini somut biçimde
 örneklemektedir.

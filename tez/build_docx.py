@@ -36,6 +36,11 @@ TEMPLATE_SRC = Path("C:/Users/atala/Desktop/tez_Düzce.docx")
 OUT_DOCX = HERE / "tez_atify_v1.docx"
 FIGURES_DIR = HERE / "figures"
 
+# Şablon yoksa kullanılacak yedek başlangıç noktaları
+TEMPLATE_FALLBACKS = [
+    HERE / "tez_atify_v1.docx",  # önceki üretilmiş çıktı
+]
+
 SECTIONS = [
     ("01_giris.md", "1. GİRİŞ"),
     ("02_literatur.md", "2. LİTERATÜR TARAMASI"),
@@ -289,15 +294,37 @@ def strip_template_body(doc: Document) -> None:
 
 
 def main() -> None:
-    if not TEMPLATE_SRC.exists():
-        raise SystemExit(f"Sablon bulunamadi: {TEMPLATE_SRC}")
+    source = TEMPLATE_SRC
+    if not source.exists():
+        for fb in TEMPLATE_FALLBACKS:
+            if fb.exists() and fb != OUT_DOCX:
+                source = fb
+                break
+        else:
+            # Hiçbir şablon yok — çıktı dosyası varsa onu yeniden inşa için kullan
+            if OUT_DOCX.exists():
+                # Geçici kopyayı kaynak olarak kullan
+                tmp_src = OUT_DOCX.with_name("_template_tmp.docx")
+                shutil.copy(OUT_DOCX, tmp_src)
+                source = tmp_src
+            else:
+                raise SystemExit(
+                    "Sablon bulunamadi ve mevcut bir tez_atify_v1.docx da yok. "
+                    "Sablonu C:/Users/atala/Desktop/tez_Düzce.docx adresine geri koyun."
+                )
 
-    print(f"Sablonu kopyaliyorum: {TEMPLATE_SRC} -> {OUT_DOCX}")
-    shutil.copy(TEMPLATE_SRC, OUT_DOCX)
+    print(f"Kaynak doc: {source}")
+    if str(source) != str(OUT_DOCX):
+        shutil.copy(source, OUT_DOCX)
+    if source.name == "_template_tmp.docx":
+        try:
+            source.unlink()
+        except Exception:
+            pass
 
     doc = Document(str(OUT_DOCX))
 
-    print("Sablonun placeholder icerigini temizliyorum...")
+    print("Mevcut icerigi temizliyorum...")
     strip_template_body(doc)
 
     # Kapak sayfasi
@@ -426,6 +453,8 @@ def main() -> None:
         ("Çizelge 5.2", "Sürüm 1 ile sürüm 2 arasındaki farklar"),
         ("Çizelge 6.1", "Seçili şarkılar için sürüm 2 hash sayıları"),
         ("Çizelge 6.2", "Tanıma akışı bileşenleri"),
+        ("Çizelge 6.3", "Ters indeks öncesi/sonrası tanıma süresi karşılaştırması"),
+        ("Çizelge 6.4", "recognition_attempt tablosu şeması"),
         ("Çizelge 7.1", "Tez amaçları ve gerçekleştirme durumu"),
     ]
     add_table_from_md(doc, ["No", "Açıklama"], tables_for_list)
