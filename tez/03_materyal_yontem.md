@@ -3,7 +3,7 @@
 Bu bölümde, Atify projesinin geliştirilmesinde kullanılan donanım,
 yazılım, veri seti ve geliştirme metodolojisi sistematik bir biçimde
 ele alınmıştır. Bölüm, FAIR (Findable, Accessible, Interoperable,
-Reusable) veri yönetimi ilkelerine [@wilkinson2016fair] uygun bir
+Reusable) veri yönetimi ilkelerine [10] uygun bir
 biçimde yapılandırılmıştır.
 
 ## 3.1. Geliştirme Ortamı

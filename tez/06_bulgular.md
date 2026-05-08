@@ -509,7 +509,7 @@ edilen gerçek üretim verisini içerecektir.
 
 Yedi sorunun ortak yanı, **ilk geliştirme aşamasında öngörülmeyen
 eşzamanlılık, tutarlılık, performans veya gözlemlenebilirlik
-probleminin** üretim trafiği altında ortaya çıkmasıdır. Bu durum, Tanenbaum'un [@tanenbaum2017dist]
+probleminin** üretim trafiği altında ortaya çıkmasıdır. Bu durum, Tanenbaum'un [12]
 *"Distributed Systems"* eserindeki "yerel ortamda olmayan başlıca
 zorluk: aynı anda çalışmak" tespitini somut biçimde
 örneklemektedir.

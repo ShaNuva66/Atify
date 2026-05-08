@@ -3,7 +3,7 @@
 Bu bölümde, Atify recognizer servisinde kullanılan akustik parmak
 izi algoritmasının matematiksel formülasyonu, parametrik seçimleri
 ve eşleştirme stratejisi ayrıntılı olarak ele alınmıştır. Algoritma,
-Wang'ın [@wang2003] orijinal landmark hashing yaklaşımını temel
+Wang'ın [1] orijinal landmark hashing yaklaşımını temel
 almakta; canlı mikrofon kayıtlarındaki dayanıklılığı artıran ek
 adımlar ile genişletilmiştir.
 
@@ -329,7 +329,7 @@ düşürmektedir:
   değişimleri ciddi tanıma kaybına yol açar.
 - **Cover/remix versiyonları:** Aynı melodinin farklı
   düzenlemeleri tepelerin frekans/zaman konumlarını değiştirir.
-  Bu durum için Chromaprint [@lalinsky2010] daha uygundur.
+  Bu durum için Chromaprint [3] daha uygundur.
 - **Çok kısa örnekler (< 5 saniye):** $|\mathcal{H}_q|$ değeri
   `MIN_HASH_COUNT` eşiğinin altına düşebilir.
 - **Yüksek arka plan müziği:** Birden fazla müzik kaynağı

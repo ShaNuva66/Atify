@@ -129,7 +129,7 @@ Bu tezin bilgi alanına ilişkin başlıca sınırlamaları:
 - **MFCC veya Chroma ek özellikleri:** Wang hash'lerine paralel
   olarak MFCC vektörleri tutulması; cover ve remix versiyonlarının
   da tanınabilmesi.
-- **Derin öğrenme tabanlı parmak izi:** NEURAL-FP [@kim2020neuralfp]
+- **Derin öğrenme tabanlı parmak izi:** NEURAL-FP [8]
   veya benzeri bir modelin Atify'ın bir başka recognizer servisi
   olarak yan yana çalışması; A/B karşılaştırması.
 

@@ -57,7 +57,7 @@
 
 - [ ] Mendeley'de yeni proje açıp kaynakları girmek
 - [ ] IEEE stili (Türkçe dil ayarı) seçmek
-- [ ] Tezdeki [@xxx] biçimindeki yer tutucuları gerçek atıflara
+- [ ] Tezdeki [?xxx?] biçimindeki yer tutucuları gerçek atıflara
       dönüştürmek
 - [ ] Atıf yapılmamış kaynakları listeden çıkarmak
 

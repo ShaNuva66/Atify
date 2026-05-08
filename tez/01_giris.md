@@ -53,7 +53,7 @@ dağıtmak ve performansını ölçmektir. Bu kapsamda alt amaçlar şu
 - Modern Java ekosisteminin (Spring Boot 3.x, JPA/Hibernate, Spring
   Security + JWT) bir müzik platformu örnek olayı üzerinden
   öğrenilmesi ve uygulanması.
-- Shazam tarafından 2003 yılında Avery Wang [@wang2003] tarafından
+- Shazam tarafından 2003 yılında Avery Wang [1] tarafından
   önerilen *landmark fingerprinting* algoritmasının Türkçe
   literatüre detaylı bir biçimde aktarılması ve Python referans
   uygulamasının açık kaynak olarak yayımlanması.
@@ -77,7 +77,7 @@ Bu tezin literatüre yapması beklenen katkılar şunlardır:
    üzerine yazılmış lisans seviyesinde Türkçe akademik tezlerin
    sayısı oldukça sınırlıdır. Bu çalışma, Wang'ın orijinal
    algoritmasının ve takip eden iyileştirmelerin (Chromaprint
-   [@lalinsky2010], Echoprint [@echoprint2011]) Türkçe terimleriyle
+   [3], Echoprint [4]) Türkçe terimleriyle
    birlikte ayrıntılı şekilde anlatıldığı bir referans
    sağlamaktadır.
 2. **Üretim seviyesinde uygulama belgesi:** Akademik tezlerin
