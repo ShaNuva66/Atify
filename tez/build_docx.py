@@ -30,6 +30,8 @@ from pathlib import Path
 from docx import Document
 from docx.shared import Cm, Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.oxml.ns import qn
+from docx.oxml import OxmlElement
 
 HERE = Path(__file__).parent.resolve()
 TEMPLATE_SRC = Path("C:/Users/atala/Desktop/tez_Düzce.docx")
@@ -273,6 +275,45 @@ def add_chapter_figures(doc: Document, chapter_no: int) -> None:
         add_figure(doc, fname, caption)
 
 
+SCREENSHOTS = [
+    ("ekran_anasayfa.png", "Şekil B.1. Atify ana sayfası (atify.com.tr)"),
+    ("ekran_tanima.png", "Şekil B.2. Şarkı tanıma kayıt ekranı"),
+    ("ekran_sonuc.png", "Şekil B.3. Tanıma sonuç ekranı"),
+    ("ekran_admin.png", "Şekil B.4. Admin paneli"),
+]
+
+
+def add_page_number_footer(doc: Document) -> None:
+    """Tüm bölümler için footer'a {PAGE} alanı ekler — sayfa numarası."""
+    for section in doc.sections:
+        footer = section.footer
+        # Mevcut paragrafı temizle ve sayfa numarası ekle
+        footer.is_linked_to_previous = False
+        if footer.paragraphs:
+            para = footer.paragraphs[0]
+        else:
+            para = footer.add_paragraph()
+        # Mevcut içerikleri temizle
+        for run in list(para.runs):
+            run._element.getparent().remove(run._element)
+        para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+        run = para.add_run()
+        # PAGE field code'unu XML olarak ekle
+        fldChar1 = OxmlElement("w:fldChar")
+        fldChar1.set(qn("w:fldCharType"), "begin")
+        run._element.append(fldChar1)
+
+        instr = OxmlElement("w:instrText")
+        instr.set(qn("xml:space"), "preserve")
+        instr.text = "PAGE \\* MERGEFORMAT"
+        run._element.append(instr)
+
+        fldChar2 = OxmlElement("w:fldChar")
+        fldChar2.set(qn("w:fldCharType"), "end")
+        run._element.append(fldChar2)
+
+
 def strip_template_body(doc: Document) -> None:
     """
     Şablonun gövdesindeki tüm placeholder içeriği (Manzara şekilleri,
@@ -438,6 +479,10 @@ def main() -> None:
         ("Şekil 5.3", "Anchor-target landmark eşleştirmesi"),
         ("Şekil 5.4", "Synthetic vs mikrofon ofset histogramı"),
         ("Şekil 6.1", "Tanıma gecikme bileşenleri"),
+        ("Şekil B.1", "Atify ana sayfası"),
+        ("Şekil B.2", "Şarkı tanıma kayıt ekranı"),
+        ("Şekil B.3", "Tanıma sonuç ekranı"),
+        ("Şekil B.4", "Admin paneli"),
     ]
     add_table_from_md(doc, ["No", "Açıklama"], figures_for_list)
     doc.add_page_break()
@@ -514,6 +559,27 @@ def main() -> None:
             add_chapter_figures(doc, int(m.group(1)))
         doc.add_page_break()
 
+    # EK B: Ekran goruntuleri
+    print("  + Ek B: Ekran goruntuleri")
+    add_heading(doc, "EK B: EKRAN GÖRÜNTÜLERİ", 1)
+    add_body(doc,
+        "Bu ekte, Atify platformunun üretim ortamından (atify.com.tr) "
+        "alınan ekran görüntüleri sunulmuştur."
+    )
+    for fname, caption in SCREENSHOTS:
+        path = FIGURES_DIR / fname
+        if not path.exists():
+            doc.add_paragraph(f"[{caption} — dosya bulunamadı: {fname}]")
+            continue
+        doc.add_picture(str(path), width=Cm(15.5))
+        cap = doc.add_paragraph(caption)
+        cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        for run in cap.runs:
+            run.italic = True
+            run.font.size = Pt(10)
+        doc.add_paragraph()
+    doc.add_page_break()
+
     # OZGECMIS
     print("  + Ozgecmis")
     add_heading(doc, "ÖZGEÇMİŞ", 1)
@@ -534,6 +600,10 @@ def main() -> None:
         "özelliğine sahip web tabanlı müzik akış platformu. Spring Boot, "
         "Python, MySQL, Docker, Caddy. Üretim ortamı: https://atify.com.tr"
     )
+
+    # Sayfa numaralari (footer)
+    print("  + Sayfa numaralari")
+    add_page_number_footer(doc)
 
     doc.save(str(OUT_DOCX))
     print(f"\nKayit edildi: {OUT_DOCX}")
