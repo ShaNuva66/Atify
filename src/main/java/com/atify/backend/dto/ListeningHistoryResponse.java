@@ -10,6 +10,12 @@ public record ListeningHistoryResponse(
         String coverUrl,
         String audioUrl,
         String source,
+        String externalUrl,
+        String licenseUrl,
+        boolean rightsVerified,
+        String rightsOwner,
+        String rightsNotes,
+        String copyrightNotice,
         long playCount,
         LocalDateTime lastListenedAt
 ) {

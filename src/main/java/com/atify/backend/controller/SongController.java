@@ -16,7 +16,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.ResourceRegion;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpRange;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -26,12 +28,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -48,6 +52,9 @@ public class SongController {
 
     @Value("${music.upload-dir}")
     private String uploadDir;
+
+    @Value("${app.rights.enforce-local-stream-verification:true}")
+    private boolean enforceLocalStreamRights;
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public SongResponse addSong(@RequestBody SongRequest request) {
@@ -108,9 +115,12 @@ public class SongController {
             @RequestParam("file") MultipartFile file,
             @RequestParam("name") String name,
             @RequestParam("artistId") Long artistId,
-            @RequestParam(value = "albumId", required = false) Long albumId
+            @RequestParam(value = "albumId", required = false) Long albumId,
+            @RequestParam(value = "rightsVerified", required = false) Boolean rightsVerified,
+            @RequestParam(value = "rightsOwner", required = false) String rightsOwner,
+            @RequestParam(value = "rightsNotes", required = false) String rightsNotes
     ) {
-        Song saved = songUploadService.uploadMp3(file, name, artistId, albumId);
+        Song saved = songUploadService.uploadMp3(file, name, artistId, albumId, rightsVerified, rightsOwner, rightsNotes);
 
         return new SongUploadResponse(
                 saved.getId(),
@@ -118,17 +128,26 @@ public class SongController {
                 saved.getDuration(),
                 saved.getArtist() != null ? saved.getArtist().getId() : null,
                 saved.getAlbum() != null ? saved.getAlbum().getId() : null,
-                saved.getFileName()
+                saved.getFileName(),
+                saved.isRightsVerified(),
+                saved.getRightsOwner(),
+                saved.getRightsNotes()
         );
     }
 
     @GetMapping("/{id}/stream")
-    public ResponseEntity<Resource> stream(@PathVariable Long id) {
+    public ResponseEntity<?> stream(
+            @PathVariable Long id,
+            @RequestHeader HttpHeaders requestHeaders
+    ) throws IOException {
         Song song = songRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Song not found"));
 
         if (song.getFileName() == null || song.getFileName().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Song does not have a fileName");
+        }
+        if (enforceLocalStreamRights && !songService.isRightsVerified(song)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Song streaming rights are not verified");
         }
 
         Path baseDir = Path.of(uploadDir).toAbsolutePath().normalize();
@@ -141,8 +160,19 @@ public class SongController {
         }
 
         Resource resource = new FileSystemResource(path.toFile());
+        List<HttpRange> ranges = requestHeaders.getRange();
+        if (!ranges.isEmpty()) {
+            ResourceRegion region = ranges.get(0).toResourceRegion(resource);
+            return ResponseEntity.status(HttpStatus.PARTIAL_CONTENT)
+                    .contentType(MediaType.parseMediaType("audio/mpeg"))
+                    .header("Accept-Ranges", "bytes")
+                    .body(region);
+        }
+
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType("audio/mpeg"))
+                .contentLength(Files.size(path))
+                .header("Accept-Ranges", "bytes")
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + path.getFileName() + "\"")
                 .body(resource);
     }

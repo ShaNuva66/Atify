@@ -23,13 +23,14 @@ public class SearchService {
     private final SongRepository songRepository;
     private final ArtistRepository artistRepository;
     private final AlbumRepository albumRepository;
+    private final SongService songService;
 
     @Cacheable(value = "search", key = "#query + '-' + #page + '-' + #size")
     public SearchResponse search(String query, int page, int size) {
         if (query == null || query.isBlank()) {
             return new SearchResponse(query, PageResponse.of(
                     songRepository.findAll(PageRequest.of(page, size, Sort.by("name")))
-                            .map(this::toSongResponse)
+                            .map(songService::toSongResponse)
             ), List.of(), List.of());
         }
 
@@ -37,7 +38,7 @@ public class SearchService {
 
         PageResponse<SongResponse> songs = PageResponse.of(
                 songRepository.searchByNameOrArtist(q, PageRequest.of(page, size, Sort.by("name")))
-                        .map(this::toSongResponse)
+                        .map(songService::toSongResponse)
         );
 
         List<ArtistResponse> artists = artistRepository.findByNameContainingIgnoreCase(q)
@@ -48,21 +49,18 @@ public class SearchService {
 
         List<AlbumResponse> albums = albumRepository.findByNameContainingIgnoreCase(q)
                 .stream()
-                .map(al -> new AlbumResponse(al.getId(), al.getName(), al.getCoverUrl()))
+                .map(al -> new AlbumResponse(
+                        al.getId(),
+                        al.getName(),
+                        al.getCoverUrl(),
+                        al.getGenre(),
+                        al.getReleaseYear(),
+                        al.getReleaseDate(),
+                        al.getArtist() != null ? al.getArtist().getId() : null,
+                        al.getArtist() != null ? al.getArtist().getName() : null
+                ))
                 .toList();
 
         return new SearchResponse(q, songs, artists, albums);
-    }
-
-    private SongResponse toSongResponse(com.atify.backend.entity.Song song) {
-        return new SongResponse(
-                song.getId(),
-                song.getName(),
-                song.getDuration(),
-                song.getArtist() != null ? song.getArtist().getName() : null,
-                song.getCoverUrl(),
-                song.getAudioUrl(),
-                song.getExternalSource() == null ? "LOCAL" : song.getExternalSource()
-        );
     }
 }

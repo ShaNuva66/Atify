@@ -2,6 +2,7 @@ package com.atify.backend.service;
 
 import com.atify.backend.dto.SongRequest;
 import com.atify.backend.dto.SongResponse;
+import com.atify.backend.entity.Album;
 import com.atify.backend.entity.Artist;
 import com.atify.backend.entity.Song;
 import com.atify.backend.repository.AlbumRepository;
@@ -63,6 +64,40 @@ class SongServiceTest {
         assertThat(result.get(0).getSource()).isEqualTo("LOCAL");
     }
 
+    @Test
+    void toSongResponse_jamendoParcadaLisansBilgisiniKorur() {
+        Artist artist = Artist.builder().id(1L).name("Jamendo Artist").build();
+        Album album = Album.builder().id(9L).name("Jamendo Album").build();
+        Song song = Song.builder()
+                .id(77L)
+                .name("Jamendo Track")
+                .duration(210)
+                .artist(artist)
+                .album(album)
+                .coverUrl("https://img.example/cover.jpg")
+                .audioUrl("https://audio.example/track.mp3")
+                .externalSource("JAMENDO")
+                .externalRef("jam-77")
+                .externalUrl("https://jamendo.example/track")
+                .licenseUrl("https://creativecommons.org/licenses/by/4.0/")
+                .rightsVerified(true)
+                .rightsOwner("Jamendo Artist")
+                .rightsNotes("Creative Commons")
+                .build();
+
+        SongResponse result = songService.toSongResponse(song);
+
+        assertThat(result.getSource()).isEqualTo("JAMENDO");
+        assertThat(result.getExternalUrl()).isEqualTo("https://jamendo.example/track");
+        assertThat(result.getLicenseUrl()).isEqualTo("https://creativecommons.org/licenses/by/4.0/");
+        assertThat(result.isRightsVerified()).isTrue();
+        assertThat(result.getRightsOwner()).isEqualTo("Jamendo Artist");
+        assertThat(result.getRightsNotes()).isEqualTo("Creative Commons");
+        assertThat(result.getCopyrightNotice()).contains("Jamendo");
+        assertThat(result.getAlbumId()).isEqualTo(9L);
+        assertThat(result.getAlbumName()).isEqualTo("Jamendo Album");
+    }
+
     // ---- getAllSongs (paginated) ----
 
     @Test
@@ -101,16 +136,38 @@ class SongServiceTest {
         request.setName("Yeni Şarkı");
         request.setDuration(180);
         request.setArtistId(1L);
+        request.setRightsVerified(true);
+        request.setRightsOwner("Test hak sahibi");
+        request.setRightsNotes("Test izin notu");
 
         when(artistRepo.findById(1L)).thenReturn(Optional.of(artist));
         Song saved = Song.builder().id(10L).name("Yeni Şarkı").duration(180).artist(artist).build();
+        saved.setRightsVerified(true);
+        saved.setRightsOwner("Test hak sahibi");
+        saved.setRightsNotes("Test izin notu");
         when(songRepo.save(any(Song.class))).thenReturn(saved);
 
         SongResponse result = songService.addSong(request);
 
         assertThat(result.getId()).isEqualTo(10L);
         assertThat(result.getName()).isEqualTo("Yeni Şarkı");
+        assertThat(result.isRightsVerified()).isTrue();
         verify(auditLogService).record(eq("SONG_CREATED"), eq("SONG"), eq(10L), any());
+    }
+
+    @Test
+    void addSong_hakDogrulamasiYoksa_exception() {
+        Artist artist = Artist.builder().id(1L).name("SanatÃ§Ä±").build();
+        SongRequest request = new SongRequest();
+        request.setName("Yeni ÅarkÄ±");
+        request.setDuration(180);
+        request.setArtistId(1L);
+
+        when(artistRepo.findById(1L)).thenReturn(Optional.of(artist));
+
+        assertThatThrownBy(() -> songService.addSong(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("hakki dogrulamasi zorunlu");
     }
 
     // ---- updateSong ----
@@ -141,6 +198,26 @@ class SongServiceTest {
 
         assertThat(result.getName()).isEqualTo("Yeni İsim");
         verify(auditLogService).record(eq("SONG_UPDATED"), eq("SONG"), eq(5L), any());
+    }
+
+    @Test
+    void updateSong_clearAlbumTrue_albumBaginiKaldirir() {
+        Artist artist = Artist.builder().id(1L).name("Sanatçı").build();
+        Album album = Album.builder().id(3L).name("Album").build();
+        Song existing = Song.builder().id(5L).name("Parça").duration(100).artist(artist).album(album).build();
+        when(songRepo.findById(5L)).thenReturn(Optional.of(existing));
+        when(songRepo.save(existing)).thenReturn(existing);
+
+        SongRequest request = new SongRequest();
+        request.setName("Parça");
+        request.setDuration(100);
+        request.setClearAlbum(true);
+
+        SongResponse result = songService.updateSong(5L, request);
+
+        assertThat(existing.getAlbum()).isNull();
+        assertThat(result.getAlbumId()).isNull();
+        assertThat(result.getAlbumName()).isNull();
     }
 
     // ---- deleteSong ----

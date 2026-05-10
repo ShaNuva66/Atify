@@ -42,7 +42,15 @@ public class SongUploadService {
         this.fingerprintService = fingerprintService;
     }
 
-    public Song uploadMp3(MultipartFile file, String name, Long artistId, Long albumId) {
+    public Song uploadMp3(
+            MultipartFile file,
+            String name,
+            Long artistId,
+            Long albumId,
+            Boolean rightsVerified,
+            String rightsOwner,
+            String rightsNotes
+    ) {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("file boş olamaz");
         }
@@ -52,6 +60,7 @@ public class SongUploadService {
         if (artistId == null) {
             throw new IllegalArgumentException("Sanatçı seçimi zorunlu.");
         }
+        validateLocalRights(rightsVerified, rightsOwner, rightsNotes);
 
         String original = (file.getOriginalFilename() == null) ? "audio.mp3" : file.getOriginalFilename();
         if (!original.toLowerCase().endsWith(".mp3")) {
@@ -84,12 +93,27 @@ public class SongUploadService {
             song.setFileName(safeName);
             song.setArtist(artist);
             song.setAlbum(album);
+            song.setRightsVerified(true);
+            song.setRightsOwner(rightsOwner.trim());
+            song.setRightsNotes(rightsNotes.trim());
 
             Song saved = songRepository.save(song);
             fingerprintService.fingerprintSong(saved);
             return saved;
         } catch (Exception e) {
             throw new RuntimeException("Upload başarısız: " + e.getMessage(), e);
+        }
+    }
+
+    private void validateLocalRights(Boolean rightsVerified, String rightsOwner, String rightsNotes) {
+        if (!Boolean.TRUE.equals(rightsVerified)) {
+            throw new IllegalArgumentException("Yerel MP3 yuklemek icin yayin/stream hakki dogrulamasi zorunlu.");
+        }
+        if (rightsOwner == null || rightsOwner.isBlank()) {
+            throw new IllegalArgumentException("Hak sahibi veya izin veren kurum/kisi zorunlu.");
+        }
+        if (rightsNotes == null || rightsNotes.isBlank()) {
+            throw new IllegalArgumentException("Hak/lisans belge notu zorunlu.");
         }
     }
 }

@@ -11,6 +11,12 @@ public record FavoriteResponse(
         String audioUrl,
         String source,
         String externalRef,
+        String externalUrl,
+        String licenseUrl,
+        boolean rightsVerified,
+        String rightsOwner,
+        String rightsNotes,
+        String copyrightNotice,
         LocalDateTime createdAt
 ) {
 }

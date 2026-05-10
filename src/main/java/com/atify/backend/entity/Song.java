@@ -54,6 +54,22 @@ public class Song {
     @Column(name = "external_ref")
     private String externalRef;
 
+    @Column(name = "external_url", length = 1024)
+    private String externalUrl;
+
+    @Column(name = "license_url", length = 1024)
+    private String licenseUrl;
+
+    @Column(name = "rights_verified", nullable = false)
+    @Builder.Default
+    private boolean rightsVerified = false;
+
+    @Column(name = "rights_owner", length = 255)
+    private String rightsOwner;
+
+    @Column(name = "rights_notes", length = 2048)
+    private String rightsNotes;
+
     @Column(name = "audio_url", length = 1024)
     private String audioUrl;
 }

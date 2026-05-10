@@ -16,14 +16,21 @@ public class JwtService {
     @Value("${jwt.secret}")
     private String SECRET_KEY;
 
+    @Value("${jwt.expirationMs:86400000}")
+    private long expirationMs;
+
     // Generate JWT token
     public String generateToken(String username) {
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) // valid for 24 hours
+                .setExpiration(new Date(System.currentTimeMillis() + expirationMs))
                 .signWith(getKey(), SignatureAlgorithm.HS256)
                 .compact();
+    }
+
+    public long getExpirationMs() {
+        return expirationMs;
     }
 
     // Extract username from token

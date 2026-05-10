@@ -388,6 +388,17 @@
                 <label>Playlist ID Listesi (opsiyonel, 1,2,3)</label>
                 <input id="songPlaylistIds" type="text" placeholder="">
 
+                <label>Hak Sahibi / İzin Veren</label>
+                <input id="songRightsOwner" type="text" placeholder="Hak sahibi, label veya izin veren kurum">
+
+                <label>Lisans / İzin Notu</label>
+                <textarea id="songRightsNotes" rows="3" placeholder="Belge no, sözleşme tarihi, izin kapsamı..."></textarea>
+
+                <label>
+                    <input id="songRightsVerified" type="checkbox" style="width:auto; margin-right:8px;">
+                    Bu yerel kaydın web ve mobilde stream edilmesi için gerekli hakların doğrulandığını onaylıyorum.
+                </label>
+
                 <div class="song-admin-actions">
                     <button id="createSongBtn" class="btn primary">Kayıt Oluştur</button>
                 </div>
@@ -417,11 +428,22 @@
                     <option value="">Playlist seçme</option>
                 </select>
 
+                <label>Hak Sahibi / İzin Veren</label>
+                <input id="uploadRightsOwner" type="text" placeholder="Hak sahibi, label veya izin veren kurum">
+
+                <label>Lisans / İzin Notu</label>
+                <textarea id="uploadRightsNotes" rows="3" placeholder="Belge no, sözleşme tarihi, izin kapsamı..."></textarea>
+
+                <label>
+                    <input id="uploadRightsVerified" type="checkbox" style="width:auto; margin-right:8px;">
+                    Bu MP3 dosyasının web ve mobilde stream edilmesi için gerekli hakların doğrulandığını onaylıyorum.
+                </label>
+
                 <label>MP3 Dosyası</label>
                 <input id="uploadSongFile" type="file" accept=".mp3,audio/mpeg">
 
                 <div class="upload-drop-hint">
-                    Dosyayı seçtiğinde backend süreyi otomatik hesaplar. MP3 dışında format kabul etmiyor.
+                    Dosyayı seçtiğinde backend süreyi otomatik hesaplar. MP3 dışında format kabul etmiyor. Hak doğrulaması olmadan yükleme reddedilir.
                 </div>
 
                 <div class="song-admin-actions">
@@ -637,7 +659,6 @@
 
 </body>
 </html>
-
 
 
 

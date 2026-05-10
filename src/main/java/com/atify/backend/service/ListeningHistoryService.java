@@ -151,9 +151,28 @@ public class ListeningHistoryService {
                 song.getCoverUrl(),
                 song.getAudioUrl(),
                 song.getExternalSource() == null ? "LOCAL" : song.getExternalSource(),
+                song.getExternalUrl(),
+                song.getLicenseUrl(),
+                isRightsVerified(song),
+                song.getRightsOwner(),
+                song.getRightsNotes(),
+                copyrightNotice(song),
                 playCount,
                 lastListenedAt
         );
+    }
+
+    private String copyrightNotice(Song song) {
+        String source = song.getExternalSource() == null ? "LOCAL" : song.getExternalSource();
+        if ("JAMENDO".equalsIgnoreCase(source)) {
+            return "Jamendo uzerinden saglanan parca. Creative Commons lisans linki ve kaynak sayfasi saklanir.";
+        }
+        return "Yerel kutuphaneye eklenen parca. Yayin/stream haklari Atify tarafindan dogrulanmalidir.";
+    }
+
+    private boolean isRightsVerified(Song song) {
+        String source = song.getExternalSource() == null ? "LOCAL" : song.getExternalSource();
+        return "JAMENDO".equalsIgnoreCase(source) ? song.getLicenseUrl() != null && !song.getLicenseUrl().isBlank() : song.isRightsVerified();
     }
 
     private Map<String, Long> buildArtistCounts(List<ListeningHistory> history) {

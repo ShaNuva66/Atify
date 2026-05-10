@@ -2,13 +2,16 @@ package com.atify.backend.controller;
 
 import com.atify.backend.dto.LoginRequest;
 import com.atify.backend.dto.LoginResponse;
+import com.atify.backend.dto.RefreshTokenRequest;
 import com.atify.backend.dto.UserProfileResponse;
 import com.atify.backend.dto.UserProfileUpdateRequest;
 import com.atify.backend.dto.UserRequest;
+import com.atify.backend.entity.RefreshToken;
 import com.atify.backend.entity.Role;
 import com.atify.backend.entity.User;
 import com.atify.backend.repository.UserRepository;
 import com.atify.backend.service.JwtService;
+import com.atify.backend.service.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +30,7 @@ public class AuthController {
     private final UserRepository userRepo;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final RefreshTokenService refreshTokenService;
 
     // ---- Register ----
     @PostMapping("/register")
@@ -71,8 +75,38 @@ public class AuthController {
 
         String token = jwtService.generateToken(user.getUsername());
         String role = resolvePrimaryRole(user);
+        RefreshToken refreshToken = refreshTokenService.createToken(user);
 
-        return ResponseEntity.ok(new LoginResponse("Login successful", token, role));
+        return ResponseEntity.ok(new LoginResponse(
+                "Login successful",
+                token,
+                role,
+                refreshToken.getToken(),
+                jwtService.getExpirationMs()
+        ));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<LoginResponse> refresh(@RequestBody RefreshTokenRequest request) {
+        RefreshToken refreshToken = refreshTokenService.rotateToken(request.getRefreshToken());
+        User user = refreshToken.getUser();
+        String token = jwtService.generateToken(user.getUsername());
+
+        return ResponseEntity.ok(new LoginResponse(
+                "Token refreshed",
+                token,
+                resolvePrimaryRole(user),
+                refreshToken.getToken(),
+                jwtService.getExpirationMs()
+        ));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(@RequestBody(required = false) RefreshTokenRequest request) {
+        if (request != null) {
+            refreshTokenService.revokeToken(request.getRefreshToken());
+        }
+        return ResponseEntity.ok("Logout successful");
     }
 
     // ---- Profil görüntüle ----

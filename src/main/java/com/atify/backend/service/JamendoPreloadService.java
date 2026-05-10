@@ -71,13 +71,15 @@ public class JamendoPreloadService {
                             settings.limit(),
                             source + ":" + query
                     );
-                    totalImported += response.imported();
-                    totalSkipped += response.skipped();
+                    int imported = response == null ? 0 : response.imported();
+                    int skipped = response == null ? 0 : response.skipped();
+                    totalImported += imported;
+                    totalSkipped += skipped;
                     log.info(
                             "Jamendo preload tamamlandı. query='{}', imported={}, skipped={}",
                             query,
-                            response.imported(),
-                            response.skipped()
+                            imported,
+                            skipped
                     );
                 } catch (Exception exception) {
                     log.warn("Jamendo preload başarısız. query='{}', message={}", query, exception.getMessage());

@@ -12,4 +12,7 @@ public class SongUploadResponse {
     private Long artistId;
     private Long albumId; // null olabilir
     private String fileName;
+    private boolean rightsVerified;
+    private String rightsOwner;
+    private String rightsNotes;
 }

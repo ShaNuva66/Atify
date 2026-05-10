@@ -47,7 +47,15 @@ public class SongService {
                 song.getArtist() != null ? song.getArtist().getName() : null,
                 song.getCoverUrl(),
                 song.getAudioUrl(),
-                song.getExternalSource() == null ? "LOCAL" : song.getExternalSource()
+                song.getExternalSource() == null ? "LOCAL" : song.getExternalSource(),
+                song.getExternalUrl(),
+                song.getLicenseUrl(),
+                isRightsVerified(song),
+                song.getRightsOwner(),
+                song.getRightsNotes(),
+                copyrightNotice(song),
+                song.getAlbum() != null ? song.getAlbum().getId() : null,
+                song.getAlbum() != null ? song.getAlbum().getName() : null
         );
     }
 
@@ -67,12 +75,17 @@ public class SongService {
             playlists = playlistRepo.findAllById(request.getPlaylistIdList());
         }
 
+        validateLocalRights(request.getRightsVerified(), request.getRightsOwner(), request.getRightsNotes());
+
         Song song = Song.builder()
                 .name(request.getName())
                 .duration(request.getDuration())
                 .artist(artist)
                 .album(album)
                 .playlists(playlists)
+                .rightsVerified(true)
+                .rightsOwner(request.getRightsOwner().trim())
+                .rightsNotes(request.getRightsNotes().trim())
                 .build();
 
         Song saved = songRepo.save(song);
@@ -102,7 +115,9 @@ public class SongService {
             song.setArtist(artist);
         }
 
-        if (request.getAlbumId() != null) {
+        if (Boolean.TRUE.equals(request.getClearAlbum())) {
+            song.setAlbum(null);
+        } else if (request.getAlbumId() != null) {
             Album album = albumRepo.findById(request.getAlbumId())
                     .orElseThrow(() -> new IllegalArgumentException("Albüm bulunamadı: " + request.getAlbumId()));
             song.setAlbum(album);
@@ -116,6 +131,13 @@ public class SongService {
                 playlists = playlistRepo.findAllById(request.getPlaylistIdList());
             }
             song.setPlaylists(playlists);
+        }
+
+        if (request.getRightsVerified() != null || request.getRightsOwner() != null || request.getRightsNotes() != null) {
+            validateLocalRights(request.getRightsVerified(), request.getRightsOwner(), request.getRightsNotes());
+            song.setRightsVerified(true);
+            song.setRightsOwner(request.getRightsOwner().trim());
+            song.setRightsNotes(request.getRightsNotes().trim());
         }
 
         Song updated = songRepo.save(song);
@@ -144,6 +166,9 @@ public class SongService {
         if (request.audioUrl() == null || request.audioUrl().isBlank()) {
             throw new IllegalArgumentException("Jamendo audio URL zorunlu.");
         }
+        if (request.licenseUrl() == null || request.licenseUrl().isBlank()) {
+            throw new IllegalArgumentException("Jamendo lisans URL zorunlu.");
+        }
 
         return songRepo.findByExternalSourceAndExternalRef("JAMENDO", request.jamendoId())
                 .orElseGet(() -> {
@@ -159,6 +184,11 @@ public class SongService {
                             .coverUrl(request.coverUrl())
                             .externalSource("JAMENDO")
                             .externalRef(request.jamendoId())
+                            .externalUrl(request.shareUrl())
+                            .licenseUrl(request.licenseUrl())
+                            .rightsVerified(true)
+                            .rightsOwner(request.artistName())
+                            .rightsNotes("Jamendo Creative Commons license: " + request.licenseUrl())
                             .audioUrl(request.audioUrl())
                             .build();
 
@@ -285,6 +315,34 @@ public class SongService {
                 track.licenseUrl(),
                 track.duration()
         );
+    }
+
+    private String copyrightNotice(Song song) {
+        String source = song.getExternalSource() == null ? "LOCAL" : song.getExternalSource();
+        if ("JAMENDO".equalsIgnoreCase(source)) {
+            return "Jamendo uzerinden saglanan parca. Creative Commons lisans linki ve kaynak sayfasi saklanir.";
+        }
+        if (isRightsVerified(song)) {
+            return "Yerel parca icin yayin/stream hakki admin tarafindan dogrulandi.";
+        }
+        return "Yerel kutuphaneye eklenen parca. Yayin/stream haklari dogrulanmadan yayinlanmamalidir.";
+    }
+
+    public boolean isRightsVerified(Song song) {
+        String source = song.getExternalSource() == null ? "LOCAL" : song.getExternalSource();
+        return "JAMENDO".equalsIgnoreCase(source) ? song.getLicenseUrl() != null && !song.getLicenseUrl().isBlank() : song.isRightsVerified();
+    }
+
+    public void validateLocalRights(Boolean rightsVerified, String rightsOwner, String rightsNotes) {
+        if (!Boolean.TRUE.equals(rightsVerified)) {
+            throw new IllegalArgumentException("Yerel parca eklemek icin yayin/stream hakki dogrulamasi zorunlu.");
+        }
+        if (rightsOwner == null || rightsOwner.isBlank()) {
+            throw new IllegalArgumentException("Hak sahibi veya izin veren kurum/kisi zorunlu.");
+        }
+        if (rightsNotes == null || rightsNotes.isBlank()) {
+            throw new IllegalArgumentException("Hak/lisans belge notu zorunlu.");
+        }
     }
 
     @Transactional

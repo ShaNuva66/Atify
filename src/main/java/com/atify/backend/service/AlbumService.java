@@ -22,20 +22,10 @@ public class AlbumService {
     private final AlbumRepository albumRepo;
     private final SongRepository songRepo;
     private final ArtistRepository artistRepo;
-
-    private SongResponse toSongResponse(Song song) {
-        return new SongResponse(
-                song.getId(),
-                song.getName(),
-                song.getDuration(),
-                song.getArtist() != null ? song.getArtist().getName() : null,
-                song.getCoverUrl(),
-                song.getAudioUrl(),
-                song.getExternalSource() == null ? "LOCAL" : song.getExternalSource()
-        );
-    }
+    private final SongService songService;
 
     public AlbumResponse addAlbum(AlbumRequest albumRequest) {
+        validateAlbumRequest(albumRequest);
         Artist artist = artistRepo.findById(albumRequest.getArtistId())
                 .orElseThrow(() -> new RuntimeException("Artist not found"));
 
@@ -50,20 +40,47 @@ public class AlbumService {
 
         Album savedAlbum = albumRepo.save(album);
 
-        return new AlbumResponse(savedAlbum.getId(), savedAlbum.getName(), savedAlbum.getCoverUrl());
+        return toAlbumResponse(savedAlbum);
     }
 
     public List<AlbumResponse> getAllAlbums() {
         return albumRepo.findAll()
                 .stream()
-                .map(a -> new AlbumResponse(a.getId(), a.getName(), a.getCoverUrl()))
+                .map(this::toAlbumResponse)
                 .collect(Collectors.toList());
     }
 
     public List<AlbumResponse> getAlbumsByArtist(Long artistId) {
         return albumRepo.findByArtistId(artistId).stream()
-                .map(a -> new AlbumResponse(a.getId(), a.getName(), a.getCoverUrl()))
+                .map(this::toAlbumResponse)
                 .collect(Collectors.toList());
+    }
+
+    public AlbumResponse updateAlbum(Long id, AlbumRequest albumRequest) {
+        validateAlbumRequest(albumRequest);
+        Album album = albumRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Album not found"));
+        Artist artist = artistRepo.findById(albumRequest.getArtistId())
+                .orElseThrow(() -> new RuntimeException("Artist not found"));
+
+        album.setName(albumRequest.getName().trim());
+        album.setReleaseDate(albumRequest.getReleaseDate());
+        album.setCoverUrl(trimToNull(albumRequest.getCoverUrl()));
+        album.setGenre(albumRequest.getGenre().trim());
+        album.setReleaseYear(albumRequest.getReleaseYear());
+        album.setArtist(artist);
+
+        return toAlbumResponse(albumRepo.save(album));
+    }
+
+    public void deleteAlbum(Long id) {
+        Album album = albumRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Album not found"));
+
+        List<Song> songs = songRepo.findByAlbum(album);
+        songs.forEach(song -> song.setAlbum(null));
+        songRepo.saveAll(songs);
+        albumRepo.delete(album);
     }
 
     public List<SongResponse> getSongsByAlbum(Long albumId) {
@@ -73,7 +90,43 @@ public class AlbumService {
         List<Song> songs = songRepo.findByAlbum(album);
 
         return songs.stream()
-                .map(this::toSongResponse)
+                .map(songService::toSongResponse)
                 .collect(Collectors.toList());
+    }
+
+    private AlbumResponse toAlbumResponse(Album album) {
+        Artist artist = album.getArtist();
+        return new AlbumResponse(
+                album.getId(),
+                album.getName(),
+                album.getCoverUrl(),
+                album.getGenre(),
+                album.getReleaseYear(),
+                album.getReleaseDate(),
+                artist != null ? artist.getId() : null,
+                artist != null ? artist.getName() : null
+        );
+    }
+
+    private void validateAlbumRequest(AlbumRequest request) {
+        if (request == null) {
+            throw new IllegalArgumentException("Album istegi bos olamaz.");
+        }
+        if (request.getName() == null || request.getName().isBlank()) {
+            throw new IllegalArgumentException("Album adi zorunlu.");
+        }
+        if (request.getGenre() == null || request.getGenre().isBlank()) {
+            throw new IllegalArgumentException("Album turu zorunlu.");
+        }
+        if (request.getReleaseYear() == null || request.getReleaseYear() < 1800) {
+            throw new IllegalArgumentException("Gecerli bir yayin yili zorunlu.");
+        }
+        if (request.getArtistId() == null) {
+            throw new IllegalArgumentException("Album sanatcisi zorunlu.");
+        }
+    }
+
+    private String trimToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 }

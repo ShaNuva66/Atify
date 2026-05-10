@@ -143,9 +143,18 @@ async function createSong() {
     const artistIdVal = document.getElementById("songArtistIdHidden").value.trim();
     const durationStr = document.getElementById("songDuration").value.trim();
     const playlistStr = document.getElementById("songPlaylistIds").value.trim();
+    const rightsVerified = document.getElementById("songRightsVerified").checked;
+    const rightsOwner = document.getElementById("songRightsOwner").value.trim();
+    const rightsNotes = document.getElementById("songRightsNotes").value.trim();
 
     if (!title || !artistIdVal) {
         setStatus("Şarkı adı ve sanatçı seçimi zorunlu (önerilerden seç).", false);
+        return;
+    }
+
+    if (!rightsVerified || !rightsOwner || !rightsNotes) {
+        setStatus("Yerel kayit icin hak dogrulamasi, hak sahibi ve lisans/izin notu zorunlu.", false);
+        showCenterModal("Hak dogrulamasi gerekli", "Yerel muzik eklemeden once yayin/stream hakkinin dogrulandigini onayla ve belge notunu gir.");
         return;
     }
 
@@ -168,7 +177,10 @@ async function createSong() {
     const payload = {
         name: title,
         artistId: Number(artistIdVal),
-        duration
+        duration,
+        rightsVerified,
+        rightsOwner,
+        rightsNotes
     };
     if (playlistIdList.length > 0) payload.playlistIdList = playlistIdList;
 
@@ -181,6 +193,9 @@ async function createSong() {
         document.getElementById("songTitle").value = "";
         document.getElementById("songDuration").value = "";
         document.getElementById("songPlaylistIds").value = "";
+        document.getElementById("songRightsOwner").value = "";
+        document.getElementById("songRightsNotes").value = "";
+        document.getElementById("songRightsVerified").checked = false;
         clearArtistSelection("songArtistNameInput", "songArtistIdHidden", "artistSuggestions");
         getSongs();
     }
@@ -196,6 +211,9 @@ async function uploadSongFile() {
     const artistIdVal = document.getElementById("uploadArtistIdHidden").value.trim();
     const albumIdVal = document.getElementById("uploadAlbumId").value.trim();
     const playlistIdVal = document.getElementById("uploadPlaylistSelect").value.trim();
+    const rightsVerified = document.getElementById("uploadRightsVerified").checked;
+    const rightsOwner = document.getElementById("uploadRightsOwner").value.trim();
+    const rightsNotes = document.getElementById("uploadRightsNotes").value.trim();
     const fileInput = document.getElementById("uploadSongFile");
     const file = fileInput && fileInput.files ? fileInput.files[0] : null;
 
@@ -204,10 +222,19 @@ async function uploadSongFile() {
         return;
     }
 
+    if (!rightsVerified || !rightsOwner || !rightsNotes) {
+        setStatus("MP3 yuklemek icin hak dogrulamasi, hak sahibi ve lisans/izin notu zorunlu.", false);
+        showCenterModal("Hak dogrulamasi gerekli", "Yerel MP3 yuklemeden once yayin/stream hakkinin dogrulandigini onayla ve belge notunu gir.");
+        return;
+    }
+
     const formData = new FormData();
     formData.append("file", file);
     formData.append("name", name);
     formData.append("artistId", artistIdVal);
+    formData.append("rightsVerified", rightsVerified ? "true" : "false");
+    formData.append("rightsOwner", rightsOwner);
+    formData.append("rightsNotes", rightsNotes);
     if (albumIdVal) {
         formData.append("albumId", albumIdVal);
     }
@@ -254,6 +281,9 @@ async function uploadSongFile() {
         document.getElementById("uploadSongName").value = "";
         document.getElementById("uploadAlbumId").value = "";
         document.getElementById("uploadPlaylistSelect").value = "";
+        document.getElementById("uploadRightsOwner").value = "";
+        document.getElementById("uploadRightsNotes").value = "";
+        document.getElementById("uploadRightsVerified").checked = false;
         if (fileInput) {
             fileInput.value = "";
         }

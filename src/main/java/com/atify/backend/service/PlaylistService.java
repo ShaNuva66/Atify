@@ -28,18 +28,6 @@ public class PlaylistService {
     private final UserRepository userRepo;
     private final SongService songService;
 
-    private SongResponse toSongResponse(Song song) {
-        return new SongResponse(
-                song.getId(),
-                song.getName(),
-                song.getDuration(),
-                song.getArtist() != null ? song.getArtist().getName() : null,
-                song.getCoverUrl(),
-                song.getAudioUrl(),
-                song.getExternalSource() == null ? "LOCAL" : song.getExternalSource()
-        );
-    }
-
     private PlaylistResponse toPlaylistResponse(Playlist playlist) {
         List<Song> songs = songRepo.findByPlaylists(playlist);
         String coverUrl = playlist.getCoverUrl();
@@ -148,7 +136,7 @@ public class PlaylistService {
             playlistRepo.save(playlist);
         }
 
-        return toSongResponse(song);
+        return songService.toSongResponse(song);
     }
 
     @Transactional
@@ -263,7 +251,7 @@ public class PlaylistService {
                 : playlist.getSongs();
 
         return songs.stream()
-                .map(this::toSongResponse)
+                .map(songService::toSongResponse)
                 .collect(Collectors.toList());
     }
 }
