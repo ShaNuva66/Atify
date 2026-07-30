@@ -2,6 +2,22 @@
 
 Atify, Spring Boot tabanli muzik uygulamasi backend'idir. Static frontend dosyalari da ayni uygulama icinden servis edilir.
 
+Canli uygulama: [atify.com.tr](https://atify.com.tr)  
+Mobil istemci: [ShaNuva66/Atify-Mobile](https://github.com/ShaNuva66/Atify-Mobile)
+
+![Atify sarki yonetimi](docs/images/sarki-yonetimi.webp)
+
+## Neler var?
+
+- JWT access/refresh token tabanli kimlik dogrulama
+- Rol tabanli kullanici ve yonetim akislari
+- Sarki, sanatci, favori ve oynatma listesi yonetimi
+- Muzik tanima ve dosya parmak izi akisi
+- MySQL, Redis, Actuator, Prometheus ve OpenAPI destegi
+- Docker Compose ve VPS yayin scriptleri
+
+![Atify sanatci yonetimi](docs/images/sanatci-yonetimi.webp)
+
 ## Lokal gelistirme
 
 ```bash
