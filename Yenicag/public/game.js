@@ -1,5 +1,5 @@
 import { FOOT, JUMP_SPEED, terrainHeight, createPlatforms, bodyBox, distanceToBody, supportHeight, moveBody, stepBody, weaponPose, sweepProjectile } from './world.js?v=2';
-import { drawBackdrop, drawGround, drawPlatform, drawFighter, drawWeapon, installRetroPreviews, loadRetroAssets, updateHeroPreview } from './cartoon.js?v=3';
+import { drawBackdrop, drawGround, drawPlatform, drawFighter, drawWeapon, installRetroPreviews, loadRetroAssets, updateHeroPreview } from './cartoon.js?v=4';
 const $ = (selector) => document.querySelector(selector);
 const canvas = $("#gameCanvas");
 const ctx = canvas.getContext("2d");
@@ -312,7 +312,7 @@ function onMessage(event) {
   }
   if (message.type === "move" && game) {
     const player = game.players[message.playerIndex];
-    if (player) { if(message.pose) Object.assign(player,message.pose); player.x = Number(message.x); player.facing=message.direction||player.facing; player.walk = 1; player.walkPhase += .7; game.moveBudget[message.playerIndex] = Number(message.budget); settlePlayers(); updateMoveControls(); }
+    if (player) { const distance=Math.abs(Number(message.x)-player.x); if(message.pose) Object.assign(player,message.pose); player.x = Number(message.x); player.facing=message.direction||player.facing; player.walk = 1; player.walkPhase += distance*.12; game.moveBudget[message.playerIndex] = Number(message.budget); settlePlayers(); updateMoveControls(); }
     return;
   }
   if (message.type === "jump" && game) {
@@ -522,6 +522,7 @@ function impact(projectile) {
       player.shield = Math.max(0, (player.shield || 0) - absorbed);
       const healthDamage = damage - absorbed;
       player.hp = Math.max(0, player.hp - healthDamage);
+      player.hurtAnim = 1;
       game.damageNumbers.push({ x: player.x, y: player.y - 65, value: absorbed ? `${healthDamage}  🛡${absorbed}` : damage, life: 1, color: playerIndex === 0 ? "#ffc44d" : "#64edcf" });
       if (projectile.effect && playerIndex !== projectile.owner) player.effects[projectile.effect] = Math.max(player.effects[projectile.effect] || 0, projectile.effect === "stun" ? 1 : 2);
       if (projectile.knockback) { const direction = Math.sign(player.x - projectile.x) || (playerIndex ? 1 : -1); player.x = Math.max(70, Math.min(1210, player.x + direction * projectile.knockback * (1 - distance / projectile.radius))); player.platformId = null; player.airborne = true; player.vy = -70; }
@@ -813,13 +814,16 @@ function update(dt) {
   game.shake = Math.max(0, game.shake - dt * 28);
   game.flash = Math.max(0, game.flash - dt * 1.8);
   for (const player of game.players) {
+    player.animTime = (player.animTime || 0) + dt;
+    player.landAnim = Math.max(0, (player.landAnim || 0) - dt * 4.5);
+    player.hurtAnim = Math.max(0, (player.hurtAnim || 0) - dt * 3.8);
     player.recoil = Math.max(0, (player.recoil || 0) - dt * 5.8);
     player.weaponSwap = Math.max(0, (player.weaponSwap || 0) - dt * 4.2);
     player.muzzleFlash = Math.max(0, (player.muzzleFlash || 0) - dt * 9);
     player.walk = Math.max(0, (player.walk || 0) - dt * 4.5);
     const wasAirborne=player.airborne;
     stepBody(player,dt,arenaConfig().gravity*.82,terrainY,game.platforms);
-    if(wasAirborne&&!player.airborne) { player.walk=1; updateMoveControls(); }
+    if(wasAirborne&&!player.airborne) { player.landAnim=1; updateMoveControls(); }
   }
 
   if (charge.active) {

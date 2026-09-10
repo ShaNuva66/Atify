@@ -1,7 +1,8 @@
 import { FOOT, bodyBox, weaponPose, terrainHeight, createPlatforms } from './world.js?v=2';
+import { fighterRig, bendJoint } from './fighter-rig.js?v=4';
 
-const skins={fox:['#ed852f','#ffe3ad'],raccoon:['#888588','#e5dbd1'],rabbit:['#f5e4c7','#fff1d6'],owl:['#ad794e','#f3dcb0'],bear:['#b47843','#f3bf7a'],cat:['#a299b6','#f1e0dc']};
-const frames={fox:[149,3,326,495,338],raccoon:[592,42,337,456,793],rabbit:[1110,2,277,502,1270],owl:[149,524,295,467,318],bear:[637,533,290,461,782],cat:[1094,524,339,469,1267]};
+const skins={fox:['#ce752f','#e4caa0'],raccoon:['#777c7d','#c4c0b6'],rabbit:['#ded7c4','#f0e8d3'],owl:['#997344','#ceaf79'],bear:['#915c34','#c49c63'],cat:['#797c80','#c4c0b6']};
+const headIds=['fox','raccoon','rabbit','owl','bear','cat'];
 const sprites=new Map();
 let assetPromise;
 export function keyAtlasPixels(data) {
@@ -25,16 +26,21 @@ export function loadRetroAssets(){
         const atlas=document.createElement('canvas');atlas.width=img.width;atlas.height=img.height;
         const ac=atlas.getContext('2d',{willReadFrequently:true});ac.drawImage(img,0,0);
         const pixels=ac.getImageData(0,0,img.width,img.height);keyAtlasPixels(pixels.data);ac.putImageData(pixels,0,0);
-        for(const [id,[x,y,w,h,anchor]] of Object.entries(frames)){
-          const sprite=document.createElement('canvas');sprite.width=Math.ceil(w/h*144);sprite.height=144;
-          const sc=sprite.getContext('2d');sc.imageSmoothingQuality='high';sc.drawImage(atlas,x,y,w,h,0,0,sprite.width,144);
-          sprites.set(id,{image:sprite,width:w/h*72,anchor:(anchor-x)/h*72});
-        }
+        headIds.forEach((id,i)=>{
+          const cw=img.width/3,ch=img.height/2,x0=Math.floor(i%3*cw),y0=Math.floor(Math.floor(i/3)*ch);
+          let left=x0+cw,top=y0+ch,right=x0,bottom=y0;
+          for(let y=y0;y<y0+ch;y++)for(let x=x0;x<x0+cw;x++)if(pixels.data[(y*img.width+x)*4+3]>180){left=Math.min(left,x);top=Math.min(top,y);right=Math.max(right,x);bottom=Math.max(bottom,y);}
+          if(right<=left||bottom<=top)throw new Error('Empty head cell: '+id);
+          const w=right-left+1,h=bottom-top+1,height=35,width=Math.min(43,w/h*height);
+          const sprite=document.createElement('canvas');sprite.width=Math.ceil(width*3);sprite.height=105;
+          const sc=sprite.getContext('2d');sc.imageSmoothingQuality='high';sc.drawImage(atlas,left,top,w,h,0,0,sprite.width,105);
+          sprites.set(id,{image:sprite,width,height});
+        });
         resolve();
       }catch(error){reject(error);}
     };
     img.onerror=()=>reject(new Error('Karakter görselleri yüklenemedi.'));
-    img.src=new URL('./assets/pets-flash-v3.png',import.meta.url).href;
+    img.src=new URL('./assets/heads-flash-v4.png',import.meta.url).href;
   });
   return assetPromise;
 }
@@ -43,7 +49,7 @@ export const palettes={
   mushroom:{sky:['#91b8b8','#d2dfbd'],far:'#9abaad',near:'#749a86',leaf:'#89ad65',light:'#c6d997',earth:'#aa8261',rock:'#82654f',ink:'#4a483a',accent:'#d99789'},
   aurora:{sky:['#889fbe','#d6e1df'],far:'#adbfc9',near:'#829eae',leaf:'#c5dfe0',light:'#f0eee0',earth:'#97a9ae',rock:'#788b96',ink:'#465562',accent:'#e6ce89'}
 };
-const ink='#442c1c';
+const ink='#302c26';
 function ellipse(c,color,x,y,rx,ry,outline=null,line=2){c.beginPath();c.ellipse(x,y,rx,ry,0,0,Math.PI*2);c.fillStyle=color;c.fill();if(outline){c.strokeStyle=outline;c.lineWidth=line;c.stroke();}}
 function round(c,color,x,y,w,h,r=5,outline=null,line=2){c.beginPath();c.roundRect(x,y,w,h,r);c.fillStyle=color;c.fill();if(outline){c.strokeStyle=outline;c.lineWidth=line;c.stroke();}}
 function path(c,color,points,outline=null,line=2){c.beginPath();points.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.fillStyle=color;c.fill();if(outline){c.strokeStyle=outline;c.lineWidth=line;c.stroke();}}
@@ -113,24 +119,37 @@ export function drawWeapon(c,id,color,length=48){
 export function drawFighter(c,p,index,active,angle,color,debug=false){
   const [fur,light]=skins[p.fighter]||skins.fox,foot=p.y+FOOT;
   if(p.hp<=0){ellipse(c,'#7e8972',p.x,foot-5,20,7);round(c,'#c7c3aa',p.x-10,foot-24,20,23,7,ink,2);return;}
-  const sprite=sprites.get(p.fighter),stride=Math.sin(p.walkPhase||0)*(p.walk||0);
+  const sprite=sprites.get(p.fighter),rig=fighterRig(p,angle,index);
+  const limb=(start,joint,end,fill,width)=>{c.beginPath();c.moveTo(start.x,start.y);c.lineTo(joint.x,joint.y);c.lineTo(end.x,end.y);c.lineCap='round';c.lineJoin='round';c.strokeStyle=ink;c.lineWidth=width+3;c.stroke();c.strokeStyle=fill;c.lineWidth=width;c.stroke();};
   c.save();c.translate(p.x,foot);c.scale(p.facing,1);
-  if(sprite){
-    // Feet stay on the shared baseline during the restrained walking squash.
-    c.scale(1,p.airborne?1.015:1-Math.abs(stride)*.018);
-    c.drawImage(sprite.image,-sprite.anchor,-72,sprite.width,72);
-  }else{
-    ellipse(c,fur,0,-22,15,20,ink,2);ellipse(c,fur,0,-49,20,21,ink,2);ellipse(c,light,7,-47,9,10);ellipse(c,ink,10,-50,3,4);ellipse(c,fur,-10,-4,10,4,ink);ellipse(c,fur,10,-4,10,4,ink);
+  if(['fox','raccoon','cat'].includes(p.fighter)){
+    c.save();c.translate(-10+rig.body.x,-20+rig.body.y+30);c.rotate(rig.tail);
+    c.beginPath();c.moveTo(0,2);c.bezierCurveTo(-20,8,-24,-8,-15,-16);c.bezierCurveTo(-18,-4,-8,-6,0,-5);c.closePath();c.fillStyle=fur;c.fill();c.strokeStyle=ink;c.lineWidth=2;c.stroke();c.restore();
   }
+  for(const leg of rig.legs){
+    limb(leg.start,leg.knee,leg.end,fur,6);
+    c.save();c.translate(leg.end.x,leg.end.y);c.rotate(leg.rotation);round(c,'#605442',-6,-2,15,5,2,ink,1.7);c.restore();
+  }
+  c.save();c.translate(rig.body.x,rig.body.y);c.rotate(rig.body.rotation);
+  // Leaner torso and visible trouser/boot shapes, independent of the head sprite.
+  c.beginPath();c.moveTo(-10,-7);c.quadraticCurveTo(0,-12,10,-6);c.lineTo(12,11);c.quadraticCurveTo(0,17,-12,10);c.closePath();c.fillStyle=fur;c.fill();c.strokeStyle=ink;c.lineWidth=2;c.stroke();
+  path(c,index%2?'#596d6b':'#77704e',[[-10,-6],[-3,-8],[-4,10],[-11,9]],ink,1.5);
+  path(c,index%2?'#596d6b':'#77704e',[[5,-8],[10,-6],[11,9],[4,10]],ink,1.5);
+  round(c,'#68573d',-11,10,23,4,1,ink,1);round(c,'#b5a06e',0,10,4,4,1);c.restore();
+  c.save();c.translate(rig.head.x,rig.head.y);c.rotate(rig.head.rotation);
+  if(sprite)c.drawImage(sprite.image,-sprite.width*.51,-sprite.height,sprite.width,sprite.height);
+  else{ellipse(c,fur,0,-17,18,17,ink,2);path(c,ink,[[1,-19],[13,-15],[12,-12],[2,-16]]);ellipse(c,light,12,-8,8,5,ink,1.5);}
+  c.restore();
   c.restore();
   const pose=weaponPose(p,angle),recoil=(p.recoil||0)*3;
   pose.pivot.x-=p.facing*Math.cos(pose.angle)*recoil;pose.pivot.y-=Math.sin(pose.angle)*recoil;
   c.save();c.translate(pose.pivot.x,pose.pivot.y);c.scale(p.facing,1);c.rotate(pose.angle);drawWeapon(c,p.equipped,color,pose.length);c.restore();
   // Hands share the weapon's local transform, including rotation and facing.
-  for(const [sx,d] of [[-8,4],[10,pose.length>30?25:16]]){
+  for(const [i,d] of [[0,4],[1,pose.length>30?25:16]]){
     const hand={x:pose.pivot.x+p.facing*(Math.cos(pose.angle)*d-Math.sin(pose.angle)*5),y:pose.pivot.y+Math.sin(pose.angle)*d+Math.cos(pose.angle)*5};
-    const shoulder={x:p.x+sx*p.facing,y:foot-28};
-    c.save();c.lineCap='round';c.lineJoin='round';c.beginPath();c.moveTo(shoulder.x,shoulder.y);c.quadraticCurveTo((shoulder.x+hand.x)/2,Math.max(shoulder.y,hand.y)+8,hand.x,hand.y);c.strokeStyle=ink;c.lineWidth=9;c.stroke();c.strokeStyle=fur;c.lineWidth=5.5;c.stroke();ellipse(c,light,hand.x,hand.y,4,4,ink,1.5);c.restore();
+    const shoulder={x:p.x+rig.shoulders[i].x*p.facing,y:foot+rig.shoulders[i].y};
+    const elbow=bendJoint(shoulder,hand,16,18,p.facing);
+    c.save();limb(shoulder,elbow,hand,fur,5);ellipse(c,light,hand.x,hand.y,3.5,3.5,ink,1.5);c.restore();
   }
   if(p.muzzleFlash>0)path(c,'#ffe297',[[pose.muzzle.x-7,pose.muzzle.y],[pose.muzzle.x,pose.muzzle.y-10],[pose.muzzle.x+9,pose.muzzle.y],[pose.muzzle.x,pose.muzzle.y+7]]);
   if(p.shield>0)ellipse(c,'#b7e0e42b',p.x,foot-37,30,42,'#92cbd0',2);
