@@ -12,5 +12,13 @@
         X-Frame-Options "DENY"
     }
 
-    reverse_proxy backend:8080
+    redir /Yenicag /Yenicag/ 308
+
+    handle_path /Yenicag/* {
+        reverse_proxy yenicag:8080
+    }
+
+    handle {
+        reverse_proxy backend:8080
+    }
 }

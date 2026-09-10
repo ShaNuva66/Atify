@@ -15,6 +15,7 @@ Mobil istemci: [ShaNuva66/Atify-Mobile](https://github.com/ShaNuva66/Atify-Mobil
 - Muzik tanima ve dosya parmak izi akisi
 - MySQL, Redis, Actuator, Prometheus ve OpenAPI destegi
 - Docker Compose ve VPS yayin scriptleri
+- `/Yenicag/` altinda 1v1 ve dort oyunculu sira tabanli online arena oyunu
 
 ![Atify sanatci yonetimi](docs/images/sanatci-yonetimi.webp)
 
@@ -70,6 +71,21 @@ python .\ops\fingerprint_live_smoke.py `
   --ssh-user atify `
   --ssh-key "$env:USERPROFILE\.ssh\atify_prod_ed25519"
 ```
+
+## Yenicag Arena
+
+Oyun servisi `Yenicag/` klasorundedir. Lokal olarak calistirmak icin:
+
+```powershell
+cd .\Yenicag
+npm ci
+npm test
+npm start
+```
+
+Production ortaminda Caddy, `/Yenicag/` isteklerini ve WebSocket baglantilarini
+ayri Node.js oyun servisine yonlendirir. Yayin adresi:
+`https://atify.com.tr/Yenicag/`
 
 ## Production
 

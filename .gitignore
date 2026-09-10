@@ -45,3 +45,5 @@ tmp/
 tmp_shots/
 __pycache__/
 *.pyc
+Yenicag/node_modules/
+Yenicag/.tmp-visual/

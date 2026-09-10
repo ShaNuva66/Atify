@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#0a0c1b">
+  <title>Pati Savaşları — Online 2D Arena</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="image" href="./assets/arena-sunset-v2.webp" fetchpriority="high">
+  <link rel="preload" as="image" href="./assets/fighters-duo-v2.webp" fetchpriority="high">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="brand">
+      <div class="brand-mark">PS</div>
+      <div><strong>PATİ SAVAŞLARI</strong><span>TACTICAL ARTILLERY</span></div>
+      <div class="season-badge"><i></i> SEZON 01 · ÖNCÜLER</div>
+      <button id="soundButton" class="icon-button" aria-label="Sesi aç veya kapat">♪</button>
+    </header>
+
+    <section id="menu" class="panel menu-panel">
+      <div class="hero-stage">
+        <img class="hero-backdrop" src="./assets/arena-sunset-v2.webp" alt="" decoding="async" fetchpriority="high">
+        <img class="hero-fighters" src="./assets/fighters-duo-v2.webp" alt="Tilki ve rakun savaşçı" decoding="async" fetchpriority="high">
+        <div class="hero-copy">
+          <span class="eyebrow"><i></i> Tarayıcıda ücretsiz oyna</span>
+          <h1>Rüzgârı oku.<br><em>İsabeti konuştur.</em></h1>
+          <p>Her atışın kaderini fizik belirler. Açını seç, gücünü ayarla ve arenanın efsanesi ol.</p>
+          <div class="feature-row"><span>⚡ Anında başla</span><span>⌁ Özel oda</span><span>◉ Yıkılabilir arazi</span></div>
+        </div>
+        <div class="arena-tag"><small>GÜNÜN ARENASI</small><strong>GÜNBATIMI VADİSİ</strong></div>
+      </div>
+
+      <div class="menu-card">
+        <div class="card-kicker">DÜELLOYA HAZIR MISIN?</div>
+        <h2>Savaşçını arenaya çıkar.</h2>
+        <label for="playerName">OYUNCU ADI</label>
+        <input id="playerName" maxlength="18" value="Cesur Pati" autocomplete="nickname">
+        <label class="picker-label">SAVAŞÇI SEÇ <b id="fighterName">KIZIL KAPTAN</b></label>
+        <div id="fighterPicker" class="fighter-picker" aria-label="Savaşçı seçimi">
+          <button class="fighter-choice selected" data-fighter="fox" title="Kızıl Kaptan"><i class="fighter-portrait fox"></i><span>Tilki</span></button>
+          <button class="fighter-choice" data-fighter="raccoon" title="Mavi Mühendis"><i class="fighter-portrait raccoon"></i><span>Rakun</span></button>
+          <button class="fighter-choice" data-fighter="rabbit" title="Gökyüzü İzci"><i class="fighter-portrait rabbit"></i><span>Tavşan</span></button>
+          <button class="fighter-choice" data-fighter="owl" title="Gece Simyacısı"><i class="fighter-portrait owl"></i><span>Baykuş</span></button>
+          <button class="fighter-choice" data-fighter="bear" title="Orman Muhafızı"><i class="fighter-portrait bear"></i><span>Ayı</span></button>
+          <button class="fighter-choice" data-fighter="cat" title="Gölge Nişancı"><i class="fighter-portrait cat"></i><span>Kedi</span></button>
+        </div>
+        <label class="picker-label">ARENA SEÇ <b id="arenaName">GÜNBATIMI VADİSİ</b></label>
+        <div id="arenaPicker" class="arena-picker" aria-label="Arena seçimi">
+          <button class="arena-choice sunset selected" data-arena="sunset"><span>Günbatımı</span><small>Dengeli</small></button>
+          <button class="arena-choice mushroom" data-arena="mushroom"><span>Mantar Ormanı</span><small>Düşük yerçekimi</small></button>
+          <button class="arena-choice aurora" data-arena="aurora"><span>Kutup Işıkları</span><small>Sert balistik</small></button>
+        </div>
+        <div class="solo-settings">
+          <label>OYUN MODU<select id="practiceMode"><option value="duel">Düello</option><option value="survival">Hayatta Kalma</option></select></label>
+          <label>BOT ZORLUĞU<select id="botDifficulty"><option value="easy">Kolay</option><option value="normal" selected>Normal</option><option value="hard">Zor</option><option value="master">Usta</option></select></label>
+        </div>
+        <button id="practiceButton" class="primary-button"><span>TEK OYUNCULU</span><strong>Yapay zekâya meydan oku</strong><b>→</b></button>
+        <div class="divider"><span>veya arkadaşınla kapış</span></div>
+        <div class="online-settings">
+          <label>ÇEVRİM İÇİ MOD<select id="onlineMode"><option value="duel">1 vs 1 Düello</option><option value="ffa4">4 Kişi · Herkes Tek</option><option value="team2v2">2 vs 2 Takım</option></select></label>
+          <label>DOST ATEŞİ<select id="friendlyFire"><option value="off">Kapalı</option><option value="on">Açık</option></select></label>
+        </div>
+        <details class="rule-settings">
+          <summary>ÖZEL MAÇ KURALLARI</summary>
+          <div>
+            <label>MAÇ TÜRÜ<select id="ruleType"><option value="classic">Klasik</option><option value="control">Kontrol</option><option value="weaponRace">Silah Yarışı</option><option value="chaos">Kaos</option></select></label>
+            <label>TUR SÜRESİ<select id="ruleTurn"><option value="15">15 sn</option><option value="25" selected>25 sn</option><option value="40">40 sn</option></select></label>
+            <label>BAŞLANGIÇ CANI<select id="ruleHp"><option value="75">75</option><option value="100" selected>100</option><option value="150">150</option></select></label>
+            <label>RÜZGÂR<select id="ruleWind"><option value="low">Düşük</option><option value="normal" selected>Normal</option><option value="high">Yüksek</option></select></label>
+            <label>SANDIK<select id="ruleCrates"><option value="scarce">Az</option><option value="normal" selected>Normal</option><option value="abundant">Bol</option></select></label>
+            <label>ANİ ÖLÜM<select id="ruleSudden"><option value="0">Kapalı</option><option value="8">8. tur</option><option value="12" selected>12. tur</option><option value="16">16. tur</option></select></label>
+          </div>
+          <p id="ruleDescription">Klasik: Son ayakta kalan oyuncu veya takım maçı kazanır.</p>
+        </details>
+        <button id="createButton" class="secondary-button">＋ &nbsp; Yeni özel oda kur</button>
+        <div class="join-row">
+          <input id="roomInput" maxlength="5" placeholder="ODA KODU" autocomplete="off">
+          <button id="joinButton" class="secondary-button compact">Katıl</button>
+        </div>
+        <p id="menuStatus" class="status" aria-live="polite"></p>
+        <div class="online-note"><i></i> Oyun sunucusu çevrim içi</div>
+      </div>
+    </section>
+
+    <section id="lobby" class="panel lobby-panel hidden">
+      <span class="eyebrow"><i></i> Özel oda</span>
+      <h2>Rakibini bekliyoruz</h2>
+      <p>Bu kodu arkadaşına gönder:</p>
+      <button id="roomCode" class="room-code" title="Kopyalamak için tıkla">-----</button>
+      <span id="copyHint" class="status">Kopyalamak için koda dokun</span>
+      <button id="cancelLobby" class="text-button">Menüye dön</button>
+    </section>
+
+    <section id="game" class="game-wrap hidden">
+      <div class="game-topbar">
+        <div class="fighter"><span id="p0Avatar" class="avatar amber">01</span><div><small>ÖNCÜ</small><strong id="p0Name">Oyuncu 1</strong><div class="health-track"><i id="p0Health"></i></div><div id="p0Status" class="status-row"></div></div><b id="p0Hp">100</b></div>
+        <div class="turn-card"><small id="modeLabel">ANTRENMAN</small><strong id="turnLabel">SENİN SIRAN</strong><b id="turnTimer" class="turn-timer">25</b><span id="windLabel">RÜZGÂR 0</span></div>
+        <div class="fighter right"><b id="p1Hp">100</b><div><small>MEYDAN OKUYAN</small><strong id="p1Name">Rakip</strong><div class="health-track"><i id="p1Health"></i></div><div id="p1Status" class="status-row"></div></div><span id="p1Avatar" class="avatar mint">02</span></div>
+      </div>
+      <div class="canvas-frame">
+        <canvas id="gameCanvas" width="1280" height="720" aria-label="Pati Savaşları oyun alanı"></canvas>
+        <div class="canvas-vignette"></div>
+        <div id="onlineRoster" class="online-roster hidden"></div>
+        <div class="move-control">
+          <span id="moveEnergy">HAREKET 160</span>
+          <div><button id="moveLeft" aria-label="Sola hareket">‹</button><button id="jumpButton" class="jump-button" aria-label="Zıpla">↑</button><button id="moveRight" aria-label="Sağa hareket">›</button></div>
+        </div>
+        <div id="resultOverlay" class="result-overlay hidden"><span id="resultEyebrow">MAÇ BİTTİ</span><h2 id="resultTitle">Kazandın!</h2><button id="rematchButton" class="primary-button">Tekrar oyna</button><button id="menuButton" class="text-button">Ana menü</button></div>
+      </div>
+      <div class="controls-panel">
+        <div class="control-group"><label for="angleInput">ATIŞ AÇISI <b id="angleValue">45°</b></label><input id="angleInput" type="range" min="5" max="85" value="45"></div>
+        <div class="weapons" role="group" aria-label="Silah seçimi">
+          <button class="weapon selected" data-weapon="findik"><span>●</span><b>Fındık</b><small>Dengeli</small></button>
+          <button class="weapon" data-weapon="roket"><span>◆</span><b>Roket</b><small>Ağır hasar</small></button>
+          <button class="weapon" data-weapon="ucleyen"><span>✦</span><b>Üçleyen</b><small>Geniş alan</small></button>
+          <button class="weapon" data-weapon="buz"><span>❄</span><b>Buz Küresi</b><small>Hafif çekim</small></button>
+          <button class="weapon" data-weapon="meteor"><span>☄</span><b>Meteor</b><small>Dev patlama</small></button>
+          <button class="weapon" data-weapon="plazma"><span>◉</span><b>Plazma</b><small>Rüzgârsız</small></button>
+          <button class="weapon" data-weapon="seri"><span>⁙</span><b>Beşli</b><small>Saçma atış</small></button>
+          <button class="weapon" data-weapon="seken"><span>↗</span><b>Seken Top</b><small>Bir kez seker</small></button>
+          <button class="weapon tactical" data-weapon="bomba"><span></span><b>El Bombası</b><small>Yuvarlanır</small></button>
+          <button class="weapon tactical" data-weapon="yapiskan"><span></span><b>Yapışkan</b><small>Gecikmeli</small></button>
+          <button class="weapon tactical" data-weapon="mayin"><span></span><b>Mayın</b><small>Alan kapatır</small></button>
+          <button class="weapon tactical" data-weapon="hava"><span></span><b>Hava Akını</b><small>Dikey saldırı</small></button>
+          <button class="weapon tactical" data-weapon="matkap"><span></span><b>Matkap</b><small>Derin krater</small></button>
+          <button class="weapon tactical" data-weapon="itici"><span></span><b>İtici</b><small>Geri savurur</small></button>
+          <button class="weapon tactical" data-weapon="zehir"><span></span><b>Zehir</b><small>Tur hasarı</small></button>
+          <button class="weapon tactical" data-weapon="isinla"><span></span><b>Işınlan</b><small>Konum değiştir</small></button>
+        </div>
+        <div class="control-group"><label for="powerInput">ATIŞ GÜCÜ <b id="powerValue">65</b></label><input id="powerInput" type="range" min="15" max="100" value="65"></div>
+        <button id="fireButton" class="fire-button"><small id="fireHint">BASILI TUT</small>ATEŞ!</button>
+      </div>
+      <p class="keyboard-help">Hareket: A D · Zıpla: W · Fareyle nişan al · Basılı tutup bırakarak ateş et</p>
+    </section>
+  </main>
+  <script type="module" src="./game.js"></script>
+</body>
+</html>
