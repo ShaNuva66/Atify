@@ -24,6 +24,25 @@ function openClient() {
   });
 }
 
+test('online jump cannot be repeated in air; both clients receive the same airborne firing pose', async () => {
+  const host=await openClient(),guest=await openClient();
+  try {
+    const created=nextMessage(host,'room_created');
+    host.send(JSON.stringify({type:'create_room',name:'Retro',arena:'sunset'}));
+    const room=await created;
+    const starts=[nextMessage(host,'match_start'),nextMessage(guest,'match_start')];
+    guest.send(JSON.stringify({type:'join_room',code:room.code,name:'Rakip'}));await Promise.all(starts);
+    const jumped=nextMessage(host,'jump');host.send(JSON.stringify({type:'jump'}));
+    const jump=await jumped;assert.equal(jump.pose.airborne,true);assert.equal(jump.budget,132);
+    host.send(JSON.stringify({type:'jump'}));
+    const moved=nextMessage(host,'move');host.send(JSON.stringify({type:'move',direction:1}));
+    assert.equal((await moved).budget,126);
+    const shots=[nextMessage(host,'shoot'),nextMessage(guest,'shoot')];
+    host.send(JSON.stringify({type:'shoot',shot:{angle:60,power:65,weapon:'roket',facing:-1}}));
+    const [a,b]=await Promise.all(shots);assert.deepEqual(a.poses,b.poses);assert.equal(a.poses[0].airborne,true);assert.equal(a.poses[0].facing,-1);assert.ok(a.poses[0].vy<0);
+  } finally {host.close();guest.close();}
+});
+
 function nextMessage(ws, expectedType) {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => reject(new Error(`${expectedType} mesaji zaman asimina ugradi`)), 2000);
@@ -80,10 +99,10 @@ test("kontrol ve silah yarisi zafer kosullari sunucuda belirlenir", () => {
 test("web istemcisi HTTP uzerinden sunulur", async () => {
   const response = await fetch(httpUrl);
   assert.equal(response.status, 200);
-  assert.match(await response.text(), /Pati Savaşları/);
+  assert.match(await response.text(), /Yeniçağ — Retro Taktik Arena/);
   const mounted = await fetch(`${httpUrl}/Yenicag/`);
   assert.equal(mounted.status, 200);
-  assert.match(await mounted.text(), /Pati Savaşları/);
+  assert.match(await mounted.text(), /Yeniçağ — Retro Taktik Arena/);
 });
 
 test("statik dosyalar sikistirilir ve uzun sure onbelleklenir", async () => {

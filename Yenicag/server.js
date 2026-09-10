@@ -1,3 +1,4 @@
+import { FOOT, JUMP_SPEED, terrainHeight, createPlatforms, supportHeight, moveBody, stepBody } from './public/world.js?v=2';
 import http from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -127,6 +128,18 @@ function publicPlayers(room) {
 
 function roomLayout(size) { return size === 4 ? [155, 455, 825, 1125] : [205, 1075]; }
 
+function initPhysics(room) {
+  room.craters=[];room.platforms=createPlatforms(room.arena);room.physicsAt=Date.now();
+  room.bodies=room.positions.map((x,i)=>({x,y:supportHeight(x,z=>terrainHeight(room.arena,z))-FOOT,vy:0,airborne:false,platformId:null,facing:x<640?1:-1,hp:room.hp[i]}));
+}
+function advancePhysics(room) {
+  if(!room.bodies)initPhysics(room);
+  const now=Date.now();let remaining=Math.min(5,(now-room.physicsAt)/1000);room.physicsAt=now;
+  const gravity=({sunset:380,mushroom:325,aurora:430}[room.arena])*.82*(room.chaosModifier==='lowGravity'?.52:1);
+  const heightAt=x=>terrainHeight(room.arena,x,room.craters);
+  while(remaining>0){const dt=Math.min(remaining,1/60);room.bodies.forEach((p,i)=>{p.hp=room.hp[i];stepBody(p,dt,gravity,heightAt,room.platforms);});remaining-=dt;}
+}
+function publicPose(p) { const {x,y,vy,airborne,platformId,facing}=p;return {x,y,vy,airborne,platformId,facing}; }
 function startPayload(room, playerIndex) {
   return { code: room.code, seed: room.seed, turn: room.turn, arena: room.arena, roomMode: room.mode, friendlyFire: room.friendlyFire, rules: room.rules, maxPlayers: room.maxPlayers, positions: room.positions, moveBudget: room.moveBudget, ammo: room.ammo, wind: room.wind, turnEndsAt: room.turnEndsAt, turnNumber: room.turnNumber, dangerInset: room.dangerInset, authorityIndex: room.authorityIndex, objective: room.objective, weaponProgress: room.weaponProgress, raceWeapons, chaosModifier: room.chaosModifier, playerIndex, players: publicPlayers(room) };
 }
@@ -257,7 +270,7 @@ wss.on("connection", (ws) => {
       room.lastActivity = Date.now();
       ws.roomCode = code;
       if (room.players.length < room.maxPlayers) { broadcast(room, "room_waiting", { count: room.players.length, maxPlayers: room.maxPlayers }); return; }
-      room.started = true; openTurn(room);
+      room.started = true; initPhysics(room); openTurn(room);
       room.players.forEach((player, index) => send(player.ws, "match_start", startPayload(room, index)));
       return;
     }
@@ -268,37 +281,44 @@ wss.on("connection", (ws) => {
     const playerIndex = room.players.findIndex((player) => player.ws === ws);
 
     if (message.type === "jump") {
-      if (playerIndex !== room.turn || !room.shotOpen || room.moveBudget[playerIndex] < 28) return;
+      advancePhysics(room);
+      if (playerIndex !== room.turn || !room.shotOpen || room.moveBudget[playerIndex] < 28 || room.bodies[playerIndex]?.airborne) return;
       room.moveBudget[playerIndex] -= 28;
-      broadcast(room, "jump", { playerIndex, budget: room.moveBudget[playerIndex] });
+      const body=room.bodies[playerIndex];body.airborne=true;body.platformId=null;body.vy=-JUMP_SPEED;
+      broadcast(room, "jump", { playerIndex, budget: room.moveBudget[playerIndex], pose:publicPose(body) });
       return;
     }
 
     if (message.type === "move") {
       if (playerIndex !== room.turn || !room.shotOpen || ![-1, 1].includes(message.direction)) return;
-      const cost = surfaceCost(room.arena, room.positions[playerIndex]);
+      advancePhysics(room);
+      const body=room.bodies[playerIndex];
+      const cost = body.airborne || body.platformId!==null ? 1 : surfaceCost(room.arena, room.positions[playerIndex]);
       const requestedDistance = Number.isFinite(Number(message.distance)) ? Math.max(1, Math.min(10, Number(message.distance))) : 6;
       const step = Math.min(requestedDistance, room.moveBudget[playerIndex] / cost);
       if (step <= 0) return;
       const candidate = Math.max(70, Math.min(1210, room.positions[playerIndex] + message.direction * step));
-      if (room.positions.some((x, index) => index !== playerIndex && room.hp[index] > 0 && Math.abs(candidate - x) < 110)) return;
+      if(!moveBody(body,candidate,x=>terrainHeight(room.arena,x,room.craters),room.platforms,room.bodies)) return;
+      body.facing=message.direction;
       const spent = Math.abs(candidate - room.positions[playerIndex]) * cost;
       room.positions[playerIndex] = candidate;
       room.moveBudget[playerIndex] = Math.max(0, room.moveBudget[playerIndex] - spent);
-      broadcast(room, "move", { playerIndex, x: candidate, budget: room.moveBudget[playerIndex] });
+      broadcast(room, "move", { playerIndex, x: candidate, direction:message.direction, pose:publicPose(body), budget: room.moveBudget[playerIndex] });
       return;
     }
 
     if (message.type === "shoot") {
       if (playerIndex !== room.turn || !room.shotOpen || !validShot(message.shot)) return;
       if (room.rules.gameType === "weaponRace" && message.shot.weapon !== raceWeapons[room.weaponProgress[playerIndex]]) return;
+      advancePhysics(room);
+      if([1,-1].includes(message.shot.facing))room.bodies[playerIndex].facing=message.shot.facing;
       const remaining = room.ammo[playerIndex][message.shot.weapon];
       if (remaining === 0) return;
       if (remaining > 0) room.ammo[playerIndex][message.shot.weapon] -= 1;
       clearTurnTimer(room);
       room.shotOpen = false;
       room.turnEndsAt = null;
-      broadcast(room, "shoot", { playerIndex, shot: message.shot, ammo: room.ammo });
+      broadcast(room, "shoot", { playerIndex, shot: message.shot, ammo: room.ammo, poses:room.bodies.map(publicPose) });
       return;
     }
 
@@ -321,6 +341,15 @@ wss.on("connection", (ws) => {
           respawned.add(index);
         });
       }
+      if(Array.isArray(message.craters))room.craters=message.craters.filter(c=>Number.isFinite(c.x)&&Number.isFinite(c.radius)&&c.radius>0&&Number.isFinite(c.depth)).slice(-18);
+      if(Array.isArray(message.platforms))message.platforms.forEach(t=>{const p=room.platforms.find(p=>p.id===t.id);if(p)p.hp=Math.max(0,Math.min(4,Number(t.hp)||0));});
+      room.positions.forEach((x,i)=>{
+        const body=room.bodies[i],incoming=message.players?.[i];body.x=x;body.hp=room.hp[i];
+        const platform=room.platforms.find(t=>t.id===incoming?.platformId&&t.hp>0&&Math.abs(x-t.x)<=t.width/2+10);
+        body.platformId=platform?.id??null;body.y=(platform?platform.y:supportHeight(x,z=>terrainHeight(room.arena,z,room.craters)))-FOOT;
+        body.airborne=false;body.vy=0;
+        if([1,-1].includes(incoming?.facing))body.facing=incoming.facing;
+      });room.physicsAt=Date.now();
       awardControlPoint(room);
       const gameOver = matchResult(room);
       if (!gameOver) {
@@ -329,7 +358,7 @@ wss.on("connection", (ws) => {
         if (message.turnModifiers?.stun) room.turnEndsAt = Date.now() + Math.max(8_000, (room.rules.turnSeconds - 10) * 1000);
       } else { clearTurnTimer(room); room.shotOpen = false; room.turnEndsAt = null; }
       broadcast(room, "state_sync", {
-        players: message.players?.map((player, index) => ({ ...player, hp: room.hp[index], x: room.positions[index], shield: respawned.has(index) ? 0 : player.shield, effects: respawned.has(index) ? {} : player.effects })),
+        players: message.players?.map((player, index) => ({ ...player, ...publicPose(room.bodies[index]), hp: room.hp[index], x: room.positions[index], shield: respawned.has(index) ? 0 : player.shield, effects: respawned.has(index) ? {} : player.effects })),
         craters: message.craters,
         barrels: message.barrels,
         platforms: message.platforms,
@@ -366,6 +395,7 @@ wss.on("connection", (ws) => {
       room.chaosModifier = room.rules.gameType === "chaos" ? chaosModifiers[room.seed % chaosModifiers.length] : null;
       room.wind = rollWind(room);
       room.players.forEach((player) => { player.disconnected = false; });
+      initPhysics(room);
       openTurn(room);
       room.players.forEach((player, index) => send(player.ws, "match_start", startPayload(room, index)));
     }

@@ -4,31 +4,30 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <meta name="theme-color" content="#0a0c1b">
-  <title>Pati Savaşları — Online 2D Arena</title>
+  <title>Yeniçağ — Retro Taktik Arena</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preload" as="image" href="./assets/arena-sunset-v2.webp" fetchpriority="high">
-  <link rel="preload" as="image" href="./assets/fighters-duo-v2.webp" fetchpriority="high">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./styles.css?v=2">
+  <link rel="stylesheet" href="./retro.css?v=2">
 </head>
 <body>
   <main class="shell">
     <header class="brand">
-      <div class="brand-mark">PS</div>
-      <div><strong>PATİ SAVAŞLARI</strong><span>TACTICAL ARTILLERY</span></div>
-      <div class="season-badge"><i></i> SEZON 01 · ÖNCÜLER</div>
+      <div class="brand-mark">YÇ</div>
+      <div><strong>YENİÇAĞ ARENA</strong><span>RETRO TAKTİK · ATIFY</span></div>
+      <div class="season-badge"><i></i> 02 · YÜKSEK ZEMİN</div>
       <button id="soundButton" class="icon-button" aria-label="Sesi aç veya kapat">♪</button>
     </header>
 
     <section id="menu" class="panel menu-panel">
       <div class="hero-stage">
-        <img class="hero-backdrop" src="./assets/arena-sunset-v2.webp" alt="" decoding="async" fetchpriority="high">
-        <img class="hero-fighters" src="./assets/fighters-duo-v2.webp" alt="Tilki ve rakun savaşçı" decoding="async" fetchpriority="high">
+        <img class="hero-backdrop" alt="Piksel vadisi ve retro savaşçılar">
+        <img class="hero-fighters" alt="">
         <div class="hero-copy">
           <span class="eyebrow"><i></i> Tarayıcıda ücretsiz oyna</span>
-          <h1>Rüzgârı oku.<br><em>İsabeti konuştur.</em></h1>
-          <p>Her atışın kaderini fizik belirler. Açını seç, gücünü ayarla ve arenanın efsanesi ol.</p>
+          <h1>Yükseğe çık.<br><em>Doğru anı bekle.</em></h1>
+          <p>Vadiler, kırılabilir köprüler ve yüksek atış noktaları. Zıpla, mevzi al; rüzgârı kendi lehine çevir.</p>
           <div class="feature-row"><span>⚡ Anında başla</span><span>⌁ Özel oda</span><span>◉ Yıkılabilir arazi</span></div>
         </div>
         <div class="arena-tag"><small>GÜNÜN ARENASI</small><strong>GÜNBATIMI VADİSİ</strong></div>
@@ -137,6 +136,6 @@
       <p class="keyboard-help">Hareket: A D · Zıpla: W · Fareyle nişan al · Basılı tutup bırakarak ateş et</p>
     </section>
   </main>
-  <script type="module" src="./game.js"></script>
+  <script type="module" src="./game.js?v=2"></script>
 </body>
 </html>

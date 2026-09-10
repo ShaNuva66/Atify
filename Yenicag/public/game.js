@@ -1,26 +1,11 @@
+import { FOOT, JUMP_SPEED, terrainHeight, createPlatforms, bodyBox, distanceToBody, supportHeight, moveBody, stepBody, weaponPose, sweepProjectile } from './world.js?v=2';
+import { drawBackdrop, drawGround, drawPlatform, drawFighter, drawWeapon, installRetroPreviews } from './retro.js?v=2';
 const $ = (selector) => document.querySelector(selector);
 const canvas = $("#gameCanvas");
 const ctx = canvas.getContext("2d");
 const W = canvas.width;
 const H = canvas.height;
-const assetUrl = (name) => new URL(`./assets/${name}`, import.meta.url).href;
-const assetSources = {
-  arenas: { sunset: assetUrl("arena-sunset-v2.webp"), mushroom: assetUrl("arena-mushroom-v3.webp"), aurora: assetUrl("arena-aurora-v3.webp") },
-  duo: assetUrl("fighters-duo-v2.webp"), atlas: assetUrl("fighters-atlas-v3.webp"), ammo: assetUrl("ammo-atlas-v4.webp"), tacticalAmmo: assetUrl("tactical-ammo-atlas-v2.webp")
-};
-const art = { arenas: Object.fromEntries(Object.keys(assetSources.arenas).map((id) => [id, new Image()])), duo: new Image(), atlas: new Image(), ammo: new Image(), tacticalAmmo: new Image() };
-function loadImage(image, source) {
-  if (!image.src) image.src = source;
-  if (image.complete && image.naturalWidth) return Promise.resolve();
-  return image.decode?.().catch(() => {}) || Promise.resolve();
-}
-function prepareGameAssets(arenaId) {
-  const safeArena = assetSources.arenas[arenaId] ? arenaId : "sunset";
-  return Promise.all([
-    loadImage(art.arenas[safeArena], assetSources.arenas[safeArena]), loadImage(art.duo, assetSources.duo), loadImage(art.atlas, assetSources.atlas),
-    loadImage(art.ammo, assetSources.ammo), loadImage(art.tacticalAmmo, assetSources.tacticalAmmo)
-  ]);
-}
+function prepareGameAssets() { return Promise.resolve(); }
 
 const ui = {
   menu: $("#menu"), lobby: $("#lobby"), game: $("#game"), status: $("#menuStatus"),
@@ -156,27 +141,13 @@ function newGame(seed, combatants, startingTurn = 0, arenaId = "sunset", supplie
   game.pickups = Array.from({ length: pickupCount }, (_, index) => { let x = (index + 1) * W / (pickupCount + 1) + Math.round((random() - .5) * 24); if (game.players.some((player) => Math.abs(player.x - x) < 90)) x = Math.max(90, Math.min(1190, x + (x < W / 2 ? 95 : -95))); return { id: index, type: pickupTypes[index], x, taken: false, bob: random() * 6.28 }; });
   const barrelBases = game.players.length === 4 ? [300, 980] : [455, 825];
   game.barrels = barrelBases.map((x, index) => ({ id: index, x: x + Math.round((random() - .5) * 26), destroyed: false }));
-  game.platforms = [0, 1].map((id) => { const x = 330 + id * 510 + Math.round((random() - .5) * 45); return { id, x, y: terrainY(x) - 105 - id * 18, width: 125, hp: 2 }; });
+  game.platforms = createPlatforms(safeArenaId);
   settlePlayers();
   updateHud();
   ui.result.classList.add("hidden");
 }
 
-function rawTerrainY(x) {
-  if (!game) return 540;
-  const t = game.terrain;
-  const roughness = arenas[game.arena]?.roughness || 1;
-  let y = 512 + Math.sin(x * .0062 + t.phaseA) * 38 * roughness + Math.sin(x * .014 + t.phaseB) * 21 * roughness + Math.sin(x * .002 + t.phaseC) * 28;
-  for (const hill of t.hills) {
-    const distance = x - hill.x;
-    y += hill.height * Math.exp(-(distance * distance) / (2 * hill.width * hill.width));
-  }
-  for (const crater of t.craters) {
-    const dx = Math.abs(x - crater.x);
-    if (dx < crater.radius) y += crater.depth * Math.sqrt(1 - (dx * dx) / (crater.radius * crater.radius));
-  }
-  return Math.min(645, y);
-}
+function rawTerrainY(x) { return game ? terrainHeight(game.arena, x, game.terrain.craters) : 540; }
 
 function rebuildTerrainCache() {
   if (!game) return;
@@ -200,18 +171,9 @@ function terrainY(x) {
 
 function settlePlayers() {
   if (!game) return;
-  for (const player of game.players) if (!player.airborne) {
-    const platform = game.platforms?.find((item) => item.id === player.platformId && item.hp > 0 && Math.abs(player.x - item.x) <= item.width / 2);
-    if (platform) { player.y = platform.y - 29; continue; }
-    player.platformId = null;
-    let floor = terrainY(player.x);
-    if (floor >= 638 && game.terrain.craters.length) {
-      const oldX = player.x;
-      for (let offset = 45; offset <= 360; offset += 45) { const left = Math.max(70, oldX - offset); const right = Math.min(1210, oldX + offset); if (terrainY(left) < 620) { player.x = left; break; } if (terrainY(right) < 620) { player.x = right; break; } }
-      player.hp = Math.max(0, player.hp - 12); floor = terrainY(player.x);
-      game.damageNumbers.push({ x: player.x, y: floor - 100, value: "12 DÜŞME", life: 1.2, color: "#ff826f" });
-    }
-    player.y = floor - 29;
+  for (const player of game.players) {
+    if (!player.initialized) { player.y = supportHeight(player.x, terrainY) - FOOT; player.initialized = true; }
+    stepBody(player, 0, arenaConfig().gravity * .82, terrainY, game.platforms || []);
   }
 }
 
@@ -260,12 +222,14 @@ function socketUrl() {
 
 function connect(onOpen) {
   closeSocket();
+  mode = "online";
   ui.status.textContent = "Sunucuya bağlanılıyor…";
   socket = new WebSocket(socketUrl());
+  const connection=socket;
   socket.addEventListener("open", onOpen, { once: true });
   socket.addEventListener("message", onMessage);
   socket.addEventListener("close", () => {
-    if (mode === "online" && screen !== "menu") showResult("Bağlantı kesildi", false);
+    if (socket===connection && mode === "online" && screen !== "menu") showResult("Bağlantı kesildi", false);
   });
   socket.addEventListener("error", () => { ui.status.textContent = "Sunucuya bağlanılamadı."; });
 }
@@ -342,21 +306,23 @@ function onMessage(event) {
   }
   if (message.type === "shoot") {
     if (Array.isArray(message.ammo)) game.ammo = message.ammo;
+    if(message.poses) message.poses.forEach((pose,i)=>Object.assign(game.players[i],pose));
     beginShot(message.playerIndex, message.shot);
     return;
   }
   if (message.type === "move" && game) {
     const player = game.players[message.playerIndex];
-    if (player) { player.x = Number(message.x); player.walk = 1; player.walkPhase += .7; game.moveBudget[message.playerIndex] = Number(message.budget); settlePlayers(); updateMoveControls(); }
+    if (player) { if(message.pose) Object.assign(player,message.pose); player.x = Number(message.x); player.facing=message.direction||player.facing; player.walk = 1; player.walkPhase += .7; game.moveBudget[message.playerIndex] = Number(message.budget); settlePlayers(); updateMoveControls(); }
     return;
   }
   if (message.type === "jump" && game) {
     const player = game.players[message.playerIndex];
-    if (player && !player.airborne) { game.moveBudget[message.playerIndex] = Number(message.budget); player.airborne = true; player.vy = -285; player.walk = 1; beep(310, .08, "sine"); updateHud(); }
+    if (player) { if(message.pose) Object.assign(player,message.pose); game.moveBudget[message.playerIndex] = Number(message.budget); player.platformId=null; player.airborne = true; player.vy = -JUMP_SPEED; player.walk = 1; beep(310, .08, "sine"); updateHud(); }
     return;
   }
   if (message.type === "state_sync" && game) {
     const revivedPlayers = [];
+    message.players?.forEach((p,i)=>{const target=game.players[i];if(target&&Number.isFinite(p.y)){for(const key of ['y','vy','airborne','platformId','facing'])if(p[key]!==undefined)target[key]=p[key];}});
     message.players?.forEach((player, index) => { if (game.players[index]) { const incomingHp = Math.max(0, Number(player.hp)); if (game.rules.gameType === "weaponRace" && game.players[index].hp <= 0 && incomingHp > 0) revivedPlayers.push(game.players[index].name); game.players[index].hp = incomingHp; game.players[index].shield = Math.max(0, Number(player.shield) || 0); game.players[index].effects = player.effects && typeof player.effects === "object" ? player.effects : {}; if (Number.isFinite(Number(player.x))) game.players[index].x = Number(player.x); } });
     if (Array.isArray(message.moveBudget)) game.moveBudget = message.moveBudget.map(Number);
     if (Array.isArray(message.ammo)) game.ammo = message.ammo;
@@ -404,7 +370,7 @@ function onMessage(event) {
 
 function canShoot() {
   const forced = game?.rules.gameType === "weaponRace" ? game.raceWeapons[game.weaponProgress[localIndex]] : null;
-  return screen === "game" && game && !game.gameOver && !game.shotResolving && game.projectiles.length === 0 && game.turn === localIndex && game.players[localIndex].hp > 0 && !game.players[localIndex].airborne && game.ammo[localIndex][selectedWeapon] !== 0 && (!forced || selectedWeapon === forced);
+  return screen === "game" && game && !game.gameOver && !game.shotResolving && game.projectiles.length === 0 && game.turn === localIndex && game.players[localIndex].hp > 0 && game.ammo[localIndex][selectedWeapon] !== 0 && (!forced || selectedWeapon === forced);
 }
 
 function syncForcedWeapon() {
@@ -423,32 +389,23 @@ function canMove(playerIndex = localIndex) {
 
 function movementCandidate(playerIndex, direction, amount) {
   const player = game.players[playerIndex];
-  const budget = game.moveBudget[playerIndex];
-  const cost = surfaceCostAt(player.x);
-  const step = Math.min(amount, budget / cost);
+  const cost = player.airborne || player.platformId !== null ? 1 : surfaceCostAt(player.x);
+  const step = Math.min(amount, game.moveBudget[playerIndex] / cost);
   const x = Math.max(70, Math.min(1210, player.x + direction * step));
-  if (game.players.some((other, index) => index !== playerIndex && other.hp > 0 && Math.abs(x - other.x) < 110)) return null;
-  if (!player.airborne && Math.abs(terrainY(x) - terrainY(player.x)) > Math.max(8, step * 1.7)) return null;
-  return { x, spent: Math.abs(x - player.x) * cost };
+  const candidate = { ...player };
+  if (!moveBody(candidate, x, terrainY, game.platforms, game.players.filter(p=>p!==player))) return null;
+  return { x, spent: Math.abs(x-player.x)*cost, pose:candidate };
 }
 
 function applyMovement(playerIndex, direction, amount) {
   if (!canMove(playerIndex)) return false;
-  const candidate = movementCandidate(playerIndex, direction, amount);
+  const candidate = movementCandidate(playerIndex,direction,amount);
   if (!candidate || candidate.spent <= 0) return false;
-  const player = game.players[playerIndex];
-  player.x = candidate.x;
-  player.walk = 1;
-  player.walkPhase += candidate.spent * .1;
-  game.moveBudget[playerIndex] = Math.max(0, game.moveBudget[playerIndex] - candidate.spent);
-  if (!player.airborne && player.platformId !== null) {
-    const platform = game.platforms.find((item) => item.id === player.platformId && item.hp > 0);
-    if (platform && Math.abs(player.x - platform.x) <= platform.width / 2) player.y = platform.y - 29;
-    else { player.platformId = null; player.airborne = true; player.vy = 0; }
-  } else if (!player.airborne) player.y = terrainY(player.x) - 29;
-  if (Math.floor(player.walkPhase) % 4 === 0) emitParticle({ x: player.x - direction * 18, y: terrainY(player.x) - 3, vx: -direction * 12, vy: -18, life: .35, size: 3, color: "rgba(220,205,165,.65)" });
-  updateMoveControls();
-  return true;
+  const player=game.players[playerIndex];
+  Object.assign(player,candidate.pose);
+  player.facing=direction;player.walk=1;player.walkPhase+=candidate.spent*.12;
+  game.moveBudget[playerIndex]=Math.max(0,game.moveBudget[playerIndex]-candidate.spent);
+  updateMoveControls();return true;
 }
 
 function requestNetworkMove(direction, distance = 6) {
@@ -463,7 +420,7 @@ function performJump(playerIndex) {
   if (!player || player.airborne || !canMove(playerIndex) || game.moveBudget[playerIndex] < 28) return false;
   player.airborne = true;
   player.platformId = null;
-  player.vy = -285;
+  player.vy = -JUMP_SPEED;
   game.moveBudget[playerIndex] -= 28;
   player.walk = 1;
   beep(310, .08, "sine");
@@ -490,28 +447,26 @@ function releaseCharge() {
   requestShot();
 }
 
-function muzzlePosition(player) {
-  const fighter = fighters[player.fighter] || fighters.fox;
-  const ground = player.y + 29;
-  return { x: player.x + player.facing * (fighter.anchorX + 42), y: ground + fighter.anchorY };
-}
+function muzzlePosition(player, angle = Number(ui.angle.value)) { return weaponPose(player, angle).muzzle; }
 
 function requestShot() {
   if (!canShoot()) return;
-  const shot = { angle: Number(ui.angle.value), power: Number(ui.power.value), weapon: selectedWeapon };
+  const shot = { angle: Number(ui.angle.value), power: Number(ui.power.value), weapon: selectedWeapon, facing: game.players[localIndex].facing };
   if (mode === "online") send("shoot", { shot }); else beginShot(localIndex, shot);
 }
 
 function beginShot(playerIndex, shot) {
   if (!game || game.shotResolving) return;
   const shooter = game.players[playerIndex];
+  if ([1,-1].includes(shot.facing)) shooter.facing = shot.facing;
   const baseWeapon = weapons[shot.weapon] || weapons.findik;
   const weapon = game.chaosModifier === "megaBlast" ? { ...baseWeapon, damage: baseWeapon.damage * 1.35, radius: baseWeapon.radius * 1.45, crater: baseWeapon.crater * 1.3 } : baseWeapon;
   if (mode !== "online" && game.ammo[playerIndex][shot.weapon] > 0) game.ammo[playerIndex][shot.weapon] -= 1;
   shooter.equipped = shot.weapon;
   shooter.recoil = 1;
   shooter.muzzleFlash = 1;
-  const muzzle = muzzlePosition(shooter);
+  shooter.aimAngle = Number(shot.angle);
+  const muzzle = muzzlePosition(shooter, shot.angle);
   const baseAngle = Number(shot.angle) * Math.PI / 180;
   const speed = (290 + Number(shot.power) * 4.35) * weapon.speed;
   game.shotResolving = true;
@@ -549,7 +504,7 @@ function impact(projectile) {
     const owner = game.players[projectile.owner]; owner.x = Math.max(70, Math.min(1210, projectile.x)); owner.airborne = false; owner.y = terrainY(owner.x) - 29;
     game.explosions.push({ x: owner.x, y: owner.y - 70, life: 1, radius: 52, color: projectile.color }); beep(720, .2, "sine"); return;
   }
-  if (projectile.crater > 0) {
+  if (projectile.crater > 0 && projectile.y + projectile.radius >= terrainY(projectile.x)) {
     game.terrain.craters.push({ x: projectile.x, radius: projectile.radius * .75 * projectile.crater, depth: projectile.radius * .32 * projectile.crater });
     game.terrain.craters = game.terrain.craters.slice(-18);
     rebuildTerrainCache();
@@ -558,7 +513,7 @@ function impact(projectile) {
   game.shake = Math.max(game.shake, projectile.radius * .13);
   game.flash = Math.max(game.flash, .28);
   game.players.forEach((player, playerIndex) => {
-    const distance = Math.hypot(player.x - projectile.x, player.y - 88 - projectile.y);
+    const distance = distanceToBody(projectile.x, projectile.y, player);
     if (distance < projectile.radius) {
       const protectedTeammate = game.roomMode === "team2v2" && !game.friendlyFire && playerIndex !== projectile.owner && player.team === game.players[projectile.owner].team;
       if (protectedTeammate) return;
@@ -567,9 +522,9 @@ function impact(projectile) {
       player.shield = Math.max(0, (player.shield || 0) - absorbed);
       const healthDamage = damage - absorbed;
       player.hp = Math.max(0, player.hp - healthDamage);
-      game.damageNumbers.push({ x: player.x, y: player.y - 150, value: absorbed ? `${healthDamage}  🛡${absorbed}` : damage, life: 1, color: playerIndex === 0 ? "#ffc44d" : "#64edcf" });
+      game.damageNumbers.push({ x: player.x, y: player.y - 65, value: absorbed ? `${healthDamage}  🛡${absorbed}` : damage, life: 1, color: playerIndex === 0 ? "#ffc44d" : "#64edcf" });
       if (projectile.effect && playerIndex !== projectile.owner) player.effects[projectile.effect] = Math.max(player.effects[projectile.effect] || 0, projectile.effect === "stun" ? 1 : 2);
-      if (projectile.knockback) { const direction = Math.sign(player.x - projectile.x) || (playerIndex ? 1 : -1); player.x = Math.max(70, Math.min(1210, player.x + direction * projectile.knockback * (1 - distance / projectile.radius))); player.y = terrainY(player.x) - 29; }
+      if (projectile.knockback) { const direction = Math.sign(player.x - projectile.x) || (playerIndex ? 1 : -1); player.x = Math.max(70, Math.min(1210, player.x + direction * projectile.knockback * (1 - distance / projectile.radius))); player.platformId = null; player.airborne = true; player.vy = -70; }
     }
   });
   for (let i = 0; i < 48; i += 1) {
@@ -631,7 +586,7 @@ function finishShot() {
     game.awaitingSync = true;
     if (localIndex === game.authorityIndex) {
       send("state_sync", {
-        players: game.players.map(({ hp, shield, effects, x }) => ({ hp, shield, effects, x })),
+        players: game.players.map(({ hp, shield, effects, x, y, vy, airborne, platformId, facing }) => ({ hp, shield, effects, x, y, vy, airborne, platformId, facing })),
         craters: game.terrain.craters,
         barrels: game.barrels.map(({ id, destroyed }) => ({ id, destroyed })),
         platforms: game.platforms.map(({ id, hp }) => ({ id, hp })),
@@ -662,14 +617,16 @@ const botLevels = {
   master: { angleStep: 2.5, powerStep: 4, angleError: .35, powerError: .7, weaponLimit: 16 }
 };
 
-function predictImpact(shooter, angleDegrees, power, weapon) {
+function predictImpact(shooter, angleDegrees, power, weapon, weaponId) {
   const angle = angleDegrees * Math.PI / 180;
   const speed = (290 + power * 4.35) * weapon.speed;
-  const muzzle = muzzlePosition(shooter);
+  const muzzle = muzzlePosition({...shooter,equipped:weaponId}, angleDegrees);
   let x = muzzle.x, y = muzzle.y, vx = Math.cos(angle) * speed * shooter.facing, vy = -Math.sin(angle) * speed;
   for (let step = 0; step < 360; step += 1) {
-    const dt = .025; vx += game.wind * 1.45 * weapon.wind * dt; vy += arenaConfig().gravity * weapon.gravity * dt; x += vx * dt; y += vy * dt;
-    if (y >= terrainY(Math.max(0, Math.min(W, x))) || x < -80 || x > W + 80) return { x, y };
+    const previous={x,y},dt=1/60; vx += game.wind * 1.45 * weapon.wind * dt; vy += arenaConfig().gravity * weapon.gravity * dt; x += vx * dt; y += vy * dt;
+    const hit=sweepProjectile(previous,{x,y},game.players,game.platforms,terrainY,game.players.indexOf(shooter),step*dt,4);
+    if(hit)return hit;
+    if(x < -80 || x > W + 80)return {x,y};
   }
   return { x, y };
 }
@@ -704,8 +661,8 @@ function chooseBotShot() {
   for (const weaponId of usable) {
     const weapon = weapons[weaponId]; const targetX = weaponId === "isinla" ? W / 2 : target.x;
     for (let angle = 20; angle <= 78; angle += level.angleStep) for (let power = 25; power <= 100; power += level.powerStep) {
-      const hit = predictImpact(shooter, angle, power, weapon);
-      let score = Math.abs(hit.x - targetX);
+      const hit = predictImpact(shooter, angle, power, weapon, weaponId);
+      let score = weaponId==='isinla'?Math.abs(hit.x-targetX):distanceToBody(hit.x,hit.y,target);
       if (weapon.radius) score = Math.max(0, score - weapon.radius * .35);
       if (weapon.effect && !target.effects[weapon.effect]) score -= 14;
       if (weaponId === "itici" && (target.x < 190 || target.x > 1090)) score -= 25;
@@ -720,10 +677,10 @@ function chooseBotShot() {
 
 function botShot() {
   if (!game || game.gameOver || game.turn !== 1 || game.shotResolving) return;
-  moveBotTactically();
-  game.players[1].facing = game.players[0].x >= game.players[1].x ? 1 : -1;
-  const shot = chooseBotShot();
-  beginShot(1, shot);
+  const bot=game.players[1];
+  const platform=game.platforms.find(p=>p.hp>0&&p.y<bot.y+FOOT&&bot.y+FOOT-p.y<120&&Math.abs(p.x-bot.x)<155);
+  game.botPlan={target:platform?platform.x:botDestination(),elapsed:0};
+  if(platform)performJump(1);
 }
 
 function startNextWave() {
@@ -835,6 +792,15 @@ function pulse(text) {
 
 function update(dt) {
   if (!game) return;
+  if(game.botPlan){
+    if(mode!=='practice'||game.turn!==1||game.gameOver||game.shotResolving)game.botPlan=null;
+    else {
+      const plan=game.botPlan,bot=game.players[1];plan.elapsed+=dt;
+      const direction=Math.sign(plan.target-bot.x);
+      if(Math.abs(plan.target-bot.x)>5&&plan.elapsed<2)applyMovement(1,direction,105*dt);
+      if(plan.elapsed>2.1&&!bot.airborne){game.botPlan=null;bot.facing=game.players[0].x>=bot.x?1:-1;beginShot(1,chooseBotShot());}
+    }
+  }
   if (!game.gameOver && !game.shotResolving && game.turnEndsAt) {
     const seconds = Math.max(0, Math.ceil((game.turnEndsAt - Date.now()) / 1000));
     if (seconds !== game.lastTimer) { game.lastTimer = seconds; ui.timer.textContent = seconds; ui.timer.classList.toggle("danger", seconds <= 5); }
@@ -851,14 +817,11 @@ function update(dt) {
     player.weaponSwap = Math.max(0, (player.weaponSwap || 0) - dt * 4.2);
     player.muzzleFlash = Math.max(0, (player.muzzleFlash || 0) - dt * 9);
     player.walk = Math.max(0, (player.walk || 0) - dt * 4.5);
-    if (player.airborne) {
-      player.vy += arenaConfig().gravity * .82 * dt;
-      player.y += player.vy * dt;
-      let floor = terrainY(player.x) - 29; let landingPlatform = null;
-      for (const platform of game.platforms) if (platform.hp > 0 && Math.abs(player.x - platform.x) <= platform.width / 2 && player.y <= platform.y && platform.y - 29 < floor) { floor = platform.y - 29; landingPlatform = platform; }
-      if (player.y >= floor && player.vy > 0) { player.y = floor; player.vy = 0; player.airborne = false; player.platformId = landingPlatform?.id ?? null; player.walk = 1; for (let i = 0; i < 6; i += 1) emitParticle({ x: player.x + (Math.random() - .5) * 30, y: floor + 25, vx: (Math.random() - .5) * 45, vy: -20 - Math.random() * 35, life: .3, size: 2 + Math.random() * 3, color: "rgba(220,205,165,.65)" }); }
-    }
+    const wasAirborne=player.airborne;
+    stepBody(player,dt,arenaConfig().gravity*.82,terrainY,game.platforms);
+    if(wasAirborne&&!player.airborne) { player.walk=1; updateMoveControls(); }
   }
+
   if (charge.active) {
     if (!canShoot()) releaseCharge();
     else {
@@ -877,7 +840,7 @@ function update(dt) {
   } else movement.netTimer = 0;
   for (const pickup of game.pickups) {
     if (pickup.taken) continue;
-    const collector = game.players.findIndex((player) => !player.airborne && Math.abs(player.x - pickup.x) < 34);
+    const collector = game.players.findIndex((player) => player.hp > 0 && Math.hypot(player.x-pickup.x, player.y+FOOT-(terrainY(pickup.x)-12)) < 38);
     if (collector < 0) continue;
     pickup.taken = true;
     const player = game.players[collector];
@@ -890,18 +853,17 @@ function update(dt) {
   for (const cloud of game.clouds) { cloud.x += cloud.speed * dt + game.wind * .012; if (cloud.x > W + cloud.size * 2) cloud.x = -cloud.size * 2; }
   for (let i = game.projectiles.length - 1; i >= 0; i -= 1) {
     const p = game.projectiles[i];
+    const previous = {x:p.x,y:p.y};
     p.age += dt; p.vx += game.wind * 1.45 * p.wind * dt; p.vy += arenaConfig().gravity * p.gravity * dt; p.x += p.vx * dt; p.y += p.vy * dt;
     if (p.trail.length === 0 || Math.hypot(p.x - p.trail[0].x, p.y - p.trail[0].y) > 8) p.trail.unshift({ x: p.x, y: p.y, life: 1 });
     p.trail.forEach((point) => { point.life -= dt * 1.8; });
     p.trail = p.trail.filter((point) => point.life > 0).slice(0, performanceProfile.maxTrail);
+    const hit = sweepProjectile(previous,p,game.players,game.platforms,terrainY,p.owner,p.age,4);
+    if(hit){p.x=hit.x;p.y=hit.y;}
     const ground = terrainY(Math.max(0, Math.min(W, p.x)));
-    const groundHit = p.y >= ground;
-    const platformHit = game.platforms.find((platform) => platform.hp > 0 && Math.abs(p.x - platform.x) <= platform.width / 2 && Math.abs(p.y - platform.y) < 12);
-    let playerHit = false;
-    for (const player of game.players) {
-      if (p.age < .22 && player === game.players[p.owner]) continue;
-      if (Math.hypot(p.x - player.x, p.y - (player.y - 88)) < 46) playerHit = true;
-    }
+    const groundHit=hit?.type==='ground';
+    const platformHit=hit?.type==='platform'?hit.target:null;
+    const playerHit=hit?.type==='player';
     if (platformHit) { platformHit.hp -= 1; p.y = platformHit.y; impact(p); game.projectiles.splice(i, 1); if (platformHit.hp <= 0) settlePlayers(); }
     else if ((groundHit || playerHit) && p.special === "mine") { game.mines.push({ ...p, x: p.x, y: ground - 9, armedAt: performance.now() + 700 }); game.projectiles.splice(i, 1); beep(180, .08, "square"); }
     else if ((groundHit || playerHit) && p.special === "sticky") { game.stickyBombs.push({ ...p, y: Math.min(p.y, ground - 5), timer: 1.35 }); game.projectiles.splice(i, 1); beep(240, .08, "square"); }
@@ -910,7 +872,7 @@ function update(dt) {
     else if (p.x < -100 || p.x > W + 100 || p.y > H + 100) game.projectiles.splice(i, 1);
   }
   for (let i = game.stickyBombs.length - 1; i >= 0; i -= 1) { const bomb = game.stickyBombs[i]; bomb.timer -= dt; if (bomb.timer <= 0) { impact(bomb); game.stickyBombs.splice(i, 1); } }
-  for (let i = game.mines.length - 1; i >= 0; i -= 1) { const mine = game.mines[i]; if (performance.now() >= mine.armedAt && game.players.some((player, index) => index !== mine.owner && Math.abs(player.x - mine.x) < 72)) { game.shotResolving = true; game.settleTimer = 0; impact(mine); game.mines.splice(i, 1); } }
+  for (let i = game.mines.length - 1; i >= 0; i -= 1) { const mine = game.mines[i]; if (performance.now() >= mine.armedAt && game.players.some((player, index) => index !== mine.owner && player.hp > 0 && distanceToBody(mine.x,mine.y,player) < 48)) { game.shotResolving = true; game.settleTimer = 0; impact(mine); game.mines.splice(i, 1); } }
   for (let i = game.particles.length - 1; i >= 0; i -= 1) {
     const p = game.particles[i]; p.life -= dt; p.vy += 270 * dt; p.x += p.vx * dt; p.y += p.vy * dt;
     if (p.life <= 0) { particlePool.push(p); game.particles.splice(i, 1); }
@@ -920,7 +882,7 @@ function update(dt) {
   for (let i = game.damageNumbers.length - 1; i >= 0; i -= 1) { const number = game.damageNumbers[i]; number.life -= dt * .85; number.y -= dt * 38; if (number.life <= 0) game.damageNumbers.splice(i, 1); }
   if (game.shotResolving && !game.awaitingSync && game.projectiles.length === 0 && game.stickyBombs.length === 0) {
     game.settleTimer += dt;
-    if (game.settleTimer > .65) finishShot();
+    if (game.settleTimer > .65 && !game.players.some(p=>p.hp>0 && p.airborne)) finishShot();
   }
 }
 
@@ -929,22 +891,7 @@ function drawCloud(cloud) {
   ctx.beginPath(); ctx.arc(cloud.x, cloud.y, cloud.size * .42, 0, Math.PI * 2); ctx.arc(cloud.x + cloud.size * .44, cloud.y + 5, cloud.size * .31, 0, Math.PI * 2); ctx.arc(cloud.x - cloud.size * .42, cloud.y + 9, cloud.size * .28, 0, Math.PI * 2); ctx.fill(); ctx.restore();
 }
 
-function paintTerrain(target) {
-  const arena = arenaConfig();
-  target.clearRect(0, 0, W, H);
-  const gradient = target.createLinearGradient(0, 470, 0, H);
-  gradient.addColorStop(0, arena.ground[0]); gradient.addColorStop(.12, arena.ground[1]); gradient.addColorStop(1, arena.ground[2]);
-  target.beginPath(); target.moveTo(0, terrainY(0));
-  for (let x = 0; x <= W; x += 6) target.lineTo(x, terrainY(x));
-  target.lineTo(W, H); target.lineTo(0, H); target.closePath(); target.fillStyle = gradient; target.fill();
-  target.beginPath(); target.moveTo(0, terrainY(0)); for (let x = 0; x <= W; x += 5) target.lineTo(x, terrainY(x));
-  target.strokeStyle = arena.top; target.lineWidth = 10; target.stroke();
-  target.beginPath(); target.moveTo(0, terrainY(0) + 9); for (let x = 0; x <= W; x += 5) target.lineTo(x, terrainY(x) + 9);
-  target.strokeStyle = "rgba(23,50,39,.72)"; target.lineWidth = 8; target.stroke();
-  target.save(); target.globalAlpha = .22; target.fillStyle = "#96d176";
-  for (let x = 18; x < W; x += 37) { const y = terrainY(x); target.beginPath(); target.ellipse(x, y + 20 + (x % 17), 2.5, 1.2, -.3, 0, Math.PI * 2); target.fill(); }
-  target.restore();
-}
+function paintTerrain(target) { drawGround(target,game.arena,terrainY,W,H); }
 
 function drawTerrain() {
   const terrain = game.terrain;
@@ -957,45 +904,30 @@ function drawTerrain() {
 }
 
 function drawHazards() {
-  const zoneSets = {
-    sunset: [[315, 455, "mud", "ÇAMUR"], [575, 705, "lava", "LAV"]],
-    mushroom: [[515, 695, "water", "SU"], [790, 900, "spores", "SPOR"]],
-    aurora: [[335, 520, "ice", "BUZ"], [720, 845, "thinIce", "İNCE BUZ"]]
-  };
-  const colors = { mud: "#8b603c", lava: "#ff5938", water: "#4acfff", spores: "#a2ff5d", ice: "#9deaff", thinIce: "#d5fbff" };
-  for (const platform of game.platforms) {
-    if (platform.hp <= 0) continue;
-    const platformColor = game.arena === "aurora" ? "#a9efff" : game.arena === "mushroom" ? "#7bedca" : "#dba255";
-    ctx.save(); ctx.fillStyle = "rgba(17,28,43,.92)"; ctx.strokeStyle = platformColor; ctx.lineWidth = 6; ctx.shadowBlur = 16; ctx.shadowColor = platformColor; ctx.beginPath(); ctx.roundRect(platform.x - platform.width / 2, platform.y, platform.width, 18, 8); ctx.fill(); ctx.stroke();
-    ctx.shadowBlur = 0; ctx.fillStyle = platformColor; for (let x = platform.x - platform.width / 2 + 18; x < platform.x + platform.width / 2; x += 31) ctx.fillRect(x, platform.y + 5, 13, 3); ctx.restore();
+  for(const p of game.platforms)if(p.hp>0)drawPlatform(ctx,p,game.arena);
+  const zones={sunset:[[315,455,'#92745b','ÇAMUR'],[575,705,'#b9785f','KOR']],mushroom:[[515,695,'#7faaa5','SU'],[790,900,'#a8af75','SPOR']],aurora:[[335,520,'#bacac6','BUZ'],[720,845,'#9fbbc2','İNCE BUZ']]};
+  for(const [start,end,color,label] of zones[game.arena]){
+    ctx.fillStyle=color;for(let x=start;x<end;x+=4)ctx.fillRect(x,terrainY(x),4,5);
+    ctx.fillStyle='#eee0bf';ctx.font='10px monospace';ctx.textAlign='center';ctx.fillText(label,(start+end)/2,terrainY((start+end)/2)+27);
   }
-  for (const [start, end, type, label] of zoneSets[game.arena]) {
-    ctx.save(); ctx.strokeStyle = colors[type]; ctx.lineWidth = type === "lava" ? 16 : 11; ctx.shadowBlur = type === "lava" || type === "spores" ? 22 : 10; ctx.shadowColor = colors[type]; ctx.beginPath();
-    for (let x = start; x <= end; x += 5) { const y = terrainY(x) + 2; if (x === start) ctx.moveTo(x, y); else ctx.lineTo(x, y); } ctx.stroke();
-    ctx.shadowBlur = 0; ctx.fillStyle = colors[type]; ctx.globalAlpha = .88; ctx.font = "900 9px Sora"; ctx.textAlign = "center"; ctx.fillText(label, (start + end) / 2, terrainY((start + end) / 2) + 29); ctx.restore();
+  for(const barrel of game.barrels)if(!barrel.destroyed){
+    const x=barrel.x-14,y=terrainY(barrel.x)-38;
+    ctx.fillStyle='#252735';ctx.fillRect(x-2,y-2,32,40);
+    ctx.fillStyle='#8e604e';ctx.fillRect(x,y,28,36);
+    ctx.fillStyle='#d2ae77';ctx.fillRect(x,y+4,28,4);ctx.fillRect(x,y+26,28,4);
+    ctx.fillStyle='#efdbaf';ctx.fillRect(x+12,y+12,4,8);ctx.fillRect(x+12,y+22,4,3);
   }
-  for (const barrel of game.barrels) {
-    if (barrel.destroyed) continue;
-    const y = terrainY(barrel.x) - 24;
-    ctx.save(); ctx.translate(barrel.x, y); ctx.fillStyle = "#8e3e2d"; ctx.strokeStyle = "#ffb34c"; ctx.lineWidth = 4; ctx.beginPath(); ctx.roundRect(-18, -27, 36, 54, 8); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = "#ffc956"; ctx.font = "900 20px Sora"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("!", 0, 1); ctx.restore();
-  }
-  if (game.dangerInset > 0) {
-    const pulse = .18 + Math.abs(Math.sin(performance.now() * .004)) * .12;
-    ctx.fillStyle = `rgba(255,45,55,${pulse})`; ctx.fillRect(0, 0, game.dangerInset, H); ctx.fillRect(W - game.dangerInset, 0, game.dangerInset, H);
-    ctx.strokeStyle = "rgba(255,105,80,.9)"; ctx.lineWidth = 5; ctx.setLineDash([15, 10]); ctx.beginPath(); ctx.moveTo(game.dangerInset, 0); ctx.lineTo(game.dangerInset, H); ctx.moveTo(W - game.dangerInset, 0); ctx.lineTo(W - game.dangerInset, H); ctx.stroke(); ctx.setLineDash([]);
-  }
+  if(game.dangerInset>0){ctx.fillStyle='#b66b6350';ctx.fillRect(0,0,game.dangerInset,H);ctx.fillRect(W-game.dangerInset,0,game.dangerInset,H);}
 }
-
-function drawPickups() {
-  const colors = { health: "#ff625d", ammo: "#ffc44d", shield: "#63e7ff" };
-  const icons = { health: "+", ammo: "✦", shield: "◆" };
-  for (const pickup of game.pickups) {
-    if (pickup.taken) continue;
-    const y = terrainY(pickup.x) - 25 + Math.sin(performance.now() * .003 + pickup.bob) * 5;
-    ctx.save(); ctx.translate(pickup.x, y); ctx.shadowBlur = 22; ctx.shadowColor = colors[pickup.type];
-    ctx.fillStyle = "#17213a"; ctx.strokeStyle = colors[pickup.type]; ctx.lineWidth = 4; ctx.beginPath(); ctx.roundRect(-21, -18, 42, 36, 8); ctx.fill(); ctx.stroke();
-    ctx.shadowBlur = 0; ctx.fillStyle = colors[pickup.type]; ctx.font = "900 20px Sora"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(icons[pickup.type], 0, 1); ctx.restore();
+function drawPickups(){
+  const colors={health:'#c58e85',ammo:'#d9bb80',shield:'#9cbdb4'};
+  for(const pickup of game.pickups)if(!pickup.taken){
+    const x=pickup.x-13,y=terrainY(pickup.x)-31;
+    ctx.fillStyle='#252735';ctx.fillRect(x-2,y-2,30,30);ctx.fillStyle=colors[pickup.type];ctx.fillRect(x,y,26,26);
+    ctx.fillStyle='#4a4750';ctx.fillRect(x+3,y+3,20,20);ctx.fillStyle='#efe1bf';
+    if(pickup.type==='health'){ctx.fillRect(x+10,y+6,6,14);ctx.fillRect(x+6,y+10,14,6);}
+    else if(pickup.type==='ammo'){for(let i=0;i<3;i++)ctx.fillRect(x+6+i*6,y+8,3,12);}
+    else{ctx.beginPath();ctx.moveTo(x+6,y+7);ctx.lineTo(x+20,y+7);ctx.lineTo(x+20,y+15);ctx.lineTo(x+13,y+21);ctx.lineTo(x+6,y+15);ctx.fill();}
   }
 }
 
@@ -1007,68 +939,19 @@ function drawObjective() {
   ctx.fillStyle = "#fff"; ctx.font = "900 11px Sora"; ctx.textAlign = "center"; ctx.fillText("KONTROL NOKTASI", 0, 39); ctx.restore();
 }
 
-function drawAmmo(weaponId, x, y, width, rotation = 0) {
-  const weapon = weapons[weaponId] || weapons.findik;
-  const height = width * .58;
-  ctx.save(); ctx.translate(x, y); ctx.rotate(rotation);
-  const sheet = weapon.atlas === "tactical" ? art.tacticalAmmo : art.ammo;
-  if (sheet.complete && sheet.naturalWidth) {
-    const sw = sheet.naturalWidth / 4, sh = sheet.naturalHeight / 2;
-    ctx.drawImage(sheet, weapon.col * sw, weapon.row * sh, sw, sh, -width / 2, -height / 2, width, height);
-  } else {
-    ctx.fillStyle = weapon.color; ctx.beginPath(); ctx.ellipse(0, 0, width * .34, height * .28, 0, 0, Math.PI * 2); ctx.fill();
-  }
-  ctx.restore();
+function drawAmmo(weaponId,x,y,width,rotation=0) {
+  const weapon=weapons[weaponId]||weapons.findik;
+  ctx.save();ctx.translate(x,y);ctx.rotate(rotation);
+  // Projectiles are compact, centred on the swept 4-pixel collision radius.
+  const size=width<=20?4:7;
+  ctx.fillStyle="#252735";ctx.fillRect(-size-2,-size-2,size*2+4,size*2+4);
+  ctx.fillStyle=weapon.color;ctx.fillRect(-size,-size,size*2,size*2);
+  ctx.fillStyle="#f0dfb2";ctx.fillRect(-size,-size,3,3);ctx.restore();
 }
 
-function drawPlayer(player, index) {
-  const active = game.turn === index && !game.shotResolving;
-  const phase = performance.now() * .0035 + index * 1.7;
-  const breathing = Math.sin(phase);
-  const walkBob = Math.abs(Math.sin(player.walkPhase || 0)) * (player.walk || 0) * 5;
-  const bob = breathing * (active ? 3 : 1.4) - walkBob;
-  const recoil = (player.recoil || 0) ** 2;
-  const kickX = -player.facing * recoil * 13;
-  const kickY = recoil * 3;
-  const floor = terrainY(player.x);
-  const ground = player.y + 29;
-  ctx.save();
-  const airHeight = Math.max(0, floor - ground);
-  ctx.globalAlpha = Math.max(.18, 1 - airHeight / 260); ctx.fillStyle = "rgba(2,6,12,.5)"; ctx.beginPath(); ctx.ellipse(player.x - kickX * .2, floor + 5, 70 - recoil * 7 - airHeight * .08, 13 - recoil * 2, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
-  if (active) { const glow = ctx.createRadialGradient(player.x, ground - 80, 10, player.x, ground - 80, 110); glow.addColorStop(0, index === 0 ? "rgba(255,190,73,.2)" : "rgba(84,226,195,.2)"); glow.addColorStop(1, "transparent"); ctx.fillStyle = glow; ctx.fillRect(player.x - 120, ground - 205, 240, 220); }
-  if (game.roomMode === "team2v2") { ctx.strokeStyle = player.team === 0 ? "rgba(255,179,71,.9)" : "rgba(85,217,255,.9)"; ctx.lineWidth = 5; ctx.beginPath(); ctx.ellipse(player.x, floor + 4, 68, 12, 0, 0, Math.PI * 2); ctx.stroke(); }
-  if (player.shield > 0) { ctx.fillStyle = "rgba(95,225,255,.09)"; ctx.strokeStyle = `rgba(105,235,255,${.35 + player.shield / 90})`; ctx.lineWidth = 4; ctx.beginPath(); ctx.ellipse(player.x, ground - 118, 92, 135, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
-  if (player.effects.burn) { ctx.fillStyle = "rgba(255,90,30,.72)"; for (let i = 0; i < 4; i += 1) { ctx.beginPath(); ctx.arc(player.x - 34 + i * 22, ground - 18 - Math.abs(Math.sin(phase + i)) * 18, 7, 0, Math.PI * 2); ctx.fill(); } }
-  if (player.effects.poison) { ctx.fillStyle = "rgba(105,245,70,.6)"; for (let i = 0; i < 4; i += 1) { ctx.beginPath(); ctx.arc(player.x - 40 + i * 25, ground - 45 - Math.abs(Math.sin(phase * 1.4 + i)) * 55, 4 + i % 2, 0, Math.PI * 2); ctx.fill(); } }
-  if (player.effects.freeze) { ctx.strokeStyle = "rgba(105,225,255,.75)"; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(player.x, ground - 94, 67, .15, Math.PI - .15); ctx.stroke(); }
-  const fighter = fighters[player.fighter] || fighters.fox;
-  const sheet = art[fighter.sheet];
-  const heldX = player.x + player.facing * (fighter.anchorX + 22);
-  const heldY = ground + fighter.anchorY + bob * .7;
-  const heldRotation = player.facing === 1 ? -.07 + breathing * .012 : Math.PI + .07 - breathing * .012;
-  ctx.save();
-  ctx.translate(kickX, kickY);
-  const swapScale = 1 + (player.weaponSwap || 0) * .16;
-  drawAmmo(player.equipped || "findik", heldX, heldY, 92 * swapScale, heldRotation);
-  if (sheet.complete && sheet.naturalWidth) {
-    const sw = sheet.naturalWidth / fighter.cols, sh = sheet.naturalHeight / fighter.rows;
-    const flip = fighter.nativeFacing !== player.facing;
-    ctx.save(); ctx.translate(player.x, 0); ctx.scale(flip ? -1 : 1, 1);
-    ctx.drawImage(sheet, fighter.col * sw, fighter.row * sh, sw, sh, -103, ground - 270 + bob, 206, 270);
-    ctx.restore();
-  } else {
-    ctx.fillStyle = player.color; ctx.beginPath(); ctx.arc(player.x, ground - 55, 46, 0, Math.PI * 2); ctx.fill();
-  }
-  const socketX = player.x + player.facing * fighter.anchorX;
-  ctx.save(); ctx.translate(socketX, heldY); ctx.rotate(heldRotation); ctx.fillStyle = "#e4a93f"; ctx.strokeStyle = "#5f351b"; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(0, 0, 7, 12, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.restore();
-  if (player.muzzleFlash > 0) {
-    const muzzle = muzzlePosition(player);
-    const flash = ctx.createRadialGradient(muzzle.x, muzzle.y, 1, muzzle.x, muzzle.y, 34 * player.muzzleFlash);
-    flash.addColorStop(0, "rgba(255,255,225,1)"); flash.addColorStop(.35, "rgba(255,205,74,.9)"); flash.addColorStop(1, "rgba(255,92,42,0)");
-    ctx.fillStyle = flash; ctx.beginPath(); ctx.arc(muzzle.x, muzzle.y, 36 * player.muzzleFlash, 0, Math.PI * 2); ctx.fill();
-  }
-  ctx.restore();
-  ctx.restore();
+function drawPlayer(player,index) {
+  const angle=index===localIndex&&!game.shotResolving?Number(ui.angle.value):(player.aimAngle||35);
+  drawFighter(ctx,{...player,maxHp:game.maxHp},index,game.turn===index&&!game.shotResolving,angle,weapons[player.equipped||'findik'].color,new URLSearchParams(location.search).has('hitboxes'));
 }
 
 function drawAimGuide() {
@@ -1080,9 +963,10 @@ function drawAimGuide() {
   const muzzle = muzzlePosition(player);
   let x = muzzle.x, y = muzzle.y, vx = Math.cos(angle) * speed * player.facing, vy = -Math.sin(angle) * speed;
   ctx.save(); ctx.fillStyle = "rgba(255,255,255,.72)";
-  for (let i = 0; i < 11; i += 1) {
-    const dt = .08; vx += game.wind * 1.45 * weapon.wind * dt; vy += arenaConfig().gravity * weapon.gravity * dt; x += vx * dt; y += vy * dt;
-    ctx.globalAlpha = 1 - i / 13; ctx.beginPath(); ctx.arc(x, y, Math.max(2, 5 - i * .22), 0, Math.PI * 2); ctx.fill();
+  for (let i = 0; i < 54; i += 1) {
+    const previous={x,y},dt=1/60; vx += game.wind * 1.45 * weapon.wind * dt; vy += arenaConfig().gravity * weapon.gravity * dt; x += vx * dt; y += vy * dt;
+    if(sweepProjectile(previous,{x,y},game.players,game.platforms,terrainY,game.turn,i*dt,4))break;
+    if(i%5===0){ctx.globalAlpha=1-i/65;ctx.fillRect(x-2,y-2,4,4);}
   }
   ctx.restore();
 }
@@ -1090,10 +974,13 @@ function drawAimGuide() {
 function render() {
   ctx.save();
   if (game?.shake) ctx.translate((Math.random() - .5) * game.shake, (Math.random() - .5) * game.shake);
-  const background = art.arenas[game?.arena || selectedArena];
-  if (background?.complete && background.naturalWidth) ctx.drawImage(background, 0, 0, W, H);
-  else { const sky = ctx.createLinearGradient(0,0,0,H); sky.addColorStop(0,"#10244b"); sky.addColorStop(1,"#ef8758"); ctx.fillStyle=sky; ctx.fillRect(0,0,W,H); }
-  ctx.fillStyle = "rgba(6,10,25,.08)"; ctx.fillRect(0,0,W,H);
+  if(!game?.backgroundLayer) {
+    const layer=document.createElement('canvas');layer.width=W;layer.height=H;
+    drawBackdrop(layer.getContext('2d'),game?.arena||selectedArena);
+    if(game)game.backgroundLayer=layer;
+    ctx.drawImage(layer,0,0);
+  } else ctx.drawImage(game.backgroundLayer,0,0);
+  ctx.imageSmoothingEnabled=false;
   if (!game) { ctx.restore(); return; }
   drawTerrain();
   drawHazards();
@@ -1105,10 +992,10 @@ function render() {
   game.players.forEach(drawPlayer);
   for (const p of game.projectiles) {
     p.trail.slice().reverse().forEach((point, index) => { ctx.globalAlpha = point.life * .55; ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(point.x, point.y, 2 + index * .18, 0, Math.PI * 2); ctx.fill(); });
-    ctx.globalAlpha = 1; ctx.shadowBlur = 24; ctx.shadowColor = p.color; drawAmmo(p.weapon, p.x, p.y, 54, Math.atan2(p.vy, p.vx)); ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1; ctx.shadowBlur = 0; ctx.shadowColor = p.color; drawAmmo(p.weapon, p.x, p.y, 16, Math.atan2(p.vy, p.vx)); ctx.shadowBlur = 0;
   }
   for (const explosion of game.explosions) { ctx.globalAlpha = explosion.life; ctx.strokeStyle = explosion.color; ctx.lineWidth = 5 * explosion.life; ctx.beginPath(); ctx.arc(explosion.x, explosion.y, explosion.radius * (1.3 - explosion.life), 0, Math.PI * 2); ctx.stroke(); }
-  for (const p of game.particles) { ctx.globalAlpha = Math.min(1,p.life*2); ctx.fillStyle=p.color; ctx.shadowBlur=performanceProfile.shadows ? 8 : 0; ctx.shadowColor=p.color; ctx.beginPath(); ctx.arc(p.x,p.y,p.size||3,0,Math.PI*2); ctx.fill(); } ctx.shadowBlur=0;
+  for (const p of game.particles) { ctx.globalAlpha = Math.min(1,p.life*2); ctx.fillStyle=p.color; ctx.shadowBlur=0; ctx.shadowColor=p.color; ctx.fillRect(Math.round(p.x),Math.round(p.y),p.size||3,p.size||3); } ctx.shadowBlur=0;
   for (const number of game.damageNumbers) { const label = number.positive ? number.value : `-${number.value}`; ctx.globalAlpha=Math.min(1,number.life*2); ctx.fillStyle=number.color; ctx.strokeStyle="rgba(8,10,22,.75)"; ctx.lineWidth=7; ctx.font="800 34px Sora"; ctx.textAlign="center"; ctx.strokeText(label,number.x,number.y); ctx.fillText(label,number.x,number.y); }
   ctx.globalAlpha = 1;
   if (game.flash > 0) { ctx.fillStyle=`rgba(255,240,190,${game.flash})`; ctx.fillRect(0,0,W,H); }
@@ -1174,7 +1061,8 @@ document.querySelectorAll(".arena-choice").forEach((button) => button.addEventLi
   ui.arenaName.textContent = arenas[selectedArena].name;
   document.querySelectorAll(".arena-choice").forEach((item) => item.classList.toggle("selected", item === button));
   const backdrop = document.querySelector(".hero-backdrop");
-  backdrop.src = art.arenas[selectedArena].src;
+  const preview=document.createElement('canvas');preview.width=1280;preview.height=720;
+  drawBackdrop(preview.getContext('2d'),selectedArena);backdrop.src=preview.toDataURL();
   document.querySelector(".arena-tag strong").textContent = arenas[selectedArena].name;
 }));
 
@@ -1221,7 +1109,7 @@ bindMoveButton(ui.moveRight, "right");
 function aimFromPointer(event) {
   if (!canShoot()) return;
   const rect = canvas.getBoundingClientRect(); const x = (event.clientX - rect.left) * W / rect.width; const y = (event.clientY - rect.top) * H / rect.height;
-  const player = game.players[game.turn]; player.facing = x >= player.x ? 1 : -1; const dx = Math.max(1, Math.abs(x - player.x)); const dy = player.y - y;
+  const player = game.players[game.turn]; player.facing = x >= player.x ? 1 : -1; const dx = Math.max(1, Math.abs(x - player.x)); const dy = player.y + FOOT - 32 - y;
   ui.angle.value = Math.max(5, Math.min(85, Math.round(Math.atan2(dy, dx) * 180 / Math.PI)));
   ui.angle.dispatchEvent(new Event("input"));
 }
@@ -1277,4 +1165,10 @@ if (debugParams.get("practice") === "1") {
   if (debugParams.get("danger") === "1") { game.turnNumber = 15; game.dangerInset = 112; updateHud(); }
   if (debugParams.get("bot") === "1") { game.turn = 1; game.turnEndsAt = Date.now() + game.rules.turnSeconds * 1000; updateHud(); window.setTimeout(botShot, 100); }
   if (debugParams.get("autofire") === "1") window.setTimeout(requestShot, 250);
+}
+
+
+installRetroPreviews(fighters,weapons);
+if (['localhost','127.0.0.1'].includes(location.hostname) && new URLSearchParams(location.search).has('test')) {
+  window.arenaTest={get game(){return game;},jump:performJump,move:applyMovement,update,render,shoot:beginShot,terrainY};
 }
