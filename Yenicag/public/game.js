@@ -1,11 +1,11 @@
 import { FOOT, JUMP_SPEED, terrainHeight, createPlatforms, bodyBox, distanceToBody, supportHeight, moveBody, stepBody, weaponPose, sweepProjectile } from './world.js?v=2';
-import { drawBackdrop, drawGround, drawPlatform, drawFighter, drawWeapon, installRetroPreviews } from './retro.js?v=2';
+import { drawBackdrop, drawGround, drawPlatform, drawFighter, drawWeapon, installRetroPreviews, loadRetroAssets, updateHeroPreview } from './cartoon.js?v=3';
 const $ = (selector) => document.querySelector(selector);
 const canvas = $("#gameCanvas");
 const ctx = canvas.getContext("2d");
 const W = canvas.width;
 const H = canvas.height;
-function prepareGameAssets() { return Promise.resolve(); }
+function prepareGameAssets() { return loadRetroAssets().catch(() => {}); }
 
 const ui = {
   menu: $("#menu"), lobby: $("#lobby"), game: $("#game"), status: $("#menuStatus"),
@@ -891,7 +891,7 @@ function drawCloud(cloud) {
   ctx.beginPath(); ctx.arc(cloud.x, cloud.y, cloud.size * .42, 0, Math.PI * 2); ctx.arc(cloud.x + cloud.size * .44, cloud.y + 5, cloud.size * .31, 0, Math.PI * 2); ctx.arc(cloud.x - cloud.size * .42, cloud.y + 9, cloud.size * .28, 0, Math.PI * 2); ctx.fill(); ctx.restore();
 }
 
-function paintTerrain(target) { drawGround(target,game.arena,terrainY,W,H); }
+function paintTerrain(target) { target.clearRect(0,0,W,H); drawGround(target,game.arena,terrainY,W,H); }
 
 function drawTerrain() {
   const terrain = game.terrain;
@@ -908,12 +908,11 @@ function drawHazards() {
   const zones={sunset:[[315,455,'#92745b','ÇAMUR'],[575,705,'#b9785f','KOR']],mushroom:[[515,695,'#7faaa5','SU'],[790,900,'#a8af75','SPOR']],aurora:[[335,520,'#bacac6','BUZ'],[720,845,'#9fbbc2','İNCE BUZ']]};
   for(const [start,end,color,label] of zones[game.arena]){
     ctx.fillStyle=color;for(let x=start;x<end;x+=4)ctx.fillRect(x,terrainY(x),4,5);
-    ctx.fillStyle='#eee0bf';ctx.font='10px monospace';ctx.textAlign='center';ctx.fillText(label,(start+end)/2,terrainY((start+end)/2)+27);
+    ctx.fillStyle='#514737';ctx.font='bold 10px Trebuchet MS, sans-serif';ctx.textAlign='center';ctx.fillText(label,(start+end)/2,terrainY((start+end)/2)+27);
   }
   for(const barrel of game.barrels)if(!barrel.destroyed){
     const x=barrel.x-14,y=terrainY(barrel.x)-38;
-    ctx.fillStyle='#252735';ctx.fillRect(x-2,y-2,32,40);
-    ctx.fillStyle='#8e604e';ctx.fillRect(x,y,28,36);
+    ctx.beginPath();ctx.roundRect(x-1,y-1,30,38,8);ctx.fillStyle='#ac7855';ctx.fill();ctx.strokeStyle='#55412e';ctx.lineWidth=2;ctx.stroke();
     ctx.fillStyle='#d2ae77';ctx.fillRect(x,y+4,28,4);ctx.fillRect(x,y+26,28,4);
     ctx.fillStyle='#efdbaf';ctx.fillRect(x+12,y+12,4,8);ctx.fillRect(x+12,y+22,4,3);
   }
@@ -923,8 +922,8 @@ function drawPickups(){
   const colors={health:'#c58e85',ammo:'#d9bb80',shield:'#9cbdb4'};
   for(const pickup of game.pickups)if(!pickup.taken){
     const x=pickup.x-13,y=terrainY(pickup.x)-31;
-    ctx.fillStyle='#252735';ctx.fillRect(x-2,y-2,30,30);ctx.fillStyle=colors[pickup.type];ctx.fillRect(x,y,26,26);
-    ctx.fillStyle='#4a4750';ctx.fillRect(x+3,y+3,20,20);ctx.fillStyle='#efe1bf';
+    ctx.beginPath();ctx.roundRect(x-2,y-2,30,30,6);ctx.fillStyle=colors[pickup.type];ctx.fill();ctx.strokeStyle='#55412e';ctx.lineWidth=2;ctx.stroke();
+    ctx.beginPath();ctx.roundRect(x+3,y+3,20,20,3);ctx.fillStyle='#786b50';ctx.fill();ctx.fillStyle='#fff0ca';
     if(pickup.type==='health'){ctx.fillRect(x+10,y+6,6,14);ctx.fillRect(x+6,y+10,14,6);}
     else if(pickup.type==='ammo'){for(let i=0;i<3;i++)ctx.fillRect(x+6+i*6,y+8,3,12);}
     else{ctx.beginPath();ctx.moveTo(x+6,y+7);ctx.lineTo(x+20,y+7);ctx.lineTo(x+20,y+15);ctx.lineTo(x+13,y+21);ctx.lineTo(x+6,y+15);ctx.fill();}
@@ -944,9 +943,8 @@ function drawAmmo(weaponId,x,y,width,rotation=0) {
   ctx.save();ctx.translate(x,y);ctx.rotate(rotation);
   // Projectiles are compact, centred on the swept 4-pixel collision radius.
   const size=width<=20?4:7;
-  ctx.fillStyle="#252735";ctx.fillRect(-size-2,-size-2,size*2+4,size*2+4);
-  ctx.fillStyle=weapon.color;ctx.fillRect(-size,-size,size*2,size*2);
-  ctx.fillStyle="#f0dfb2";ctx.fillRect(-size,-size,3,3);ctx.restore();
+  ctx.beginPath();ctx.ellipse(0,0,size+1,size,0,0,Math.PI*2);ctx.fillStyle=weapon.color;ctx.fill();ctx.strokeStyle="#493c30";ctx.lineWidth=2;ctx.stroke();
+  ctx.beginPath();ctx.arc(-2,-2,1.5,0,Math.PI*2);ctx.fillStyle="#f8ebcc";ctx.fill();ctx.restore();
 }
 
 function drawPlayer(player,index) {
@@ -980,7 +978,8 @@ function render() {
     if(game)game.backgroundLayer=layer;
     ctx.drawImage(layer,0,0);
   } else ctx.drawImage(game.backgroundLayer,0,0);
-  ctx.imageSmoothingEnabled=false;
+  ctx.imageSmoothingEnabled=true;
+  ctx.imageSmoothingQuality='high';
   if (!game) { ctx.restore(); return; }
   drawTerrain();
   drawHazards();
@@ -1060,9 +1059,7 @@ document.querySelectorAll(".arena-choice").forEach((button) => button.addEventLi
   selectedArena = button.dataset.arena;
   ui.arenaName.textContent = arenas[selectedArena].name;
   document.querySelectorAll(".arena-choice").forEach((item) => item.classList.toggle("selected", item === button));
-  const backdrop = document.querySelector(".hero-backdrop");
-  const preview=document.createElement('canvas');preview.width=1280;preview.height=720;
-  drawBackdrop(preview.getContext('2d'),selectedArena);backdrop.src=preview.toDataURL();
+  updateHeroPreview(selectedArena);
   document.querySelector(".arena-tag strong").textContent = arenas[selectedArena].name;
 }));
 
@@ -1169,6 +1166,9 @@ if (debugParams.get("practice") === "1") {
 
 
 installRetroPreviews(fighters,weapons);
+loadRetroAssets().then(()=>installRetroPreviews(fighters,weapons)).catch(()=>{
+  ui.status.textContent='Karakter görselleri yüklenemedi. Sayfayı yenileyebilirsin; oyun yine çalışır.';
+});
 if (['localhost','127.0.0.1'].includes(location.hostname) && new URLSearchParams(location.search).has('test')) {
   window.arenaTest={get game(){return game;},jump:performJump,move:applyMovement,update,render,shoot:beginShot,terrainY};
 }
